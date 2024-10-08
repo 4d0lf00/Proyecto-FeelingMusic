@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Report Bug - Form</title>
+    <!-- Boostrap CDN -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <script src="https://cdn.tiny.cloud/1/b0b6yrt6pdgjv1i5y2e3gx8be3o6d81azc70qr73ig2bci0m/tinymce/5/tinymce.min.js" referrerpolicy="origin"></script>
+    <script src="https://kit.fontawesome.com/cd4f2f6156.js" crossorigin="anonymous"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/css/intlTelInput.css" integrity="sha512-gxWow8Mo6q6pLa1XH/CcH8JyiSDEtiwJV78E+D+QP0EVasFs8wKXq16G8CLD4CJ2SnonHr4Lm/yY2fSI2+cbmw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+<body>
+    <div class="container my-4">
+        <div class="row justify-content-md-center">
+            <div class="col-md-12 col-lg-8">
+                <span class="form-heading d-flex justify-content-center mt-4 pb-4">
+                    <h1 class="fs-3">Formulario de registro</h1>
+                    <i class="fas fa-music align-items-baseline ps-2 pt-1" style="color: orange; font-size: 1.5em;"></i>
+                </span>
+
+                <form action="#" method="POST" id="bugform" name="bug-form">
+                    <!-- Campos del formulario aquí -->
+                    <div class="input-group pb-4">
+                        <span class="input-group-text">Nombre</span>
+                        <input type="text" class="form-control border" name="issuername" id="issuername" placeholder="Ingrese el nombre" required>
+                        <small class="col-12 d-flex"></small>
+                    </div>
+
+                    <div class="input-group pb-4">
+                        <span class="input-group-text">Apellidos</span>
+                        <input type="text" class="form-control border" name="apellido" id="apellido" placeholder="Ingrese los Apellidos" required>
+                        <small class="col-12 d-flex"></small>
+                    </div>
+
+                    <div class="input-group pb-4">
+                        <span class="input-group-text">Correo electronico</span>
+                        <input type="email" class="form-control border" name="email" id="email" placeholder="Ingrese el correo electronico" required>
+                        <small class="col-12 d-flex"></small>
+                    </div>
+
+                    <div class="row mb-4">
+                        <div class="row mb-4">
+                            <div class="col">
+                                <div class="input-group">
+                                    <span class="input-group-text" id="issuer-phone-label">Número de teléfono</span>
+                                    <input type="tel" name="issuer-phone" id="issuerphone" class="form-control border" 
+                                           aria-label="Text input with dropdown button" 
+                                           placeholder="+569XXXXXXXX" 
+                                           pattern="^\+569[0-9]{8}$" 
+                                           title="El número debe ser en el formato +569XXXXXXXX" required>
+                                    <small class="col-12 d-flex"></small>
+                                </div>
+                            </div>
+                            <div class="col">
+                                <div class="input-group">
+                                    <span class="input-group-text">RUT</span>
+                                    <input type="text" class="form-control border" 
+                                           name="rut" 
+                                           id="rut" 
+                                           placeholder="Ingrese el RUT (ej. 12345678-K)" 
+                                           pattern="^[0-9]{7,8}[-][0-9Kk]$" 
+                                           title="El RUT debe estar en el formato XXXXXXXX-X o XXXXXXXX-K" 
+                                           required>
+                                    <small class="col-12 d-flex"></small>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Termino de campos de formulario -->
+                    <div class="form-group pb-2">
+                        <label for="bug-report">Comentarios<i class="fas fa-music pb-2" style="color: orange;"></i></label>
+                        <textarea class="form-control border" name="bug-report" id="bug-report" style="min-height: calc(1.5em + (5rem + 2px))" aria-label="With textarea" required></textarea>
+                        <small class="col-12 d-flex"></small>
+                    </div>
+
+                    <button type="submit" class="btn btn-warning">Aceptar</button>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- Bootstrap JS Bundle -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
+    <!-- End Bootstrap JS Bundle -->
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/js/intlTelInput.js" integrity="sha512-Re9cWc8hkn7aWsPHHlX+FusmIyrNeKQy17imsq9KxIPauDx1XGnBhJn7+ItWi7fwT35i+81pDJGQtolFwnUXZg==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/js/utils.js" integrity="sha512-/b3Hz5C3/9PtjfdAtl9gQhYSkZirvbAOPTkcCT/9ABa4hpyQizp1DILcGZNrsmi1VvRBH3vImPNmaWtaf0IyHA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <script defer src="js/alert.js"></script> <!-- ruta de la alerta del JS -->
+</body>
+</html>
