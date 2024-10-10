@@ -25,6 +25,7 @@ function mostrarAlumnos(listaAlumnos) {
     });
 }
 
+//git pesao
 // Función principal para filtrar y mostrar alumnos
 function filtrarYMostrarAlumnos(clase) {
     const alumnosFiltrados = filtrarAlumnosPorClase(clase);
