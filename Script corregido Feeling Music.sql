@@ -151,3 +151,19 @@ CREATE TABLE sala_horario (
   FOREIGN KEY (profesor_id) REFERENCES profesor(id),
   FOREIGN KEY (clase_id) REFERENCES clases(id)
 );
+
+--poblacion tablas de prueba
+INSERT INTO `feeling_music`.`profesor`
+(`id`,
+`nombre`,
+`apellido`,
+`email`,
+`tipo`,
+`especialidad`)
+VALUES
+(1,
+'pedro',
+'pedraza',
+'p.pedraza@gmail.com',
+1,
+'guitarra');
