@@ -1,10 +1,48 @@
 /* Import Google font - Poppins */
 @import url("https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap");
+
 * {
   margin: 0;
   padding: 0;
   box-sizing: border-box;
   font-family: "Poppins", sans-serif;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: repeating-conic-gradient(
+        from 30deg,
+        #0000 0 120deg,
+        var(--c3) 0 180deg
+      )
+      calc(0.5 * var(--s)) calc(0.5 * var(--s) * 0.577),
+    repeating-conic-gradient(
+      from 30deg,
+      var(--c1) 0 60deg,
+      var(--c2) 0 120deg,
+      var(--c3) 0 180deg
+    );
+  background-size: var(--s) calc(var(--s) * 0.577);
+  --s: 200px; /* control del tamaño */
+  --c1: #1d1d1d;
+  --c2: #4e4f51;
+  --c3: #3c3c3c;
+}
+
+/* Estilo personalizado del contenedor */
+.container {
+  width: 100%;
+  max-width: 700px;
+  background: rgba(255, 255, 255, 0.9); /* Fondo semitransparente */
+  padding: 25px;
+  border-radius: 8px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
+  position: relative; /* Cambiado para mantener el espacio */
 }
 
 header {
@@ -17,45 +55,26 @@ header {
   justify-content: center; /* Centra el contenido horizontalmente */
 }
 
-
-body {
-  min-height: 100vh;
-  display: flex;
-  align-items: center;
-  justify-content: center; 
-  padding: 20px;
-  background: url('../images/fondo.jpg') no-repeat center center;
-  background-size: cover; /* Asegura que la imagen cubra todo el fondo */
-}
-
-
-.container {
-  position: relative;
-  max-width: 700px;
-  width: 100%;
-  background: rgba(255, 255, 255, 0.9); /* Fondo semitransparente */
-  padding: 25px;
-  border-radius: 8px;
-  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
-  margin-top: 20px; /* Añadir margen superior */
-}
-
 .container header {
   font-size: 1.5rem;
   color: #333;
   font-weight: 500;
   text-align: center;
 }
+
 .container .form {
   margin-top: 30px;
 }
+
 .form .input-box {
   width: 100%;
   margin-top: 20px;
 }
+
 .input-box label {
   color: #333;
 }
+
 .form :where(.input-box input, .select-box) {
   position: relative;
   height: 50px;
@@ -68,43 +87,80 @@ body {
   border-radius: 6px;
   padding: 0 15px;
 }
+
 .input-box input:focus {
   box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1);
 }
+
 .form .column {
   display: flex;
   column-gap: 15px;
 }
+
 .form .gender-box {
   margin-top: 20px;
 }
+
 .gender-box h3 {
   color: #333;
   font-size: 1rem;
   font-weight: 400;
   margin-bottom: 8px;
 }
-.form :where(.gender-option, .gender) {
+
+.gender-option {
   display: flex;
   align-items: center;
-  column-gap: 50px;
+  column-gap: 20px;
   flex-wrap: wrap;
 }
-.form .gender {
-  column-gap: 5px;
-}
-.gender input {
-  accent-color: rgb(0, 0, 0);
-}
-.form :where(.gender input, .gender label) {
+
+.radio-button {
+  display: flex;
+  align-items: center;
   cursor: pointer;
+  transition: all 0.2s ease-in-out;
 }
-.gender label {
-  color: #707070;
+
+.radio-button:hover {
+  transform: translateY(-2px);
 }
+
+.radio-button input[type="radio"] {
+  display: none; /* Oculta el botón de radio original */
+}
+
+.radio-checkmark {
+  display: inline-block;
+  position: relative;
+  width: 16px;
+  height: 16px;
+  margin-right: 10px;
+  border: 2px solid #333;
+  border-radius: 50%;
+}
+
+.radio-checkmark:before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #333;
+  transition: all 0.2s ease-in-out;
+}
+
+.radio-button input[type="radio"]:checked ~ .radio-checkmark:before {
+  transform: translate(-50%, -50%) scale(1); /* Muestra el estado seleccionado */
+}
+
 .address :where(input, .select-box) {
   margin-top: 15px;
 }
+
 .select-box select {
   height: 100%;
   width: 100%;
@@ -113,27 +169,124 @@ body {
   color: #707070;
   font-size: 1rem;
 }
-.form button {
-  height: 55px;
-  width: 100%;
-  color: #fff;
-  font-size: 1rem;
-  font-weight: 400;
-  margin-top: 30px;
-  border: none;
+
+
+button {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 10px;
+  background-color: #a38560;
+  background-image: linear-gradient(315deg, #a38560 0%, #e0d4ae 74%); /* Gradiente dorado */
+  font-family: "Montserrat", sans-serif;
+  box-shadow: 0px 6px 24px 0px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
   cursor: pointer;
-  transition: all 0.2s ease;
-  background: rgb(130, 106, 251);
+  border: none;
+  padding: 5px 10px;
+  font-size: 9px;
+  font-weight: 700;
+  color: #fff;
+  margin: 20px auto;
+  width: auto;
 }
-.form button:hover {
-  background: rgb(88, 56, 250);
+
+button:after {
+  content: " ";
+  width: 0%;
+  height: 100%;
+  background-color: #d3d3d3; /* Color al pasar el cursor */
+  background-image: linear-gradient(315deg, #d3d3d3 0%, #57606f 74%); /* Gradiente plateado claro */
+  position: absolute;
+  transition: all 0.4s ease-in-out;
+  right: 0;
 }
-/*Responsive*/
+
+button:hover::after {
+  right: auto;
+  left: 0;
+  width: 100%;
+}
+
+button span {
+  text-align: center;
+  text-decoration: none;
+  width: 100%;
+  padding: 18px 25px;
+  color: #fff;
+  font-size: 1.125em;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  z-index: 20;
+  transition: all 0.3s ease-in-out;
+}
+
+button:hover span {
+  color: #183153;
+  animation: scaleUp 0.3s ease-in-out;
+}
+
+@keyframes scaleUp {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(0.95);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Responsive */
 @media screen and (max-width: 500px) {
   .form .column {
     flex-wrap: wrap;
   }
-  .form :where(.gender-option, .gender) {
+  .form .gender-option {
     row-gap: 15px;
   }
+}
+
+/* Estilos para el icono de check */
+.input-box {
+  position: relative;
+}
+
+.check-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: none;
+  color: #4CAF50;
+  font-size: 1.2em;
+}
+
+.check-icon.show {
+  display: block;
+  animation: fadeIn 0.5s;
+}
+
+@keyframes fadeIn {
+  from {
+      opacity: 0;
+      transform: translateY(-50%) scale(0.5);
+  }
+  to {
+      opacity: 1;
+      transform: translateY(-50%) scale(1);
+  }
+}
+
+/* Ajuste para el input cuando es válido */
+.input-box input:valid {
+  padding-right: 30px; /* Espacio para el icono */
+}
+
+.input-box input:valid + .check-icon {
+  display: block;
 }

@@ -1,47 +1,75 @@
-// Función para verificar si todos los campos están completos
+function validarCampo(campo) {
+    const checkIcon = campo.nextElementSibling;
+    if (campo.checkValidity() && campo.value.trim() !== '') {
+        checkIcon.classList.add('show');
+    } else {
+        checkIcon.classList.remove('show');
+    }
+}
+
 function camposCompletos() {
     const campos = document.querySelectorAll('input, textarea');
-    let todosCompletos = true; // Variable para verificar todos los campos
+    let todosCompletos = true;
     campos.forEach(campo => {
-        const checkIcon = campo.nextElementSibling; // Obtenemos el span para el check
+        validarCampo(campo);
         if (campo.required && campo.value.trim() === '') {
-            checkIcon.textContent = ''; // Limpiar el icono si no está completo
             todosCompletos = false;
-        } else {
-            checkIcon.textContent = '✔️'; // Agregar un icono de verificación
         }
     });
     return todosCompletos;
 }
 
-// Función para validar los datos (puedes personalizar según tus necesidades)
 function datosCorrectos() {
-    // Aquí se puede agregar validaciones específicas
     return camposCompletos();
 }
 
-// Función principal que se ejecuta al enviar el formulario
 function manejarEnvio(event) {
-    event.preventDefault(); // Prevenir el envío del formulario por defecto
+    event.preventDefault();
 
-    if (!camposCompletos()) {
-        alert('Por favor, complete todos los campos requeridos.');
+    if (!datosCorrectos()) {
+        alert('Por favor, complete todos los campos requeridos correctamente.');
         return;
     }
 
-    if (datosCorrectos()) {
-        if (confirm('Los datos son correctos. ¿Desea continuar?')) {
-            window.location.href = 'formulario-class.html'; // Redireccionar si es necesario
-        }
-    } else {
-        alert('Por favor, verifique los datos ingresados.');
+    if (confirm('Los datos son correctos. ¿Desea continuar?')) {
+        const formulario = event.target;
+        const formData = new FormData(formulario);
+
+        // Convertir FormData a un objeto simple
+        const data = {};
+        formData.forEach((value, key) => { data[key] = value });
+
+        fetch(formulario.action, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(data)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message) {
+                alert(data.message);
+                window.location.href = '/formulario-class';
+            } else {
+                throw new Error(data.error || 'Hubo un problema con el envío del formulario.');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert(error.message || 'Hubo un error al enviar el formulario. Por favor, inténtelo de nuevo.');
+        });
     }
 }
 
-// Agregar el evento de envío al formulario
 document.addEventListener('DOMContentLoaded', function() {
     const formulario = document.querySelector('form');
     if (formulario) {
         formulario.addEventListener('submit', manejarEnvio);
+        const campos = document.querySelectorAll('input, textarea');
+        campos.forEach(campo => {
+            campo.addEventListener('input', () => validarCampo(campo));
+            campo.addEventListener('blur', () => validarCampo(campo));
+        });
     }
 });

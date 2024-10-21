@@ -1,7 +1,10 @@
 {
   "dependencies": {
+    "cors": "^2.8.5",
+    "ejs": "^3.1.10",
     "express": "^4.21.1",
-    "mysql": "^2.18.1"
+    "mysql": "^2.18.1",
+    "mysql2": "^3.11.3"
   },
   "name": "nueva-carpeta",
   "version": "1.0.0",
@@ -12,5 +15,6 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "devDependencies": {},
   "description": ""
 }
