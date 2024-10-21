@@ -1,0 +1,182 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Filtro Mensual de Alumnos</title>
+    <style>
+        /* El mismo estilo que ya tienes */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            --s: 200px;
+            --c1: #1d1d1d;
+            --c2: #4e4f51;
+            --c3: #3c3c3c;
+            background: repeating-conic-gradient(
+                from 30deg,
+                #0000 0 120deg,
+                var(--c3) 0 180deg
+            )
+            calc(0.5 * var(--s)) calc(0.5 * var(--s) * 0.577),
+            repeating-conic-gradient(
+                from 30deg,
+                var(--c1) 0 60deg,
+                var(--c2) 0 120deg,
+                var(--c3) 0 180deg
+            );
+            background-size: var(--s) calc(var(--s) * 0.577);
+        }
+        .container {
+            width: 80%;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
+            border-radius: 8px;
+            background-color: #000;
+            border: 1px solid #4e4f51;
+            color: #d1d1d1;
+        }
+        h1 {
+            text-align: center;
+            color: #d1d1d1;
+        }
+        form {
+            margin-bottom: 20px;
+        }
+        .form-group {
+            margin-bottom: 10px;
+        }
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #d1d1d1;
+        }
+        .form-group select {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border-radius: 4px;
+            border: 1px solid #4e4f51;
+            background-color: #2c2c2c;
+            color: #d1d1d1;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            color: #d1d1d1;
+        }
+        table, th, td {
+            border: 1px solid #4e4f51;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+        th {
+            background-color: #3c3c3c;
+            cursor: pointer;
+        }
+        tr:hover {
+            background-color: #2c2c2c;
+        }
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: radial-gradient(ellipse farthest-corner at right bottom, #FEDB37 0%, #FDB931 8%, #9f7928 30%, #8A6E2F 40%, transparent 80%),
+            radial-gradient(ellipse farthest-corner at left top, #FFFFFF 0%, #FFFFAC 8%, #D1B464 25%, #5d4a1f 62.5%, #5d4a1f 100%);
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            text-align: center;
+        }
+        .btn:hover {
+            background: radial-gradient(ellipse farthest-corner at right bottom, #FEDB37 0%, #FDB931 8%, #9f7928 30%, #8A6E2F 50%, transparent 80%),
+            radial-gradient(ellipse farthest-corner at left top, #FFFFFF 0%, #FFFFAC 8%, #D1B464 25%, #5d4a1f 62.5%, #5d4a1f 100%);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Filtrar Alumnos por Mes</h1>
+        <!-- Formulario de filtro -->
+        <form id="filtroForm">
+            <div class="form-group">
+                <label for="mes">Seleccionar Mes:</label>
+                <select id="mes" name="mes">
+                    <option value="01">Enero</option>
+                    <option value="02">Febrero</option>
+                    <option value="03">Marzo</option>
+                    <option value="04">Abril</option>
+                    <option value="05">Mayo</option>
+                    <option value="06">Junio</option>
+                    <option value="07">Julio</option>
+                    <option value="08">Agosto</option>
+                    <option value="09">Septiembre</option>
+                    <option value="10">Octubre</option>
+                    <option value="11">Noviembre</option>
+                    <option value="12">Diciembre</option>
+                </select>
+            </div>
+            <button type="submit" class="btn">Filtrar</button>
+        </form>
+        <!-- Tabla de resultados -->
+        <table id="tablaAlumnos">
+            <thead>
+                <tr>
+                    <th>RUT</th>
+                    <th>Nombre</th>
+                    <th>Apellidos</th>
+                    <th>Celular</th>
+                    <th>Email</th>
+                    <th>Fecha de Registro</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Aquí se mostrarían los resultados de la base de datos -->
+            </tbody>
+        </table>
+    </div>
+    <script>
+        function formatearRUT(rut) {
+            rut = rut.replace(/[.-]/g, '');
+            return rut.slice(0, -1).replace(/\B(?=(\d{3})+(?!\d))/g, ".") + '-' + rut.slice(-1);
+        }
+
+        document.getElementById('filtroForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const mes = document.getElementById('mes').value;
+            fetch('http://localhost:3000/alumnos_por_mes', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ mes })
+            })
+            .then(response => response.json())
+            .then(data => {
+                const tbody = document.querySelector('#tablaAlumnos tbody');
+                tbody.innerHTML = '';
+                data.forEach(alumno => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${formatearRUT(alumno.rut)}</td>
+                        <td>${alumno.nombre}</td>
+                        <td>${alumno.apellidos}</td>
+                        <td>${alumno.numero_telefono}</td>
+                        <td>${alumno.email}</td>
+                        <td>${alumno.FechaRegistro}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            })
+            .catch(error => console.error('Error:', error));
+        });
+    </script>
+</body>
+</html>

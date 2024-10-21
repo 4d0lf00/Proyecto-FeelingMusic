@@ -1,0 +1,29 @@
+/* Estilos para el formulario */
+
+.form-heading {
+    font-weight: bold;
+    color: #333;
+}
+
+.form-control, .form-select {
+    border-radius: 10px;
+    padding: 10px;
+    font-size: 16px;
+}
+
+.form-check-label {
+    font-size: 16px;
+}
+
+.btn {
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 10px;
+    background-color: #ffc107;
+    color: #333;
+    border: none;
+}
+
+.btn:hover {
+    background-color: #ff9900;
+}
