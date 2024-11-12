@@ -39,32 +39,6 @@ const insertarAlumno = (nombre, apellido, email, numero_telefono, rut, comentari
     });
 };
 
-//Funcion para saber si un alumno esta en la base de datos
-
-const repetir = 'SELECT * FROM alumnos WHERE email = ? OR rut = ?';
-
-db.query(repetir, [email, rut], (error, results) => {
-    if (error) {
-        return callback(error);
-    }
-    if (results.length > 0) {
-        return callback(new Error('El alumno ya existe en la base de datos.'));
-    }
-    const query = `
-        INSERT INTO alumnos (nombre, apellido, email, numero_telefono, rut, comentarios)
-        VALUES (?, ?, ?, ?, ?, ?);
-    `;
-    db.query(query, [nombre, apellido, email, numero_telefono, rut, comentarios], (error, results) => {
-        if (error) {
-            // Manejar el error de duplicación de email
-            if (error.code === 'ER_DUP_ENTRY') {
-                return callback(new Error('El email ya está registrado'));
-            }
-            return callback(error);
-        }
-        callback(null, results);
-    });
-});
 
 // Exportar las funciones
 module.exports = {
