@@ -1,0 +1,163 @@
+                
+                
+                
+                
+                
+<%- include('partials/header1') %>   
+                
+
+                
+
+<form action="/login" method="POST"> <!-- Cambia a POST y define la acción -->
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6"> <!-- Ajusta el número para cambiar el tamaño -->
+                <br>
+                <br>
+                <br>
+                <h3 class="w3layouts-heading">Iniciar Sesión</h3>
+                
+                <!-- Mensaje de error (si corresponde) -->
+                <div id="error-message" class="alert alert-danger" style="display: none;"></div>
+
+                <div class="mb-3">
+                    <label for="exampleInputEmail1" class="form-label">Correo electrónico</label>
+                    <input type="email" class="form-control" id="exampleInputEmail1" name="email" required autocomplete="email">
+
+                </div>
+                <div class="mb-3">
+                    <label for="exampleInputPassword1" class="form-label">Contraseña</label>
+                    <input type="password" class="form-control" id="exampleInputPassword1" name="contrasena" required> <!-- Agregar name y required -->
+                </div>
+                
+                <br>
+                <button type="submit" class="btn btn-primary">Iniciar Sesión</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+<br>
+
+<script>
+
+console.log('Script cargado'); 
+console.log(localStorage.getItem('token'));
+console.log('---------------------------'); 
+// Función para agregar el token al header de la solicitud
+const agregarToken = () => {
+    const token = localStorage.getItem('token');
+    console.log('Token obtenido(funcion agregar token):', token); // Para verificar si estás recuperando el token
+    return {
+        headers: {
+            'Authorization': token, // Ya no necesitamos agregar 'Bearer' aquí porque viene incluido del servidor
+            'Content-Type': 'application/json'
+        }
+    };
+};
+
+// Manejo del envío del formulario
+// Manejo del envío del formulario
+document.querySelector('form[action="/login"]').addEventListener('submit', async (e) => {
+    console.log('Formulario enviado'); 
+    e.preventDefault(); 
+
+    const email = document.getElementById('exampleInputEmail1').value;
+    const contrasena = document.getElementById('exampleInputPassword1').value;
+
+    try {
+        const response = await fetch('/login', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email, contrasena }),
+        });
+        
+        const data = await response.json();
+        console.log('Datos recibidos del servidor:', data);
+
+        if (response.ok) {
+            // Almacenar el token completo (incluyendo "Bearer ")
+            localStorage.setItem('token', data.token);
+            console.log('Token almacenado en localStorage:', localStorage.getItem('token'));
+
+            if (data.tipo === 1) {
+                console.log('Intentando acceder a ruta-admin con token:', data.token);
+                
+                // Usar el token completo en la solicitud
+                const responseAdmin = await fetch('/registrar-profesor', {
+                    method: 'GET',
+                    headers: {
+                        'Authorization': data.token,
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                console.log('Respuesta de ruta-admin:', responseAdmin);
+                console.log('Headers enviados:', {
+                    'Authorization': data.token,
+                    'Content-Type': 'application/json'
+                });
+
+                if (responseAdmin.ok) {
+                    // En lugar de redireccionar, cargar el contenido vía AJAX
+                    const contenido = await responseAdmin.text();
+                    document.body.innerHTML = contenido;
+                    // Actualizar la URL sin recargar la página
+                    history.pushState({}, '', '/registrar-profesor');
+                } else {
+                    const errorData = await responseAdmin.json();
+                    console.error('Error en respuesta admin:', errorData);
+                    const errorMessage = document.getElementById('error-message');
+                    errorMessage.innerText = errorData.error || 'Error al acceder a la ruta de administrador.';
+                    errorMessage.style.display = 'block';
+                }
+            } else {
+                window.location.href = '/';
+            }
+
+            
+            
+            
+        } else {
+            const errorMessage = document.getElementById('error-message');
+            errorMessage.innerText = data.error || 'Error en el inicio de sesión.';
+            errorMessage.style.display = 'block';
+        }
+    } catch (error) {
+        console.error('Error en el proceso de inicio de sesión:', error);
+        const errorMessage = document.getElementById('error-message');
+        errorMessage.innerText = 'Error en el proceso de inicio de sesión.';
+        errorMessage.style.display = 'block';
+    }
+});
+
+// Agregar al inicio del script
+document.addEventListener('DOMContentLoaded', function() {
+    // Obtener parámetros de la URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const error = urlParams.get('error');
+    
+    // Si hay un mensaje de error en la URL, mostrarlo
+    if (error) {
+        const errorMessage = document.getElementById('error-message');
+        errorMessage.textContent = decodeURIComponent(error);
+        errorMessage.style.display = 'block';
+    }
+});
+</script>
+
+    
+              
+
+<%- include('partials/footer1') %>
+

@@ -1,0 +1,16 @@
+-------------------------------
+Para ejecutar un script, se debe colocar el comando en la consola, asegurandose de que 
+la ruta está ubicada en la carpeta raíz del proyecto.
+
+Comando:
+
+node scripts/nombreDelScript.js
+
+-------------------------------
+
+Comando de creación de Admin:
+
+node scripts/crearAdmin.js
+
+
+-------------------------------
