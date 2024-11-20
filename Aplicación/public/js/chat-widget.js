@@ -49,6 +49,10 @@
       palabrasClave: ['horario', 'horarios', 'atencion', 'atención', 'abierto', 'abren', 'cierran'],
       respuesta: 'Nuestro horario de atención es de 08:00 a 19:00 horas, de lunes a viernes.'
     },
+    'hola': {
+      palabrasClave: ['hola', 'saludos', 'como', 'estas',],
+      respuesta: 'Hola, ¿en qué puedo ayudarte hoy?'
+    },
     'ubicacion': {
       palabrasClave: ['donde', 'ubicacion', 'ubicación', 'direccion', 'dirección', 'lugar'],
       respuesta: 'Nos encontramos en [Tu dirección aquí].'
@@ -76,7 +80,21 @@
           </svg>
           Contactar por WhatsApp
       </a>`
-    }
+    },
+    'hola': {
+      palabrasClave: ['hola', 'saludos', 'como', 'estas',],
+      respuesta: 'Hola, ¿en qué puedo ayudarte hoy?'
+    },
+    'sqlInjection': {
+      palabrasClave: [
+        'select', 'union', 'insert', 'delete', 'update', 'drop', 
+        'alter', 'create', 'truncate', 'exec', 'or', 'and', '--', 
+        ';', '#', 'sleep', 'benchmark', 'load_file', 'outfile', 
+        'information_schema', 'database()', "'", '"', '%', '=', 
+        '1=1', 'union select', 'drop table'
+      ],
+      respuesta: 'Advertencia: Se ha detectado un posible intento de inyección SQL. intentalo para la proxima jaja saludos👋 .'
+    },
   };
 
   // Función para procesar el mensaje y obtener la respuesta adecuada
@@ -98,21 +116,28 @@
     return respuestasPredefinidas.default.respuesta;
   }
 
-  // Modificar la función de envío de mensaje para usar las respuestas predefinidas
+  // Modificar la función de envío de mensaje
   function enviarMensaje(event) {
     event.preventDefault();
     const mensaje = campoMensaje.value.trim();
     
     if (mensaje) {
-      // Mostrar mensaje del usuario
-      enviarMensajeUsuario(mensaje);
-      campoMensaje.value = '';
-      
-      // Obtener y mostrar respuesta del bot
-      setTimeout(() => {
-        const respuesta = obtenerRespuesta(mensaje);
-        responderBot(respuesta);
-      }, 500); // Pequeño delay para simular procesamiento
+        // Mostrar mensaje del usuario
+        enviarMensajeUsuario(mensaje);
+        campoMensaje.value = '';
+        
+        // Mostrar animación de carga
+        mostrarAnimacionCarga();
+        
+        // Obtener y mostrar respuesta del bot después de un delay
+        setTimeout(() => {
+            // Eliminar la animación de carga
+            eliminarAnimacionCarga();
+            
+            // Mostrar la respuesta
+            const respuesta = obtenerRespuesta(mensaje);
+            responderBot(respuesta);
+        }, 1500); // Delay de 1.5 segundos
     }
   }
 
@@ -130,7 +155,35 @@
   botonFlotante.addEventListener('click', function() {
     ventanaChat.style.display = 'block';
     campoMensaje.focus();
+    
+    // Verificar si el contenedor de mensajes está vacío antes de mostrar el mensaje de bienvenida
+    if (contenedorMensajes.children.length === 0) {
+        mostrarMensajeBienvenida();
+    }
   });
+
+  // Agregar función para mostrar mensaje de bienvenida
+  function mostrarMensajeBienvenida() {
+    const mensajeBienvenida = `¡Bienvenido! 👋 
+
+¿En qué puedo ayudarte hoy? Puedes preguntarme sobre:
+
+• 📍 Ubicación o dirección
+• 📞 Información de contacto
+• 🕒 Horarios de atención
+• 💼 Nuestros servicios
+
+¡Escribe tu consulta y con gusto te ayudaré!`;
+
+    responderBot(mensajeBienvenida);
+    scrollToBottom();
+  }
+
+  // Función para desplazar el chat hacia abajo
+  function scrollToBottom() {
+    const chatContainer = document.querySelector('.chats');
+    chatContainer.scrollTop = chatContainer.scrollHeight;
+  }
 
   // Función para mostrar el mensaje del usuario
   function enviarMensajeUsuario(mensaje) {
@@ -143,7 +196,7 @@
         <div class="userMsg">${mensaje}</div>
     `;
     contenedorMensajes.appendChild(elementoMensaje);
-    contenedorMensajes.scrollTop = contenedorMensajes.scrollHeight;
+    scrollToBottom();
   }
   
   // Función para mostrar la respuesta del bot
@@ -160,7 +213,7 @@
       </div>
     `;
     contenedorMensajes.appendChild(elementoRespuesta);
-    contenedorMensajes.scrollTop = contenedorMensajes.scrollHeight;
+    scrollToBottom();
   }
 
   // Modificar el evento para cerrar al hacer clic fuera
@@ -185,7 +238,7 @@
     }
   });
 
-  // También podemos agregar la misma funcionalidad cuando se cierra con el botón de WhatsApp
+  // Modificar la función limpiarChat para mantener consistencia
   function limpiarChat() {
     const contenedorMensajes = document.getElementById('chat-messages');
     contenedorMensajes.innerHTML = '';
@@ -194,10 +247,40 @@
     if (campoMensaje) {
         campoMensaje.value = '';
     }
+    
+    // Mostrar nuevamente el mensaje de bienvenida después de limpiar
+    mostrarMensajeBienvenida();
   }
 
   // Evitar que los clics dentro del widget cierren el chat
   widget.addEventListener('click', function(event) {
     event.stopPropagation();
   });
+
+  // Función para mostrar la animación de carga
+  function mostrarAnimacionCarga() {
+    const elementoCarga = document.createElement('div');
+    elementoCarga.className = 'clearfix';
+    elementoCarga.id = 'loadingAnimation';
+    elementoCarga.innerHTML = `
+        <div class="botAvatar">
+            <img src="/images/botAvatar.png" alt="Bot" />
+        </div>
+        <div class="dots-container">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+    `;
+    contenedorMensajes.appendChild(elementoCarga);
+    scrollToBottom();
+  }
+
+  // Función para eliminar la animación de carga
+  function eliminarAnimacionCarga() {
+    const animacion = document.getElementById('loadingAnimation');
+    if (animacion) {
+        animacion.remove();
+    }
+  }
 })();
