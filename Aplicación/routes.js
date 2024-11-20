@@ -103,11 +103,6 @@ router.post('/alumnos', (req, res) => {
     });
 });
 
-// Ruta para el favicon
-router.get('/favicon.ico', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'favicon.ico'));
-});
-
 //-------------------Inicio Rutas login
 
 // Ruta para el registro de usuario
@@ -142,10 +137,9 @@ router.post('/registrar-profesor', [
 
 
 
-// Ruta para el login con validaciones
+// Ruta para el login
 router.post('/login', [
     body('email').isEmail().withMessage('El email no es válido'),
-    //El requisito de contraseña debe cambiarse por uno más robusto
     body('contrasena').isLength({ min: 4 }).withMessage('La contraseña debe tener al menos 4 caracteres'),
 ], (req, res) => {
     const errors = validationResult(req);
@@ -155,7 +149,6 @@ router.post('/login', [
 
     const { email, contrasena } = req.body;
 
-    // Consultar a la base de datos para verificar las credenciales
     queries.obtenerUsuarioLogin(email, (err, results) => {
         if (err || results.length === 0) {
             return res.status(401).json({ error: 'Credenciales incorrectas' });
@@ -163,7 +156,6 @@ router.post('/login', [
 
         const user = results[0];
 
-        // Verificar la contraseña con bcrypt
         bcrypt.compare(contrasena, user.contrasena, (err, match) => {
             if (err || !match) {
                 return res.status(401).json({ error: 'Credenciales incorrectas' });
@@ -177,9 +169,11 @@ router.post('/login', [
                 maxAge: 4 * 60 * 60 * 1000
             });
             
+            // Enviar la URL de redirección según el tipo de usuario
             res.json({ 
+                success: true,
                 tipo: user.tipo,
-                token: `Bearer ${token}`
+                redirectUrl: user.tipo === 1 ? '/dashboard' : '/'
             });
         });
     });
@@ -212,7 +206,7 @@ router.get('/dashboard', verificarToken, (req, res) => {
     if (req.userTipo !== 1) {
         return res.redirect('/login?error=' + encodeURIComponent('No tienes permiso para acceder a esta página'));
     }
-    res.render('dashboard', { title: 'Dashboard' });
+    dashboardController.getDashboardData(req, res);
 });
 
 // Ruta protegida para administradores

@@ -15,7 +15,13 @@ const dashboardData = {
 
 const getDashboardData = (req, res) => {
     try {
-        res.render('dashboard', { data: dashboardData });
+        console.log('Datos enviados al dashboard:', dashboardData);
+        
+        res.render('dashboard', { 
+            title: 'Dashboard',
+            data: dashboardData,
+            userTipo: req.userTipo
+        });
     } catch (error) {
         console.error('Error en el dashboard:', error);
         res.status(500).render('error', { message: 'Error al cargar el dashboard' });
