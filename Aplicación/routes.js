@@ -255,5 +255,40 @@ router.get('/api/total-alumnos', async (req, res) => {
     }
 });
 
+// Agregar esta nueva ruta para obtener alumnos por mes
+router.get('/api/alumnos-por-mes', async (req, res) => {
+    try {
+        const query = `
+            SELECT 
+                MONTH(fecha_registro) as mes,
+                COUNT(*) as total
+            FROM alumno
+            WHERE YEAR(fecha_registro) = YEAR(CURRENT_DATE())
+            GROUP BY MONTH(fecha_registro)
+            ORDER BY mes
+        `;
+
+        db.query(query, (err, results) => {
+            if (err) {
+                console.error('Error al obtener alumnos por mes:', err);
+                return res.status(500).json({ error: 'Error al obtener datos' });
+            }
+
+            // Crear array con 12 meses inicializados en 0
+            const monthlyData = new Array(12).fill(0);
+            
+            // Llenar con los datos reales
+            results.forEach(row => {
+                monthlyData[row.mes - 1] = row.total;
+            });
+
+            res.json({ monthly: monthlyData });
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ error: 'Error del servidor' });
+    }
+});
+
 // Exportar el router
 module.exports = router;
