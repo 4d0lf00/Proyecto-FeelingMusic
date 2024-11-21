@@ -9,7 +9,7 @@ document.addEventListener('DOMContentLoaded', function() {
             data: {
                 labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
                 datasets: [{
-                    label: 'Ingresos Mensuales',
+                    label: 'Alumnos Registrados',
                     data: data.monthly,
                     backgroundColor: 'rgba(54, 162, 235, 0.7)',
                     borderColor: 'rgba(54, 162, 235, 1)',
@@ -19,15 +19,20 @@ document.addEventListener('DOMContentLoaded', function() {
             options: {
                 responsive: true,
                 plugins: {
-                    legend: { display: false }
+                    legend: { display: false },
+                    title: {
+                        display: true,
+                        text: 'Alumnos Registrados por Mes'
+                    }
                 },
                 scales: {
                     y: {
                         beginAtZero: true,
                         grid: { color: 'rgba(0, 0, 0, 0.05)' },
                         ticks: {
+                            stepSize: 1,
                             callback: function(value) {
-                                return '$' + value.toLocaleString();
+                                return value + ' alumnos';
                             }
                         }
                     },
@@ -99,11 +104,30 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    // Actualizar el gráfico cada 30 segundos
+    async function actualizarGraficoAlumnos() {
+        try {
+            const response = await fetch('/api/alumnos-por-mes');
+            const data = await response.json();
+            
+            // Actualizar los datos del gráfico
+            if (window.salesChart) {
+                window.salesChart.data.datasets[0].data = data.monthly;
+                window.salesChart.update();
+            }
+        } catch (error) {
+            console.error('Error al actualizar gráfico:', error);
+        }
+    }
+
     // Inicializar las gráficas
     const dashboardData = window.dashboardData;
     if (dashboardData) {
-        createSalesChart(dashboardData);
+        window.salesChart = createSalesChart(dashboardData);
         createCategoryChart(dashboardData);
         createTrafficChart(dashboardData);
+
+        // Actualizar el gráfico cada 30 segundos
+        setInterval(actualizarGraficoAlumnos, 15000);
     }
 });
