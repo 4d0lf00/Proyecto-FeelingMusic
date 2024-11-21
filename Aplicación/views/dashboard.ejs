@@ -58,16 +58,16 @@
 
             <div class="stats-grid">
                 <div class="stat-card">
-                    <h3><i class="fas fa-users"></i> Total Users</h3>
-                    <p><%= data && data.users ? data.users : 0 %></p>
-                </div>
-                <div class="stat-card">
                     <h3><i class="fas fa-dollar-sign"></i> Revenue</h3>
                     <p>$<%= data && data.revenue ? data.revenue.toLocaleString() : 0 %></p>
                 </div>
                 <div class="stat-card">
                     <h3><i class="fas fa-shopping-cart"></i> Orders</h3>
                     <p><%= data && data.orders ? data.orders : 0 %></p>
+                </div>
+                <div class="stat-card">
+                    <h3><i class="fas fa-users"></i> Alumnos Registrados</h3>
+                    <p id="totalAlumnos">0</p>
                 </div>
             </div>
 
@@ -93,11 +93,37 @@
         </main>
     </div>
 
-    <!--<script>
+    <script>
         // Pasar los datos del servidor al cliente
         window.dashboardData = <%- JSON.stringify(data) %>;
         console.log('Datos recibidos en el cliente:', window.dashboardData);
-    </script>-->
+    </script>
     <script src="/js/graficos.js"></script>
+    <script>
+        async function actualizarContadores() {
+            try {
+                // Actualizar alumnos
+                const responseAlumnos = await fetch('/api/total-alumnos');
+                const dataAlumnos = await responseAlumnos.json();
+                const elementoAlumnos = document.getElementById('totalAlumnos');
+                
+                // Agregar clase para animación
+                elementoAlumnos.classList.add('updating');
+                elementoAlumnos.textContent = dataAlumnos.total;
+                
+                // Remover clase después de la animación
+                setTimeout(() => {
+                    elementoAlumnos.classList.remove('updating');
+                }, 300);
+                
+            } catch (error) {
+                console.error('Error al actualizar contadores:', error);
+            }
+        }
+
+        // Actualizar cada 30 segundos
+        actualizarContadores();
+        setInterval(actualizarContadores, 30000);
+    </script>
 </body>
 </html>
