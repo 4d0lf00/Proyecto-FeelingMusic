@@ -21,8 +21,8 @@ const generarContrasena = (nombre, rut) => {
 // Función para buscar alumnos
 const buscarAlumnos = (busqueda, callback) => {
     const query = `
-        SELECT RUT, Nombre, Apellido, Celular, Email, FechaNacimiento 
-        FROM alumnos 
+        SELECT rut, nombre, apellido, numero_telefono, email, DATE_FORMAT(fecha_registro, '%d-%m-%Y') AS fecha_registro
+        FROM alumno 
         WHERE RUT LIKE ? OR Nombre LIKE ? OR Apellido LIKE ? OR Email LIKE ?;
     `;
     const likeBusqueda = `%${busqueda}%`;
@@ -106,6 +106,88 @@ const obtenerProfesores = (callback) => {
     db.query(sql, callback);
 };
 
+// Función para obtener salas
+const obtenerSalas = (callback) => {
+    const query = 'SELECT id, nombre FROM salas';
+    db.query(query, (error, resultados) => {
+        if (error) {
+            return callback(error);
+        }
+        callback(null, resultados);
+    });
+};
+
+// Función para insertar un nuevo horario en la base de datos
+const insertarHorario = (fecha, horaInicio, horaFin, profesorId, salaNombre, callback) => {
+    if (!fecha || !horaInicio || !horaFin || !profesorId || !salaNombre) {
+        return callback(new Error('Todos los campos son requeridos'));
+    }
+
+    // Descomponer la fecha en día, mes y año
+    const [annio, mes, dia] = fecha.split('-');
+
+    // Verificar si ya existe un horario en la misma sala a la misma hora
+    const queryVerificar = `
+        SELECT COUNT(*) AS count FROM horarios h
+        JOIN sala_horario sh ON h.id = sh.horario_id
+        JOIN salas s ON sh.sala_id = s.id
+        WHERE h.dia = ? AND h.mes = ? AND h.annio = ? AND h.hora_inicio = ? AND s.nombre = ?;
+    `;
+
+    db.query(queryVerificar, [dia, mes, annio, horaInicio, salaNombre], (errorVerificar, resultadosVerificar) => {
+        if (errorVerificar) {
+            return callback(errorVerificar);
+        }
+
+        if (resultadosVerificar[0].count > 0) {
+            return callback(new Error('La sala ya está ocupada en este horario'));
+        }
+
+        // Insertar el horario en la tabla horarios
+        const queryHorario = `
+            INSERT INTO horarios (dia, mes, annio, hora_inicio, hora_fin)
+            VALUES (?, ?, ?, ?, ?);
+        `;
+
+        db.query(queryHorario, [dia, mes, annio, horaInicio, horaFin], (error, resultados) => {
+            if (error) {
+                return callback(error);
+            }
+
+            const horarioId = resultados.insertId;
+
+            // Relacionar el horario con el profesor
+            const queryProfesorHorario = `
+                INSERT INTO profesor_horario (profesor_id, horario_id)
+                VALUES (?, ?);
+            `;
+
+            db.query(queryProfesorHorario, [profesorId, horarioId], (errorProfesorHorario) => {
+                if (errorProfesorHorario) {
+                    return callback(errorProfesorHorario);
+                }
+
+                // Relacionar el horario con la sala
+                const querySalaHorario = `
+                    INSERT INTO sala_horario (sala_id, horario_id)
+                    VALUES ((SELECT id FROM salas WHERE nombre = ? LIMIT 1), ?);
+                `;
+
+                db.query(querySalaHorario, [salaNombre, horarioId], (errorSalaHorario) => {
+                    if (errorSalaHorario) {
+                        return callback(errorSalaHorario);
+                    }
+
+                    callback(null, {
+                        mensaje: 'Horario creado con éxito',
+                        horarioId,
+                    });
+                });
+            });
+        });
+    });
+};
+
 //----------Inicio login----------//
 
 // Obtener usuario por email
@@ -143,12 +225,43 @@ function insertarUsuario(email, contrasena, nombre, callback) {
 
 //-----------Fin login-----------//
 
+// Función para obtener los horarios de un profesor
+const obtenerHorariosPorProfesor = (profesorId, callback) => {
+    const query = `
+        SELECT h.id, h.dia, h.mes, h.annio, h.hora_inicio, h.hora_fin, s.nombre AS sala
+        FROM horarios h
+        JOIN profesor_horario ph ON h.id = ph.horario_id
+        JOIN sala_horario sh ON h.id = sh.horario_id
+        JOIN salas s ON sh.sala_id = s.id
+        WHERE ph.profesor_id = ?;
+    `;
+    db.query(query, [profesorId], callback);
+};
+
+// Función para actualizar un horario
+const actualizarHorario = (horarioId, fecha, horaInicio, horaFin, salaNombre, callback) => {
+    const [annio, mes, dia] = fecha.split('-');
+
+    const query = `
+        UPDATE horarios h
+        JOIN sala_horario sh ON h.id = sh.horario_id
+        SET h.dia = ?, h.mes = ?, h.annio = ?, h.hora_inicio = ?, h.hora_fin = ?, sh.sala_id = (SELECT id FROM salas WHERE nombre = ? LIMIT 1)
+        WHERE h.id = ?;
+    `;
+
+    db.query(query, [dia, mes, annio, horaInicio, horaFin, salaNombre, horarioId], callback);
+};
+
 // Exportar las funciones
 module.exports = {
     buscarAlumnos,
     obtenerProfesores,
+    obtenerSalas,
     insertarAlumno,
     crearUsuarioAlumno,
     obtenerUsuarioLogin,
     insertarUsuario,
+    insertarHorario,
+    obtenerHorariosPorProfesor,
+    actualizarHorario
 };

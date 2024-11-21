@@ -10,10 +10,18 @@ const db = require('./db'); // Agregar esta línea
 
 // Ruta para el filtro
 router.get('/filtro', (req, res) => {
-    if (req.userTipo === 3 || (req.userTipo !== 1 && req.userTipo !== 2)) {
+    if (req.userTipo === 2 && req.userTipo !== 1) {
         return res.redirect('/login?error=' + encodeURIComponent('No tienes permiso para acceder a esta página'));
     }
     res.render('filtro', { title: 'Filtro de Alumnos' });
+});
+
+// Ruta para el filtro2
+router.get('/filtro2', (req, res) => {
+    if (req.userTipo === 2 && req.userTipo !== 1) {
+        return res.redirect('/login?error=' + encodeURIComponent('No tienes permiso para acceder a esta página'));
+    }
+    res.render('filtro2', { title: 'Filtro de Alumnos 2' });
 });
 
 // Ruta para la página de inicio
@@ -288,6 +296,77 @@ router.get('/api/alumnos-por-mes', async (req, res) => {
         console.error('Error:', error);
         res.status(500).json({ error: 'Error del servidor' });
     }
+});
+
+// Ruta para el horario
+router.get('/horarios', (req, res) => {
+    if (req.userTipo === 2 && req.userTipo !== 1) {
+        return res.redirect('/login?error=' + encodeURIComponent('No tienes permiso para acceder a esta página'));
+    }
+
+    queries.obtenerProfesores((error, profesores) => {
+        if (error) {
+            console.error('Error al obtener los profesores:', error);
+            return res.status(500).send('Error al obtener los profesores');
+        }
+
+        // Obtener también las salas si es necesario
+        queries.obtenerSalas((errorSalas, salas) => {
+            if (errorSalas) {
+                console.error('Error al obtener las salas:', errorSalas);
+                return res.status(500).send('Error al obtener las salas');
+            }
+
+            res.render('horarios', { 
+                title: 'Horario de Clases',
+                profesores: profesores,
+                salas: salas
+            });
+        });
+    });
+});
+
+// Ruta para guardar el horario
+router.post('/guardar-horario', (req, res) => {
+    const { fecha, horaInicio, horaFin, profesorId, salaNombre } = req.body;
+
+    queries.insertarHorario(fecha, horaInicio, horaFin, profesorId, salaNombre, (error, resultado) => {
+        if (error) {
+            console.error('Error al guardar el horario:', error);
+            if (error.message === 'La sala ya está ocupada en este horario') {
+                return res.status(409).json({ success: false, message: 'La sala ya está ocupada en este horario' });
+            }
+            return res.status(500).json({ success: false, message: 'Error al guardar el horario' });
+        }
+        res.json({ success: true, message: 'Horario guardado exitosamente' });
+    });
+});
+
+// Ruta para obtener los horarios de un profesor
+router.get('/horarios/:profesorId', (req, res) => {
+    const { profesorId } = req.params;
+
+    queries.obtenerHorariosPorProfesor(profesorId, (error, horarios) => {
+        if (error) {
+            console.error('Error al obtener los horarios:', error);
+            return res.status(500).json({ error: 'Error al obtener los horarios' });
+        }
+        res.json(horarios);
+    });
+});
+
+// Ruta para actualizar un horario
+router.put('/actualizar-horario/:horarioId', (req, res) => {
+    const { horarioId } = req.params;
+    const { fecha, horaInicio, horaFin, salaNombre } = req.body;
+
+    queries.actualizarHorario(horarioId, fecha, horaInicio, horaFin, salaNombre, (error, resultado) => {
+        if (error) {
+            console.error('Error al actualizar el horario:', error);
+            return res.status(500).json({ success: false, message: 'Error al actualizar el horario' });
+        }
+        res.json({ success: true, message: 'Horario actualizado exitosamente' });
+    });
 });
 
 // Exportar el router
