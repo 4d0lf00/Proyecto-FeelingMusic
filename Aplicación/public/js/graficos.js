@@ -1,23 +1,19 @@
 document.addEventListener('DOMContentLoaded', function() {
     
-    // Función para crear el gráfico de líneas
+    // Función para crear el gráfico de barras
     function createSalesChart(data) {
         const ctx = document.getElementById('salesChart').getContext('2d');
-        const gradient = ctx.createLinearGradient(0, 0, 0, 400);
-        gradient.addColorStop(0, 'rgba(54, 162, 235, 0.5)');
-        gradient.addColorStop(1, 'rgba(54, 162, 235, 0)');
-
+        
         return new Chart(ctx, {
-            type: 'line',
+            type: 'bar',
             data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                labels: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'],
                 datasets: [{
-                    label: 'Monthly Sales',
+                    label: 'Ingresos Mensuales',
                     data: data.monthly,
-                    borderColor: '#36A2EB',
-                    backgroundColor: gradient,
-                    tension: 0.4,
-                    fill: true
+                    backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
                 }]
             },
             options: {
@@ -28,7 +24,12 @@ document.addEventListener('DOMContentLoaded', function() {
                 scales: {
                     y: {
                         beginAtZero: true,
-                        grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                        grid: { color: 'rgba(0, 0, 0, 0.05)' },
+                        ticks: {
+                            callback: function(value) {
+                                return '$' + value.toLocaleString();
+                            }
+                        }
                     },
                     x: {
                         grid: { display: false }
@@ -99,7 +100,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Inicializar las gráficas
-    const dashboardData = window.dashboardData; // Asegúrate de pasar estos datos desde el servidor
+    const dashboardData = window.dashboardData;
     if (dashboardData) {
         createSalesChart(dashboardData);
         createCategoryChart(dashboardData);

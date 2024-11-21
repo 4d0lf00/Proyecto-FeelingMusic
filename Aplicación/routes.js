@@ -6,6 +6,7 @@ const bcrypt = require('bcrypt');
 const { body, validationResult } = require('express-validator');
 const dashboardController = require('./controllers/dashboardController');
 const path = require('path');
+const db = require('./db'); // Agregar esta línea
 
 // Ruta para el filtro
 router.get('/filtro', (req, res) => {
@@ -237,6 +238,22 @@ router.get('/login', (req, res) => {
 // });
 
 //-------------------Fin Rutas login
+
+// Ruta para obtener el total de alumnos
+router.get('/api/total-alumnos', async (req, res) => {
+    try {
+        db.query('SELECT COUNT(*) as total FROM alumno', (err, results) => {
+            if (err) {
+                console.error('Error al obtener total de alumnos:', err);
+                return res.status(500).json({ error: 'Error al obtener datos' });
+            }
+            res.json({ total: results[0].total });
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ error: 'Error del servidor' });
+    }
+});
 
 // Exportar el router
 module.exports = router;
