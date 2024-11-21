@@ -1,0 +1,224 @@
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <style>
+        /* El mismo estilo que ya tienes */
+        body {
+            font-family: Arial, sans-serif;
+            /* margin: 0;
+            padding: 0; */
+            /*height: 100vh;*/
+            /* display: flex;
+            justify-content: center;
+            align-items: center; */
+            --s: 200px;
+            --c1: #1d1d1d;
+            --c2: #4e4f51;
+            --c3: #3c3c3c;
+            background: repeating-conic-gradient(
+                from 30deg,
+                #0000 0 120deg,
+                var(--c3) 0 180deg
+              )
+              calc(0.5 * var(--s)) calc(0.5 * var(--s) * 0.577),
+              repeating-conic-gradient(
+                from 30deg,
+                var(--c1) 0 60deg,
+                var(--c2) 0 120deg,
+                var(--c3) 0 180deg
+              );
+            background-size: var(--s) calc(var(--s) * 0.577);
+        }
+
+        .container {
+            /*width: 80%;*/
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
+            border-radius: 8px;
+            background-color: #000;
+            border: 1px solid #4e4f51;
+            color: #d1d1d1;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #d1d1d1;
+        }
+
+        form {
+            /*margin-bottom: 20px;*/
+        }
+
+        .form-group {
+            /* margin-bottom: 10px; */
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #d1d1d1;
+        }
+
+        .form-group input[type="text"] {
+             width: 100%; 
+            padding: 8px;
+             box-sizing: border-box; 
+            border-radius: 4px;
+            border: 1px solid #4e4f51;
+            background-color: #2c2c2c;
+            color: #d1d1d1;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            color: #d1d1d1;
+        }
+
+        table, th, td {
+            border: 1px solid #4e4f51;
+        }
+/* 
+        th, td {
+            padding: 12px;
+            text-align: left;
+        } */
+
+        th {
+            background-color: #3c3c3c;
+            cursor: pointer;
+        }
+
+        tr:hover {
+            background-color: #2c2c2c;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background-color: #28a745;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background-color: #218838;
+        }
+    </style>
+
+    <!-- //Meta-Tags -->
+	<link href="css/bootstrap.css" rel="stylesheet" type="text/css" media="all" />
+	<!--bootstrap-css-->
+	<link href="css/font-awesome.css" rel="stylesheet">
+	<!--font-awesome-css-->
+	<link rel="stylesheet" href="css/flexslider.css" type="text/css" media="screen" />
+	<!--flexslider-css-->
+	<link href="css/style.css" rel="stylesheet" type="text/css" media="all" />
+	<!--style-sheet-->
+	<!--fonts-->
+	<link href="//fonts.googleapis.com/css?family=Raleway:200,300,400,600,700,800,900" rel="stylesheet">
+	<!--//fonts-->
+
+
+</head>
+<body>
+
+
+    <div class="banner" id="home">
+		<div class="w3-agile-dot">
+			<div class="header">
+				<%- include('partials/header') %>
+                
+			</div>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            <br>
+            
+            <div class="container">
+                <br>
+                <h1>Filtrar Información de Alumnos</h1>
+                <br>
+                <br>
+                
+                
+                <!-- Formulario de filtro -->
+                <form id="buscarForm">
+                    <div class="form-group">
+                        <label for="busqueda">Buscar Alumno (Nombre, Apellido, RUT, Email, etc.):</label>
+                        <input type="text" id="busqueda" name="busqueda" placeholder="Ingrese el dato a buscar...">
+                    </div>
+                    <button type="submit" class="btn">Buscar</button>
+                </form>
+        
+                <!-- Tabla de resultados -->
+                <table id="tablaAlumnos">
+                    <thead>
+                        <tr>
+                            <th>RUT</th>
+                            <th>Nombre</th>
+                            <th>Apellido</th>
+                            <th>Celular</th>
+                            <th>Email</th>
+                            <th>Fecha de Nacimiento</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Aquí se mostrarían los resultados de la base de datos -->
+                    </tbody>
+                </table>
+            </div>
+        
+            <script>
+                document.getElementById('buscarForm').addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    const busqueda = document.getElementById('busqueda').value;
+        
+                    fetch('http://localhost:3000/buscar_alumnos', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ busqueda })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        const tbody = document.querySelector('#tablaAlumnos tbody');
+                        tbody.innerHTML = '';
+                        data.forEach(alumno => {
+                            const row = document.createElement('tr');
+                            row.innerHTML = `
+                                <td>${alumno.RUT}</td>
+                                <td>${alumno.Nombre}</td>
+                                <td>${alumno.Apellido}</td>
+                                <td>${alumno.Celular}</td>
+                                <td>${alumno.Email}</td>
+                                <td>${alumno.FechaNacimiento}</td>
+                            `;
+                            tbody.appendChild(row);
+                        });
+                    })
+                    .catch(error => console.error('Error:', error));
+                });
+            </script>
+		</div>
+        
+	</div>
+
+    
+
+   
+
+</body>
+</html>
