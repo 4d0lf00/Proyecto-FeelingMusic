@@ -62,7 +62,7 @@ const insertarAlumno = (nombre, apellido, email, numero_telefono, rut, comentari
 // Función modificada para crear usuario y enviar correo
 const crearUsuarioAlumno = (alumnoId, email, nombre, rut, callback) => {
     const contrasena = generarContrasena(nombre, rut);
-    const tipoAlumno = 2;
+    const tipoAlumno = 3;
     
     const query = `
         INSERT INTO usuarios (email_personal, contrasena, tipo, alumno_id, profesor_id)
@@ -199,24 +199,28 @@ function obtenerUsuarioLogin(email, callback) {
 }
 
 // Insertar un nuevo usuario
-function insertarUsuario(email, contrasena, nombre, callback) {
-    // Primero insertamos en la tabla profesor
-    const queryProfesor = 'INSERT INTO profesor (nombre, email, tipo) VALUES (?, ?, 2)';
-    db.query(queryProfesor, [nombre, email], (err, profesorResult) => {
+function insertarUsuario(email, contrasena, nombre, apellido, especialidad, callback) {
+    // Validar que los campos no sean nulos
+    if (!nombre || !apellido || !email || !especialidad) {
+        return callback({ error: 'Todos los campos son requeridos' });
+    }
+
+    const queryProfesor = 'INSERT INTO profesor (nombre, apellido, email, tipo, especialidad) VALUES (?, ?, ?, ?, ?)';
+    db.query(queryProfesor, [nombre, apellido, email, 2, especialidad], (err, profesorResult) => {
         if (err) {
+            console.error('Error al insertar profesor:', err);
             if (err.code === 'ER_DUP_ENTRY') {
-                return callback(new Error('El email ya está registrado'));
+                return callback({ error: 'El email ya está registrado' });
             }
-            return callback(err);
+            return callback({ error: 'Error al insertar profesor' });
         }
 
-        // Después insertamos en la tabla usuarios
-        const queryUsuario = 'INSERT INTO usuarios (email_personal, contrasena, tipo, profesor_id) VALUES (?, ?, 2, ?)';
-        db.query(queryUsuario, [email, contrasena, profesorResult.insertId], (err, usuarioResult) => {
+        const queryUsuario = 'INSERT INTO usuarios (email_personal, contrasena, tipo, profesor_id) VALUES (?, ?, ?, ?)';
+        db.query(queryUsuario, [email, contrasena, 2, profesorResult.insertId], (err, usuarioResult) => {
             if (err) {
-                // Si hay error, eliminamos el profesor que acabamos de insertar
                 db.query('DELETE FROM profesor WHERE id = ?', [profesorResult.insertId]);
-                return callback(err);
+                console.error('Error al insertar usuario:', err);
+                return callback({ error: 'Error al insertar usuario' });
             }
             callback(null, usuarioResult);
         });

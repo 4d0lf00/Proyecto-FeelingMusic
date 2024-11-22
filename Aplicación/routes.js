@@ -9,17 +9,19 @@ const path = require('path');
 const db = require('./db'); // Agregar esta línea
 
 // Ruta para el filtro
-router.get('/filtro', (req, res) => {
-    if (req.userTipo === 2 && req.userTipo !== 1) {
-        return res.redirect('/login?error=' + encodeURIComponent('No tienes permiso para acceder a esta página'));
+router.get('/filtro', verificarToken, (req, res) => {
+    if (req.userTipo === 2 || req.userTipo === 1) {
+        res.render('filtro', { title: 'Filtro de Alumnos' });
+    } else {
+        // Si no es profesor ni admin, redirigir
+        return res.redirect('/login2?error=' + encodeURIComponent('No tienes permiso para acceder a esta página'));
     }
-    res.render('filtro', { title: 'Filtro de Alumnos' });
 });
 
 // Ruta para el filtro2
 router.get('/filtro2', (req, res) => {
     if (req.userTipo === 2 && req.userTipo !== 1) {
-        return res.redirect('/login?error=' + encodeURIComponent('No tienes permiso para acceder a esta página'));
+        return res.redirect('/login2?error=' + encodeURIComponent('No tienes permiso para acceder a esta página'));
     }
     res.render('filtro2', { title: 'Filtro de Alumnos 2' });
 });
@@ -32,15 +34,15 @@ router.get('/', (req, res) => {
 // Ruta para el formulario
 router.get('/form', (req, res) => {
     if (req.userTipo === 1 && req.userTipo === 2) {
-        return res.redirect('/login?error=' + encodeURIComponent('No tienes permiso para acceder a esta página'));
+        return res.redirect('/login2?error=' + encodeURIComponent('No tienes permiso para acceder a esta página'));
     }
     res.render('form', { title: 'Formulario de Registro' });
 });
 
 // Ruta para el formulario de clase musical
 router.get('/formulario-class', (req, res) => {
-    if (req.userTipo === 3 || (req.userTipo !== 1 && req.userTipo !== 2)) {
-        return res.redirect('/login?error=' + encodeURIComponent('No tienes permiso para acceder a esta página'));
+    if (req.userTipo === 2 || (req.userTipo === 1)) {
+        return res.redirect('/login2?error=' + encodeURIComponent('No tienes permiso para acceder a esta página'));
     }
     res.render('formulario-class', { title: 'Formulario de Clase Musical' });
 });
@@ -114,18 +116,19 @@ router.post('/alumnos', (req, res) => {
 
 //-------------------Inicio Rutas login
 
-// Ruta para el registro de usuario
-router.post('/registrar-profesor', [
+router.post('/register2', [
     body('email').isEmail().withMessage('El email no es válido'),
     body('contrasena').isLength({ min: 6 }).withMessage('La contraseña debe tener al menos 6 caracteres'),
     body('nombre').notEmpty().withMessage('El nombre es requerido'),
+    body('apellido').notEmpty().withMessage('El apellido es requerido'),
+    body('especialidad').notEmpty().withMessage('la especialidad es requerida')
 ], (req, res) => {
     const errors = validationResult(req);
     if (!errors.isEmpty()) {
         return res.status(400).json({ errors: errors.array() });
     }
 
-    const { email, contrasena, nombre } = req.body;
+    const { email, contrasena, nombre, apellido, especialidad } = req.body;
 
     // Hashear la contraseña antes de guardarla
     bcrypt.hash(contrasena, 10, (err, hash) => {
@@ -134,7 +137,7 @@ router.post('/registrar-profesor', [
         }
 
         // Guardar el usuario en la base de datos con el hash de la contraseña
-        queries.insertarUsuario(email, hash, nombre, (err) => {
+        queries.insertarUsuario(email, hash, nombre, apellido, especialidad, (err) => {
             if (err) {
                 console.error('Error en inserción:', err);
                 return res.status(500).json({ error: 'Error al insertar el usuario' });
@@ -144,10 +147,10 @@ router.post('/registrar-profesor', [
     });
 });
 
-
+// Resto del código...
 
 // Ruta para el login
-router.post('/login', [
+router.post('/login2', [
     body('email').isEmail().withMessage('El email no es válido'),
     body('contrasena').isLength({ min: 4 }).withMessage('La contraseña debe tener al menos 4 caracteres'),
 ], (req, res) => {
@@ -193,14 +196,14 @@ function verificarToken(req, res, next) {
     const token = req.cookies.auth_token;
     
     if (!token) {
-        return res.redirect('/login?error=' + encodeURIComponent('Debes iniciar sesión para acceder a esta página'));
+        return res.redirect('/login2?error=' + encodeURIComponent('Debes iniciar sesión para acceder a esta página'));
     }
 
     const tokenPart = token.split(' ')[1];
     
     jwt.verify(tokenPart, process.env.JWT_SECRET, (err, decoded) => {
         if (err) {
-            return res.redirect('/login?error=' + encodeURIComponent('Tu sesión ha expirado. Por favor, inicia sesión nuevamente'));
+            return res.redirect('/login2?error=' + encodeURIComponent('Tu sesión ha expirado. Por favor, inicia sesión nuevamente'));
         }
         
         req.userId = decoded.id;
@@ -213,26 +216,23 @@ function verificarToken(req, res, next) {
 // Ruta protegida para administradores
 router.get('/dashboard', verificarToken, (req, res) => {
     if (req.userTipo !== 1) {
-        return res.redirect('/login?error=' + encodeURIComponent('No tienes permiso para acceder a esta página'));
+        return res.redirect('/login2?error=' + encodeURIComponent('No tienes permiso para acceder a esta página'));
     }
     dashboardController.getDashboardData(req, res);
 });
 
 // Ruta protegida para administradores
-router.get('/registrar-profesor', verificarToken, (req, res) => {
+router.get('/register2', verificarToken, (req, res) => {
     if (req.userTipo !== 1) {
-        return res.redirect('/login?error=' + encodeURIComponent('No tienes permiso para acceder a esta página'));
+        return res.redirect('/login2?error=' + encodeURIComponent('No tienes permiso para acceder a esta página'));
     }
-    res.render('registrar-profesor', { title: 'Registrar Profesor' });
+    res.render('register2', { title: 'Registrar Profesor' });
 });
 
 
-
-
-
 // Ruta GET para mostrar el formulario de login
-router.get('/login', (req, res) => {
-    res.render('login', { 
+router.get('/login2', (req, res) => {
+    res.render('login2', { 
         title: 'Inicio Sesion',
         error: req.query.error || null
     });
@@ -301,7 +301,7 @@ router.get('/api/alumnos-por-mes', async (req, res) => {
 // Ruta para el horario
 router.get('/horarios', (req, res) => {
     if (req.userTipo === 2 && req.userTipo !== 1) {
-        return res.redirect('/login?error=' + encodeURIComponent('No tienes permiso para acceder a esta página'));
+        return res.redirect('/login2?error=' + encodeURIComponent('No tienes permiso para acceder a esta página'));
     }
 
     queries.obtenerProfesores((error, profesores) => {
@@ -368,6 +368,15 @@ router.put('/actualizar-horario/:horarioId', (req, res) => {
         res.json({ success: true, message: 'Horario actualizado exitosamente' });
     });
 });
+
+// Nueva ruta para login2
+
+//router.get('/login2', (req, res) => {
+    //res.render('login2', { 
+        //title: 'Inicio Sesion',
+        //error: req.query.error || null
+    //});
+//})
 
 // Exportar el router
 module.exports = router;

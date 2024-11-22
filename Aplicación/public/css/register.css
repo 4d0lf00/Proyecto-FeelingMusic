@@ -1,0 +1,181 @@
+/* Estilos para el body y fondo */
+body {
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: linear-gradient(45deg, #2a2b38, #1f2029);
+}
+
+/* From Uiverse.io by alexruix */ 
+.card {
+    width: 90%; /* Cambiado para ser responsivo */
+    max-width: 320px; /* Máximo ancho en pantallas grandes */
+    padding: 2rem 1.5rem;
+    text-align: center;
+    background: #2a2b38;
+    border-radius: 10px;
+    box-shadow: 0 0 40px rgba(0,0,0,0.3);
+    position: relative;
+    margin: 1rem; /* Agregar margen para pantallas pequeñas */
+}
+
+/* Mensaje de error responsivo */
+#error-message {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #ff4444;
+    color: white;
+    padding: 1rem;
+    border-radius: 4px;
+    z-index: 1000;
+    width: 90%; /* Cambiado para ser responsivo */
+    max-width: 300px;
+    text-align: center;
+}
+
+/* Mensaje de alerta exitoso */
+#alert-message {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #28a745; /* Color verde para éxito */
+    color: white;
+    padding: 1rem;
+    border-radius: 4px;
+    z-index: 1000;
+    width: 90%; /* Cambiado para ser responsivo */
+    max-width: 300px;
+    text-align: center;
+    display: none; /* Inicialmente oculto */
+}
+
+/*Inputs responsivos*/
+.field {
+    margin-top: .5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5em;
+    background-color: #1f2029;
+    border-radius: 4px;
+    padding: .5em 1em;
+    width: 100%; /* Asegurar que ocupe todo el ancho disponible */
+    box-sizing: border-box; /* Incluir padding en el ancho total */
+}
+
+.input-icon {
+    height: 1em;
+    width: 1em;
+    min-width: 1em; /* Evitar que el ícono se encoja */
+    fill: #ffeba7;
+}
+
+.input-field {
+    background: none;
+    border: none;
+    outline: none;
+    width: 100%;
+    color: #d3d3d3;
+    padding: 0.5em;
+    font-size: 16px; /* Mejor tamaño para móviles */
+}
+
+.input-field::placeholder {
+    color: #8f8f8f;
+}
+
+/*Text responsivo*/
+.title {
+    margin-bottom: 2rem;
+    font-size: clamp(1.5em, 5vw, 2em); /* Tamaño de fuente responsivo */
+    font-weight: 500;
+    color: #f5f5f5;
+}
+
+/*Buttons responsivos*/
+.btn {
+    margin: 1.5rem auto;
+    display: block;
+    width: 80%;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: clamp(0.8em, 4vw, 0.9em); /* Tamaño de fuente responsivo */
+    text-transform: uppercase;
+    padding: 0.8em 1.2em;
+    background-color: #ffeba7;
+    color: #5e6681;
+    box-shadow: 0 8px 24px 0 rgb(255 235 167 / 20%);
+    transition: all .3s ease-in-out;
+    cursor: pointer;
+}
+
+.btn-link {
+    color: #f5f5f5;
+    display: block;
+    font-size: clamp(0.7em, 3vw, 0.75em); /* Tamaño de fuente responsivo */
+    transition: color .3s ease-out;
+    text-decoration: none;
+    margin-top: 1rem;
+}
+
+/* Media queries para diferentes tamaños de pantalla */
+@media screen and (max-width: 480px) {
+    .card {
+        padding: 1.5rem 1rem;
+    }
+    
+    .field {
+        padding: .4em 0.8em;
+    }
+    
+    .btn {
+        width: 90%; /* Botón más ancho en móviles */
+    }
+}
+
+@media screen and (max-height: 600px) {
+    .card {
+        margin: 0.5rem;
+        padding: 1rem;
+    }
+    
+    .title {
+        margin-bottom: 1rem;
+    }
+    
+    .btn {
+        margin: 1rem auto;
+    }
+}
+
+/*Hover & focus*/
+.field input:focus::placeholder {
+    opacity: 0;
+    transition: opacity .3s;
+}
+
+.btn:hover {
+    background-color: #5e6681;
+    color: #ffeba7;
+    box-shadow: 0 8px 24px 0 rgb(16 39 112 / 20%);
+}
+
+.btn-link:hover {
+    color: #ffeba7;
+}
+
+/* Prevenir zoom en inputs en iOS */
+@media screen and (-webkit-min-device-pixel-ratio: 0) { 
+    select,
+    textarea,
+    input {
+        font-size: 16px;
+    }
+}

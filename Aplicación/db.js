@@ -1,12 +1,10 @@
-//Esta conexion a base de datos esta realizado en local, se realizara la configuracion cuando se contrate el hosting
-// db.js - Configuración de la conexión a la base de datos MySQL
 const mysql = require('mysql2');
 
 // Crear la conexión a la base de datos
 const db = mysql.createConnection({
     host: 'localhost',
     user: 'root',         
-    password: 'a123',   
+    password: '',   
     database: 'feeling_music'  
 });
 

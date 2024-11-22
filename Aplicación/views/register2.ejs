@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro</title>
+    <link rel="stylesheet" href="/css/register.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+</head>
+<body>
+    <!-- Mensaje de error -->
+    <div id="error-message" class="alert alert-danger" style="display: none;"></div>
+    <div id="alert-message" class="alert alert-success" style="display: none;"></div>
+
+    <div class="card">
+        <h4 class="title">Registro</h4>
+        <form id="registerForm">
+            <div class="field">
+                <input autocomplete="off" id="firstname" placeholder="Nombre" class="input-field" name="nombre" type="text" required>
+            </div>
+            <div class="field">
+                <input autocomplete="off" id="lastname" placeholder="Apellido" class="input-field" name="apellido" type="text" required>
+            </div>
+            <div class="field">
+                <input autocomplete="off" id="regemail" placeholder="Email" class="input-field" name="email" type="email" required>
+            </div>
+            <div class="field">
+                <input autocomplete="off" id="regpass" placeholder="Contraseña" class="input-field" name="contrasena" type="password" required>
+            </div>
+            <div class="field">
+                <input autocomplete="off" id="specialty" placeholder="Especialidad" class="input-field" name="especialidad" type="text" required>
+            </div>
+            <button class="btn" type="submit">Registrar</button>
+            <a href="#" class="btn-link">Ya tienes una cuenta?</a>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const nombre = document.getElementById('firstname').value;
+            const apellido = document.getElementById('lastname').value;
+            const email = document.getElementById('regemail').value;
+            const contrasena = document.getElementById('regpass').value;
+            const especialidad = document.getElementById('specialty').value;
+
+            try {
+                const response = await fetch('/register2', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ nombre, apellido, email, contrasena, especialidad }),
+                });
+                
+                const data = await response.json();
+                console.log('Datos recibidos del servidor:', data);
+
+                if (response.ok) {
+                    const alertMessage = document.getElementById('alert-message');
+                    alertMessage.innerText = 'Profesor registrado exitosamente.';
+                    alertMessage.style.display = 'block'; // Mostrar el mensaje de alerta
+                    alertMessage.classList.add('animate__animated', 'animate__fadeIn');
+
+                    // Desaparecer el mensaje después de 2 segundos
+                    setTimeout(() => {
+                        alertMessage.classList.add('animate__fadeOut');
+                        setTimeout(() => {
+                            alertMessage.style.display = 'none';
+                            alertMessage.classList.remove('animate__fadeOut');
+                        }, 1000);
+
+                        // Preguntar si desea registrar otro profesor
+                        Swal.fire({
+                            title: '¿Registrar otro profesor?',
+                            icon: 'question',
+                            showCancelButton: true,
+                            confirmButtonText: 'Sí',
+                            cancelButtonText: 'No'
+                        }).then((result) => {
+                            if (result.isConfirmed) {
+                                document.getElementById('registerForm').reset(); // Reiniciar el formulario
+                            } else {
+                                window.location.href = '/dashboard'; // Redirigir al dashboard
+                            }
+                        });
+                    }, 2000);
+                } else {
+                    const errorMessage = document.getElementById('error-message');
+                    console.log('Datos de error recibidos del servidor:', data);
+                    errorMessage.innerText = data.error || 'Error en el registro.';
+                    errorMessage.style.display = 'block';
+                    errorMessage.classList.add('animate__animated', 'animate__fadeIn');
+                }
+            } catch (error) {
+                console.error('Error en el proceso de registro:', error);
+                const errorMessage = document.getElementById('error-message');
+                errorMessage.innerText = 'Error en el proceso de registro.';
+                errorMessage.style.display = 'block';
+                errorMessage.classList.add('animate__animated', 'animate__fadeIn');
+            }
+        });
+
+        // Mostrar mensaje de error si existe en la URL
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const error = urlParams.get('error');
+            
+            if (error) {
+                const errorMessage = document.getElementById('error-message');
+                errorMessage.textContent = decodeURIComponent(error);
+                errorMessage.style.display = 'block';
+                errorMessage.classList.add('animate__animated', 'animate__fadeIn');
+            }
+        });
+    </script>
+
+    <!-- Incluir SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Incluir Animaciones de Alerta -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+</body>
+</html>
