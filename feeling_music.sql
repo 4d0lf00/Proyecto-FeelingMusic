@@ -3,7 +3,7 @@
 -- https://www.phpmyadmin.net/
 --
 -- Servidor: 127.0.0.1
--- Tiempo de generación: 21-11-2024 a las 00:16:11
+-- Tiempo de generación: 25-11-2024 a las 07:59:05
 -- Versión del servidor: 10.4.32-MariaDB
 -- Versión de PHP: 8.2.12
 
@@ -35,15 +35,17 @@ CREATE TABLE `alumno` (
   `numero_telefono` varchar(13) DEFAULT NULL,
   `email` varchar(100) DEFAULT NULL,
   `comentarios` text DEFAULT NULL,
-  `fecha_registro` datetime DEFAULT current_timestamp()
+  `fecha_registro` datetime DEFAULT current_timestamp(),
+  `profesor_id` bigint(20) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `alumno`
 --
 
-INSERT INTO `alumno` (`id`, `nombre`, `apellido`, `rut`, `numero_telefono`, `email`, `comentarios`, `fecha_registro`) VALUES
-(1, 'adolfo', 'venegas', '20752557-k', '+56934884214', 'adolfoignacio.vg@gmail.com', 'wena papi', '2024-11-20 20:02:51');
+INSERT INTO `alumno` (`id`, `nombre`, `apellido`, `rut`, `numero_telefono`, `email`, `comentarios`, `fecha_registro`, `profesor_id`) VALUES
+(9, 'renata', 'caro', '20823516-9', '+56934884222', 'renatacaro@gmail.com', 'porfavor dios', '2024-11-25 03:19:25', 12),
+(11, 'adolfo', 'venegas', '20752557-k', '+56934884214', 'adolfoignacio.vg@gmail.com', 'porfavor dios', '2024-11-25 03:42:02', 12);
 
 -- --------------------------------------------------------
 
@@ -93,8 +95,16 @@ CREATE TABLE `horarios` (
   `hora_inicio` time DEFAULT NULL,
   `hora_fin` time DEFAULT NULL,
   `estado` varchar(50) DEFAULT NULL,
-  `color` varchar(10) DEFAULT NULL
+  `color` varchar(10) DEFAULT NULL,
+  `profesor_id` int(11) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `horarios`
+--
+
+INSERT INTO `horarios` (`id`, `dia`, `mes`, `annio`, `hora_inicio`, `hora_fin`, `estado`, `color`, `profesor_id`) VALUES
+(1, 7, 11, 2024, '23:00:00', '00:00:00', NULL, NULL, 12);
 
 -- --------------------------------------------------------
 
@@ -146,16 +156,16 @@ CREATE TABLE `profesor` (
   `apellido` varchar(42) DEFAULT NULL,
   `email` varchar(100) DEFAULT NULL,
   `tipo` int(11) DEFAULT NULL,
-  `especialidad` varchar(50) DEFAULT NULL
+  `especialidad` varchar(50) DEFAULT NULL,
+  `usuario_id` bigint(20) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `profesor`
 --
 
-INSERT INTO `profesor` (`id`, `nombre`, `apellido`, `email`, `tipo`, `especialidad`) VALUES
-(1, 'profe', NULL, 'testprofe@gmail.com', 2, NULL),
-(2, 'aaa', NULL, 'testprofes@gmail.com', 2, NULL);
+INSERT INTO `profesor` (`id`, `nombre`, `apellido`, `email`, `tipo`, `especialidad`, `usuario_id`) VALUES
+(12, 'profesor', 'prueba', 'profe@gmail.com', 2, 'canto', NULL);
 
 -- --------------------------------------------------------
 
@@ -182,6 +192,13 @@ CREATE TABLE `salas` (
   `profesor_id` bigint(20) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
+--
+-- Volcado de datos para la tabla `salas`
+--
+
+INSERT INTO `salas` (`id`, `nombre`, `capacidad`, `profesor_id`) VALUES
+(1, 'Sala 1', 4, 12);
+
 -- --------------------------------------------------------
 
 --
@@ -195,6 +212,13 @@ CREATE TABLE `sala_horario` (
   `profesor_id` bigint(20) DEFAULT NULL,
   `clase_id` bigint(20) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+
+--
+-- Volcado de datos para la tabla `sala_horario`
+--
+
+INSERT INTO `sala_horario` (`id`, `sala_id`, `horario_id`, `profesor_id`, `clase_id`) VALUES
+(1, 1, 1, NULL, NULL);
 
 -- --------------------------------------------------------
 
@@ -220,17 +244,19 @@ CREATE TABLE `usuarios` (
   `contrasena` varchar(60) DEFAULT NULL,
   `tipo` int(11) DEFAULT NULL,
   `alumno_id` bigint(20) DEFAULT NULL,
-  `profesor_id` bigint(20) DEFAULT NULL
+  `profesor_id` bigint(20) DEFAULT NULL,
+  `profesor_id_profesor` bigint(20) DEFAULT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 
 --
 -- Volcado de datos para la tabla `usuarios`
 --
 
-INSERT INTO `usuarios` (`id`, `email_personal`, `contrasena`, `tipo`, `alumno_id`, `profesor_id`) VALUES
-(1, 'admin@feelingmusic.com', '$2b$10$9Ap/wVy5S.jT91YHJrokYekY1Nb1q4tABTszTeP7HgzPCGzV4KbrK', 1, NULL, NULL),
-(2, 'testprofe@gmail.com', '$2b$10$k0K9q3JFHAssvAue5S9aJOj4XRH9y.BzGjjPqaq9gd6Y4/.2pdhI.', 2, NULL, 1),
-(3, 'adolfoignacio.vg@gmail.com', 'ado557k', 2, 1, NULL);
+INSERT INTO `usuarios` (`id`, `email_personal`, `contrasena`, `tipo`, `alumno_id`, `profesor_id`, `profesor_id_profesor`) VALUES
+(1, 'admin@feelingmusic.com', '$2b$10$9Ap/wVy5S.jT91YHJrokYekY1Nb1q4tABTszTeP7HgzPCGzV4KbrK', 1, NULL, NULL, NULL),
+(18, 'profe@gmail.com', '$2b$10$lZKodW/r/LypsHfYm31BtOU3XRx/I6Ky0i4LttX.5azLQYAaAGNVW', 2, NULL, 12, NULL),
+(20, 'renatacaro@gmail.com', 'ren5169', 3, 9, NULL, 12),
+(22, 'adolfoignacio.vg@gmail.com', 'ado557k', 3, 11, 12, NULL);
 
 --
 -- Índices para tablas volcadas
@@ -286,15 +312,16 @@ ALTER TABLE `modalidades`
 --
 ALTER TABLE `pagos`
   ADD PRIMARY KEY (`id`),
-  ADD KEY `profesor_id` (`profesor_id`),
-  ADD KEY `alumno_id` (`alumno_id`);
+  ADD KEY `fk_profesor` (`profesor_id`),
+  ADD KEY `fk_alumno` (`alumno_id`);
 
 --
 -- Indices de la tabla `profesor`
 --
 ALTER TABLE `profesor`
   ADD PRIMARY KEY (`id`),
-  ADD UNIQUE KEY `email` (`email`);
+  ADD UNIQUE KEY `email` (`email`),
+  ADD KEY `fk_usuario_id` (`usuario_id`);
 
 --
 -- Indices de la tabla `profesor_horario`
@@ -335,7 +362,8 @@ ALTER TABLE `sala_instrumento`
 ALTER TABLE `usuarios`
   ADD PRIMARY KEY (`id`),
   ADD KEY `alumno_id` (`alumno_id`),
-  ADD KEY `profesor_id` (`profesor_id`);
+  ADD KEY `profesor_id` (`profesor_id`),
+  ADD KEY `fk_profesor_id_profesor` (`profesor_id_profesor`);
 
 --
 -- AUTO_INCREMENT de las tablas volcadas
@@ -345,7 +373,7 @@ ALTER TABLE `usuarios`
 -- AUTO_INCREMENT de la tabla `alumno`
 --
 ALTER TABLE `alumno`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=12;
 
 --
 -- AUTO_INCREMENT de la tabla `asistencia`
@@ -363,7 +391,7 @@ ALTER TABLE `clases`
 -- AUTO_INCREMENT de la tabla `horarios`
 --
 ALTER TABLE `horarios`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `instrumentos`
@@ -387,7 +415,7 @@ ALTER TABLE `pagos`
 -- AUTO_INCREMENT de la tabla `profesor`
 --
 ALTER TABLE `profesor`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=3;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=13;
 
 --
 -- AUTO_INCREMENT de la tabla `profesor_horario`
@@ -399,13 +427,13 @@ ALTER TABLE `profesor_horario`
 -- AUTO_INCREMENT de la tabla `salas`
 --
 ALTER TABLE `salas`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=6;
 
 --
 -- AUTO_INCREMENT de la tabla `sala_horario`
 --
 ALTER TABLE `sala_horario`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=2;
 
 --
 -- AUTO_INCREMENT de la tabla `sala_instrumento`
@@ -417,7 +445,7 @@ ALTER TABLE `sala_instrumento`
 -- AUTO_INCREMENT de la tabla `usuarios`
 --
 ALTER TABLE `usuarios`
-  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=4;
+  MODIFY `id` bigint(20) NOT NULL AUTO_INCREMENT, AUTO_INCREMENT=23;
 
 --
 -- Restricciones para tablas volcadas
@@ -450,8 +478,16 @@ ALTER TABLE `instrumentos`
 -- Filtros para la tabla `pagos`
 --
 ALTER TABLE `pagos`
+  ADD CONSTRAINT `fk_alumno` FOREIGN KEY (`alumno_id`) REFERENCES `alumno` (`id`),
+  ADD CONSTRAINT `fk_profesor` FOREIGN KEY (`profesor_id`) REFERENCES `profesor` (`id`),
   ADD CONSTRAINT `pagos_ibfk_1` FOREIGN KEY (`profesor_id`) REFERENCES `profesor` (`id`),
   ADD CONSTRAINT `pagos_ibfk_2` FOREIGN KEY (`alumno_id`) REFERENCES `alumno` (`id`);
+
+--
+-- Filtros para la tabla `profesor`
+--
+ALTER TABLE `profesor`
+  ADD CONSTRAINT `fk_usuario_id` FOREIGN KEY (`usuario_id`) REFERENCES `usuarios` (`id`);
 
 --
 -- Filtros para la tabla `profesor_horario`
@@ -486,6 +522,8 @@ ALTER TABLE `sala_instrumento`
 -- Filtros para la tabla `usuarios`
 --
 ALTER TABLE `usuarios`
+  ADD CONSTRAINT `fk_profesor_id` FOREIGN KEY (`profesor_id`) REFERENCES `profesor` (`id`),
+  ADD CONSTRAINT `fk_profesor_id_profesor` FOREIGN KEY (`profesor_id_profesor`) REFERENCES `profesor` (`id`),
   ADD CONSTRAINT `usuarios_ibfk_1` FOREIGN KEY (`alumno_id`) REFERENCES `alumno` (`id`),
   ADD CONSTRAINT `usuarios_ibfk_2` FOREIGN KEY (`profesor_id`) REFERENCES `profesor` (`id`);
 COMMIT;

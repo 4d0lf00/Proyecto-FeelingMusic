@@ -29,47 +29,60 @@ const buscarAlumnos = (busqueda, callback) => {
     db.query(query, [likeBusqueda, likeBusqueda, likeBusqueda, likeBusqueda], callback);
 };
 
-const insertarAlumno = (nombre, apellido, email, numero_telefono, rut, comentarios, callback) => {
+// Función para insertar un nuevo alumno en la base de datos
+const insertarAlumno = (nombre, apellido, email, numero_telefono, rut, comentarios, profesorId, callback) => {
     if (!nombre || !apellido || !email || !numero_telefono || !rut) {
         return callback(new Error('Todos los campos son requeridos'));
     }
-    
-    const query = `
-        INSERT INTO alumno (nombre, apellido, email, numero_telefono, rut, comentarios)
-        VALUES (?, ?, ?, ?, ?, ?);
-    `;
-    
-    db.query(query, [nombre, apellido, email, numero_telefono, rut, comentarios], (error, resultados) => {
-        if (error) {
-            if (error.code === 'ER_DUP_ENTRY') {
-                return callback(new Error('El email ya está registrado'));
-            }
-            return callback(error);
+
+    // Verificar si el profesor existe en la tabla profesor
+    const queryVerificarProfesor = 'SELECT * FROM profesor WHERE id = ?';
+    db.query(queryVerificarProfesor, [profesorId], (err, results) => {
+        if (err) {
+            return callback(err);
         }
-        // Pasamos el nombre y rut a la función crearUsuarioAlumno
-        crearUsuarioAlumno(resultados.insertId, email, nombre, rut, (errorUsuario, resultadoUsuario) => {
-            if (errorUsuario) {
-                return callback(errorUsuario);
+        if (results.length === 0) {
+            return callback(new Error('El profesor no existe'));
+        }
+
+        const query = `
+            INSERT INTO alumno (nombre, apellido, email, numero_telefono, rut, comentarios, profesor_id)
+            VALUES (?, ?, ?, ?, ?, ?, ?);
+        `;
+
+        console.log('Ejecutando consulta:', query, [nombre, apellido, email, numero_telefono, rut, comentarios, profesorId]);
+
+        db.query(query, [nombre, apellido, email, numero_telefono, rut, comentarios, profesorId], (error, resultados) => {
+            if (error) {
+                if (error.code === 'ER_DUP_ENTRY') {
+                    return callback(new Error('El email ya está registrado'));
+                }
+                return callback(error);
             }
-            callback(null, {
-                alumno: resultados,
-                usuario: resultadoUsuario
-            });
+            callback(null, resultados);
         });
     });
 };
 
-// Función modificada para crear usuario y enviar correo
-const crearUsuarioAlumno = (alumnoId, email, nombre, rut, callback) => {
+// Función para obtener el ID del profesor correspondiente al ID de la tabla usuarios
+const obtenerProfesorId = (usuarioId, callback) => {
+    const query = 'SELECT profesor_id FROM usuarios WHERE id = ?';
+    db.query(query, [usuarioId], callback);
+};
+
+// Función para crear usuario y enviar correo
+const crearUsuarioAlumno = (alumnoId, email, nombre, rut, profesorId, callback) => {
     const contrasena = generarContrasena(nombre, rut);
     const tipoAlumno = 3;
     
     const query = `
         INSERT INTO usuarios (email_personal, contrasena, tipo, alumno_id, profesor_id)
-        VALUES (?, ?, ?, ?, NULL)
+        VALUES (?, ?, ?, ?, ?)
     `;
-
-    db.query(query, [email, contrasena, tipoAlumno, alumnoId], (error, resultados) => {
+    
+    console.log('Insertando usuario:', { email, contrasena, tipoAlumno, alumnoId, profesorId });
+    
+    db.query(query, [email, contrasena, tipoAlumno, alumnoId, profesorId], (error, resultados) => {
         if (error) {
             if (error.code === 'ER_DUP_ENTRY') {
                 return callback(new Error('Ya existe un usuario con este email'));
@@ -87,11 +100,10 @@ const crearUsuarioAlumno = (alumnoId, email, nombre, rut, callback) => {
                 <p>Tus datos de acceso son:</p>
                 <p><strong>Usuario:</strong> ${email}</p>
                 <p><strong>Contraseña:</strong> ${contrasena}</p>
-                <p>Te recomendamos guardar tu contraseña!!.</p>
             `
         };
 
-        transporter.sendMail(mailOptions, (errorMail, info) => {
+        transporter.sendMail(mailOptions, (errorMail) => {
             if (errorMail) {
                 console.error('Error al enviar correo:', errorMail);
             }
@@ -156,26 +168,27 @@ const insertarHorario = (fecha, horaInicio, horaFin, profesorId, salaNombre, cal
 
             const horarioId = resultados.insertId;
 
-            // Relacionar el horario con el profesor
-            const queryProfesorHorario = `
-                INSERT INTO profesor_horario (profesor_id, horario_id)
-                VALUES (?, ?);
+            // Relacionar el horario con la sala
+            const querySalaHorario = `
+                INSERT INTO sala_horario (sala_id, horario_id)
+                VALUES ((SELECT id FROM salas WHERE nombre = ? LIMIT 1), ?);
             `;
 
-            db.query(queryProfesorHorario, [profesorId, horarioId], (errorProfesorHorario) => {
-                if (errorProfesorHorario) {
-                    return callback(errorProfesorHorario);
+            db.query(querySalaHorario, [salaNombre, horarioId], (errorSalaHorario) => {
+                if (errorSalaHorario) {
+                    return callback(errorSalaHorario);
                 }
 
-                // Relacionar el horario con la sala
-                const querySalaHorario = `
-                    INSERT INTO sala_horario (sala_id, horario_id)
-                    VALUES ((SELECT id FROM salas WHERE nombre = ? LIMIT 1), ?);
+                // Actualizar la tabla horarios para agregar el profesor_id
+                const queryActualizarHorario = `
+                    UPDATE horarios
+                    SET profesor_id = ?
+                    WHERE id = ?;
                 `;
 
-                db.query(querySalaHorario, [salaNombre, horarioId], (errorSalaHorario) => {
-                    if (errorSalaHorario) {
-                        return callback(errorSalaHorario);
+                db.query(queryActualizarHorario, [profesorId, horarioId], (errorActualizarHorario) => {
+                    if (errorActualizarHorario) {
+                        return callback(errorActualizarHorario);
                     }
 
                     callback(null, {
@@ -188,6 +201,61 @@ const insertarHorario = (fecha, horaInicio, horaFin, profesorId, salaNombre, cal
     });
 };
 
+// Verificar si ya existe un horario en la misma sala a la misma hora
+const queryVerificar = `
+    SELECT COUNT(*) AS count FROM horarios h
+    JOIN sala_horario sh ON h.id = sh.horario_id
+    JOIN salas s ON sh.sala_id = s.id
+    WHERE h.dia = ? AND h.mes = ? AND h.annio = ? AND h.hora_inicio = ? AND s.nombre = ?;
+`;
+
+db.query(queryVerificar, [dia, mes, annio, horaInicio, salaNombre], (errorVerificar, resultadosVerificar) => {
+    if (errorVerificar) {
+        return callback(errorVerificar);
+    }
+
+    if (resultadosVerificar[0].count > 0) {
+        return callback(new Error('La sala ya está ocupada en este horario'));
+    }
+
+});
+
+// Actualizar el estado de la sala en la tabla horarios
+const queryActualizarEstado = `
+    UPDATE horarios h
+    JOIN sala_horario sh ON h.id = sh.horario_id
+    JOIN salas s ON sh.sala_id = s.id
+    SET h.estado = IF((SELECT COUNT(*) FROM alumno_horario ah WHERE ah.horario_id = h.id) >= s.capacidad, 'Ocupado', 'Desocupado')
+    WHERE h.id = ?;
+`;
+
+db.query(queryActualizarEstado, [horarioId], (errorActualizarEstado) => {
+    if (errorActualizarEstado) {
+        return callback(errorActualizarEstado);
+    }
+
+    callback(null, {
+        mensaje: 'Horario creado con éxito',
+        horarioId,
+    });
+});
+
+// Función para obtener el horario disponible del profesor
+const obtenerHorarioDisponible = (profesorId, callback) => {
+    const query = `
+        SELECT h.id, h.dia, h.hora_inicio, h.hora_fin, h.estado
+        FROM horarios h
+        WHERE h.profesor_id = ? AND h.estado = 'Desocupado';
+    `;
+
+    db.query(query, [profesorId], (error, resultados) => {
+        if (error) {
+            return callback(error);
+        }
+
+        callback(null, resultados);
+    });
+};
 //----------Inicio login----------//
 
 // Obtener usuario por email
@@ -267,5 +335,6 @@ module.exports = {
     insertarUsuario,
     insertarHorario,
     obtenerHorariosPorProfesor,
-    actualizarHorario
+    actualizarHorario,
+    obtenerProfesorId
 };

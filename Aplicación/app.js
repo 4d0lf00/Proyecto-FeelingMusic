@@ -8,6 +8,12 @@ const cookieParser = require('cookie-parser');
 
 const app = express();
 
+// Verificar variables de entorno
+if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.error('Error: Las variables de entorno EMAIL_USER y EMAIL_PASS no están definidas.');
+    process.exit(1); // Salir de la aplicación si las variables no están definidas
+}
+
 // Middleware
 app.use(cors());
 app.use(bodyParser.json());

@@ -52,11 +52,7 @@
                 if (response.ok) {
                     localStorage.setItem('token', data.token);
 
-                    if (data.tipo === 1) {
-                        window.location.href = '/dashboard';
-                    } else {
-                        window.location.href = '/';
-                    }
+                    window.location.href = data.redirectUrl;
                 } else {
                     const errorMessage = document.getElementById('error-message');
                     errorMessage.innerText = data.error || 'Error en el inicio de sesión.';

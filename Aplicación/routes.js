@@ -32,8 +32,8 @@ router.get('/', (req, res) => {
 });
 
 // Ruta para el formulario
-router.get('/form', (req, res) => {
-    if (req.userTipo === 1 && req.userTipo === 2) {
+router.get('/form', verificarToken, (req, res) => {
+    if (req.userTipo !== 2) {
         return res.redirect('/login2?error=' + encodeURIComponent('No tienes permiso para acceder a esta página'));
     }
     res.render('form', { title: 'Formulario de Registro' });
@@ -92,28 +92,35 @@ router.get('/profesores', (req, res) => {
     });
 });
 
-router.post('/alumnos', (req, res) => {
+// Ruta para insertar un nuevo alumno
+router.post('/alumnos', verificarToken, (req, res) => {
     const { nombre, apellido, email, numero_telefono, rut, comentarios } = req.body;
-    console.log('Datos recibidos:', req.body);
 
-    // Verificar si los datos esenciales están presentes
-    if (!nombre || !apellido || !email || !numero_telefono || !rut) {
-        return res.status(400).json({ error: 'Todos los campos son requeridos' });
-    }
-
-    queries.insertarAlumno(nombre, apellido, email, numero_telefono, rut, comentarios, (err, result) => {
+    // Obtener el ID del profesor correspondiente al ID de la tabla usuarios
+    queries.obtenerProfesorId(req.userId, (err, profesorId) => {
         if (err) {
-            console.error('Error al insertar el alumno:', err.message);
-            if (err.message === 'El email ya está registrado') {
-                return res.status(409).json({ error: err.message });
-            }
-            return res.status(500).json({ error: 'Error al insertar el alumno' });
+            console.error('Error al obtener el ID del profesor:', err);
+            return res.status(500).json({ error: 'Error al obtener el ID del profesor' });
         }
-        console.log('Inserción exitosa:', result);
-        res.status(200).json({ message: 'Alumno insertado correctamente' });
+
+        // Insertar el alumno en la base de datos
+        queries.insertarAlumno(nombre, apellido, email, numero_telefono, rut, comentarios, profesorId[0].profesor_id, (err, result) => {
+            if (err) {
+                console.error('Error al insertar el alumno:', err);
+                return res.status(500).json({ error: 'Error al insertar el alumno' });
+            }
+
+            // Crear el usuario para el alumno
+            queries.crearUsuarioAlumno(result.insertId, email, nombre, rut, profesorId[0].profesor_id, (err) => {
+                if (err) {
+                    console.error('Error al crear el usuario para el alumno:', err);
+                    return res.status(500).json({ error: 'Error al crear el usuario para el alumno' });
+                }
+                res.status(200).json({ message: 'Alumno registrado y usuario creado exitosamente' });
+            });
+        });
     });
 });
-
 //-------------------Inicio Rutas login
 
 router.post('/register2', [
@@ -173,19 +180,37 @@ router.post('/login2', [
                 return res.status(401).json({ error: 'Credenciales incorrectas' });
             }
 
-            const token = jwt.sign({ id: user.id, tipo: user.tipo }, process.env.JWT_SECRET, { expiresIn: '4h' });
-            
-            res.cookie('auth_token', `Bearer ${token}`, {
-                httpOnly: true,
-                secure: process.env.NODE_ENV === 'production',
-                maxAge: 4 * 60 * 60 * 1000
-            });
-            
-            // Enviar la URL de redirección según el tipo de usuario
-            res.json({ 
-                success: true,
-                tipo: user.tipo,
-                redirectUrl: user.tipo === 1 ? '/dashboard' : '/'
+            // Obtener el ID del profesor correspondiente al ID de la tabla usuarios
+            queries.obtenerProfesorId(user.id, (err, profesorId) => {
+                if (err) {
+                    console.error('Error al obtener el ID del profesor:', err);
+                    return res.status(500).json({ error: 'Error al obtener el ID del profesor' });
+                }
+
+                const token = jwt.sign({ id: user.id, tipo: user.tipo, profesorId: profesorId }, process.env.JWT_SECRET, { expiresIn: '4h' });
+                
+                // Configurar la cookie como una cookie de sesión
+                res.cookie('auth_token', `Bearer ${token}`, {
+                    httpOnly: true,
+                    secure: process.env.NODE_ENV === 'production',
+                    // No establecer maxAge ni expires para que sea una cookie de sesión
+                });
+                
+                // Redirigir a la página del formulario si es un profesor
+                if (user.tipo === 2) {
+                    return res.json({ 
+                        success: true,
+                        tipo: user.tipo,
+                        redirectUrl: '/form' // Redirigir a la página del formulario
+                    });
+                }
+
+                // Enviar la URL de redirección según el tipo de usuario
+                res.json({ 
+                    success: true,
+                    tipo: user.tipo,
+                    redirectUrl: user.tipo === 1 ? '/dashboard' : '/'
+                });
             });
         });
     });
