@@ -130,71 +130,57 @@ const obtenerSalas = (callback) => {
 };
 
 // Función para insertar un nuevo horario en la base de datos
-const insertarHorario = (fecha, horaInicio, horaFin, profesorId, salaNombre, callback) => {
-    if (!fecha || !horaInicio || !horaFin || !profesorId || !salaNombre) {
-        return callback(new Error('Todos los campos son requeridos'));
-    }
-
-    // Descomponer la fecha en día, mes y año
-    const [annio, mes, dia] = fecha.split('-');
-
-    // Verificar si ya existe un horario en la misma sala a la misma hora
-    const queryVerificar = `
-        SELECT COUNT(*) AS count FROM horarios h
-        JOIN sala_horario sh ON h.id = sh.horario_id
-        JOIN salas s ON sh.sala_id = s.id
-        WHERE h.dia = ? AND h.mes = ? AND h.annio = ? AND h.hora_inicio = ? AND s.nombre = ?;
-    `;
-
-    db.query(queryVerificar, [dia, mes, annio, horaInicio, salaNombre], (errorVerificar, resultadosVerificar) => {
-        if (errorVerificar) {
-            return callback(errorVerificar);
+const insertarHorario = (fecha, horaInicio, horaFin, profesorId, salaNombre) => {
+    return new Promise((resolve, reject) => {
+        if (!fecha || !horaInicio || !horaFin || !profesorId || !salaNombre) {
+            return reject(new Error('Todos los campos son requeridos'));
         }
 
-        if (resultadosVerificar[0].count > 0) {
-            return callback(new Error('La sala ya está ocupada en este horario'));
-        }
+        // Descomponer la fecha en día, mes y año
+        const [annio, mes, dia] = fecha.split('-');
 
-        // Insertar el horario en la tabla horarios
-        const queryHorario = `
-            INSERT INTO horarios (dia, mes, annio, hora_inicio, hora_fin)
-            VALUES (?, ?, ?, ?, ?);
+        // Verificar si ya existe un horario en la misma sala a la misma hora
+        const queryVerificar = `
+            SELECT COUNT(*) AS count FROM horarios h
+            JOIN sala_horario sh ON h.id = sh.horario_id
+            JOIN salas s ON sh.sala_id = s.id
+            WHERE h.dia = ? AND h.mes = ? AND h.annio = ? AND h.hora_inicio = ? AND s.nombre = ?;
         `;
 
-        db.query(queryHorario, [dia, mes, annio, horaInicio, horaFin], (error, resultados) => {
-            if (error) {
-                return callback(error);
+        db.query(queryVerificar, [dia, mes, annio, horaInicio, salaNombre], (errorVerificar, resultadosVerificar) => {
+            if (errorVerificar) {
+                return reject(errorVerificar);
             }
 
-            const horarioId = resultados.insertId;
+            if (resultadosVerificar[0].count > 0) {
+                return reject(new Error('La sala ya está ocupada en este horario'));
+            }
 
-            // Relacionar el horario con la sala
-            const querySalaHorario = `
-                INSERT INTO sala_horario (sala_id, horario_id)
-                VALUES ((SELECT id FROM salas WHERE nombre = ? LIMIT 1), ?);
+            // Insertar el horario en la tabla horarios
+            const queryHorario = `
+                INSERT INTO horarios (dia, mes, annio, hora_inicio, hora_fin)
+                VALUES (?, ?, ?, ?, ?);
             `;
 
-            db.query(querySalaHorario, [salaNombre, horarioId], (errorSalaHorario) => {
-                if (errorSalaHorario) {
-                    return callback(errorSalaHorario);
+            db.query(queryHorario, [dia, mes, annio, horaInicio, horaFin], (error, resultados) => {
+                if (error) {
+                    return reject(error);
                 }
 
-                // Actualizar la tabla horarios para agregar el profesor_id
-                const queryActualizarHorario = `
-                    UPDATE horarios
-                    SET profesor_id = ?
-                    WHERE id = ?;
+                const horarioId = resultados.insertId;
+
+                // Relacionar el horario con la sala
+                const querySalaHorario = `
+                    INSERT INTO sala_horario (sala_id, horario_id)
+                    VALUES ((SELECT id FROM salas WHERE nombre = ? LIMIT 1), ?);
                 `;
 
-                db.query(queryActualizarHorario, [profesorId, horarioId], (errorActualizarHorario) => {
-                    if (errorActualizarHorario) {
-                        return callback(errorActualizarHorario);
+                db.query(querySalaHorario, [salaNombre, horarioId], (errorSalaHorario) => {
+                    if (errorSalaHorario) {
+                        return reject(errorSalaHorario);
                     }
 
-                    callback(null, {
-                        mensaje: 'Horario creado con éxito',
-                        horarioId,
-                    });
+                    resolve({ mensaje: 'Horario creado con éxito', horarioId });
                 });
             });
         });
@@ -209,16 +195,6 @@ const queryVerificar = `
     WHERE h.dia = ? AND h.mes = ? AND h.annio = ? AND h.hora_inicio = ? AND s.nombre = ?;
 `;
 
-db.query(queryVerificar, [dia, mes, annio, horaInicio, salaNombre], (errorVerificar, resultadosVerificar) => {
-    if (errorVerificar) {
-        return callback(errorVerificar);
-    }
-
-    if (resultadosVerificar[0].count > 0) {
-        return callback(new Error('La sala ya está ocupada en este horario'));
-    }
-
-});
 
 // Actualizar el estado de la sala en la tabla horarios
 const queryActualizarEstado = `
@@ -228,17 +204,6 @@ const queryActualizarEstado = `
     SET h.estado = IF((SELECT COUNT(*) FROM alumno_horario ah WHERE ah.horario_id = h.id) >= s.capacidad, 'Ocupado', 'Desocupado')
     WHERE h.id = ?;
 `;
-
-db.query(queryActualizarEstado, [horarioId], (errorActualizarEstado) => {
-    if (errorActualizarEstado) {
-        return callback(errorActualizarEstado);
-    }
-
-    callback(null, {
-        mensaje: 'Horario creado con éxito',
-        horarioId,
-    });
-});
 
 // Función para obtener el horario disponible del profesor
 const obtenerHorarioDisponible = (profesorId, callback) => {
@@ -254,6 +219,24 @@ const obtenerHorarioDisponible = (profesorId, callback) => {
         }
 
         callback(null, resultados);
+    });
+};
+
+// Actualizar el estado de la sala en la tabla horarios
+const actualizarEstado = (horarioId, callback) => {
+    const queryActualizarEstado = `
+        UPDATE horarios h
+        JOIN sala_horario sh ON h.id = sh.horario_id
+        JOIN salas s ON sh.sala_id = s.id
+        SET h.estado = IF((SELECT COUNT(*) FROM alumno_horario ah WHERE ah.horario_id = h.id) >= s.capacidad, 'Ocupado', 'Desocupado')
+        WHERE h.id = ?;
+    `;
+
+    db.query(queryActualizarEstado, [horarioId], (errorActualizarEstado, resultadosActualizarEstado) => {
+        if (errorActualizarEstado) {
+            return callback(errorActualizarEstado);
+        }
+        callback(null, resultadosActualizarEstado);
     });
 };
 //----------Inicio login----------//

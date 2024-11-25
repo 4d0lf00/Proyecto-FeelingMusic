@@ -352,19 +352,19 @@ router.get('/horarios', (req, res) => {
 });
 
 // Ruta para guardar el horario
-router.post('/guardar-horario', (req, res) => {
-    const { fecha, horaInicio, horaFin, profesorId, salaNombre } = req.body;
+router.post('/guardar-horario', async (req, res) => {
+    try {
+        const { fecha, horaInicio, horaFin, profesorId, salaNombre } = req.body;
 
-    queries.insertarHorario(fecha, horaInicio, horaFin, profesorId, salaNombre, (error, resultado) => {
-        if (error) {
-            console.error('Error al guardar el horario:', error);
-            if (error.message === 'La sala ya está ocupada en este horario') {
-                return res.status(409).json({ success: false, message: 'La sala ya está ocupada en este horario' });
-            }
-            return res.status(500).json({ success: false, message: 'Error al guardar el horario' });
-        }
+        const resultado = await queries.insertarHorario(fecha, horaInicio, horaFin, profesorId, salaNombre);
         res.json({ success: true, message: 'Horario guardado exitosamente' });
-    });
+    } catch (error) {
+        console.error('Error al guardar el horario:', error);
+        if (error.message === 'La sala ya está ocupada en este horario') {
+            return res.status(409).json({ success: false, message: 'La sala ya está ocupada en este horario' });
+        }
+        res.status(500).json({ success: false, message: 'Error al guardar el horario' });
+    }
 });
 
 // Ruta para obtener los horarios de un profesor
