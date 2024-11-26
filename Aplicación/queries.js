@@ -251,29 +251,81 @@ function obtenerUsuarioLogin(email, callback) {
 
 // Insertar un nuevo usuario
 function insertarUsuario(email, contrasena, nombre, apellido, especialidad, callback) {
-    // Validar que los campos no sean nulos
-    if (!nombre || !apellido || !email || !especialidad) {
-        return callback({ error: 'Todos los campos son requeridos' });
-    }
-
-    const queryProfesor = 'INSERT INTO profesor (nombre, apellido, email, tipo, especialidad) VALUES (?, ?, ?, ?, ?)';
-    db.query(queryProfesor, [nombre, apellido, email, 2, especialidad], (err, profesorResult) => {
+    // Comenzar transacción
+    db.beginTransaction(function(err) {
         if (err) {
-            console.error('Error al insertar profesor:', err);
-            if (err.code === 'ER_DUP_ENTRY') {
-                return callback({ error: 'El email ya está registrado' });
-            }
-            return callback({ error: 'Error al insertar profesor' });
+            console.error('Error al iniciar transacción:', err);
+            return callback({ error: 'Error al iniciar la transacción' });
         }
 
-        const queryUsuario = 'INSERT INTO usuarios (email_personal, contrasena, tipo, profesor_id) VALUES (?, ?, ?, ?)';
-        db.query(queryUsuario, [email, contrasena, 2, profesorResult.insertId], (err, usuarioResult) => {
-            if (err) {
-                db.query('DELETE FROM profesor WHERE id = ?', [profesorResult.insertId]);
-                console.error('Error al insertar usuario:', err);
-                return callback({ error: 'Error al insertar usuario' });
+        // 1. Insertar profesor
+        const queryProfesor = `
+            INSERT INTO profesor (nombre, apellido, email, tipo, especialidad) 
+            VALUES (?, ?, ?, ?, ?)
+        `;
+
+        db.query(queryProfesor, [nombre, apellido, email, 2, especialidad], (errProfesor, profesorResult) => {
+            if (errProfesor) {
+                return db.rollback(() => {
+                    console.error('Error al insertar profesor:', errProfesor);
+                    callback({ error: 'Error al registrar el profesor' });
+                });
             }
-            callback(null, usuarioResult);
+
+            const profesorId = profesorResult.insertId;
+            console.log('ID del profesor insertado:', profesorId);
+
+            // 2. Insertar en instrumentos
+            // Si hay múltiples especialidades, las separamos
+            const especialidades = especialidad.split(',').map(e => e.trim());
+            
+            // Crear consultas para cada especialidad
+            const valoresInstrumentos = especialidades.map(esp => [esp, profesorId, 'activo']);
+            const queryInstrumentos = `
+                INSERT INTO instrumentos (nombre, profesor_id, estado) 
+                VALUES ?
+            `;
+
+            db.query(queryInstrumentos, [valoresInstrumentos], (errInstrumento) => {
+                if (errInstrumento) {
+                    return db.rollback(() => {
+                        console.error('Error al insertar instrumentos:', errInstrumento);
+                        callback({ error: 'Error al registrar las especialidades' });
+                    });
+                }
+
+                // 3. Insertar usuario
+                const queryUsuario = `
+                    INSERT INTO usuarios (email_personal, contrasena, tipo, profesor_id) 
+                    VALUES (?, ?, ?, ?)
+                `;
+
+                db.query(queryUsuario, [email, contrasena, 2, profesorId], (errUsuario) => {
+                    if (errUsuario) {
+                        return db.rollback(() => {
+                            console.error('Error al insertar usuario:', errUsuario);
+                            callback({ error: 'Error al crear el usuario' });
+                        });
+                    }
+
+                    // Confirmar transacción
+                    db.commit((errCommit) => {
+                        if (errCommit) {
+                            return db.rollback(() => {
+                                console.error('Error al confirmar transacción:', errCommit);
+                                callback({ error: 'Error al confirmar el registro' });
+                            });
+                        }
+
+                        console.log('Registro completado con éxito');
+                        callback(null, {
+                            success: true,
+                            message: 'Registro exitoso',
+                            profesorId: profesorId
+                        });
+                    });
+                });
+            });
         });
     });
 }

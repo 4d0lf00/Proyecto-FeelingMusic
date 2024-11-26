@@ -124,34 +124,57 @@ router.post('/alumnos', verificarToken, (req, res) => {
 //-------------------Inicio Rutas login
 
 router.post('/register2', [
-    body('email').isEmail().withMessage('El email no es válido'),
+    body('email').isEmail().withMessage('Email inválido'),
     body('contrasena').isLength({ min: 6 }).withMessage('La contraseña debe tener al menos 6 caracteres'),
     body('nombre').notEmpty().withMessage('El nombre es requerido'),
     body('apellido').notEmpty().withMessage('El apellido es requerido'),
-    body('especialidad').notEmpty().withMessage('la especialidad es requerida')
-], (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
-
-    const { email, contrasena, nombre, apellido, especialidad } = req.body;
-
-    // Hashear la contraseña antes de guardarla
-    bcrypt.hash(contrasena, 10, (err, hash) => {
-        if (err) {
-            return res.status(500).json({ error: 'Error al registrar el usuario' });
+    body('especialidad').custom(value => {
+        const especialidadesPermitidas = [
+            'guitarra', 'piano', 'bateria', 'canto',
+            'bajo', 'cello', 'acordeon', 'ukelele'
+        ];
+        
+        // Verificar si value es un array o una cadena
+        const especialidades = Array.isArray(value) ? value : value.split(',');
+        
+        // Limpiar y validar cada especialidad
+        return especialidades
+            .map(esp => esp.trim().toLowerCase())
+            .every(esp => especialidadesPermitidas.includes(esp));
+    }).withMessage('Selecciona especialidades válidas')
+], async (req, res) => {
+    try {
+        const errors = validationResult(req);
+        if (!errors.isEmpty()) {
+            return res.status(400).json({ error: errors.array()[0].msg });
         }
 
-        // Guardar el usuario en la base de datos con el hash de la contraseña
-        queries.insertarUsuario(email, hash, nombre, apellido, especialidad, (err) => {
+        const { email, contrasena, nombre, apellido, especialidad } = req.body;
+        
+        // Asegurarse de que especialidad sea un array
+        const especialidades = Array.isArray(especialidad) ? especialidad : especialidad.split(',');
+        
+        // Formatear cada especialidad
+        const especialidadesFormateadas = especialidades
+            .map(esp => esp.trim())
+            .map(esp => esp.charAt(0).toUpperCase() + esp.slice(1).toLowerCase())
+            .join(', ');
+
+        // Encriptar contraseña
+        const hashedPassword = await bcrypt.hash(contrasena, 10);
+
+        // Insertar usuario con la especialidad formateada
+        queries.insertarUsuario(email, hashedPassword, nombre, apellido, especialidadesFormateadas, (err, result) => {
             if (err) {
-                console.error('Error en inserción:', err);
-                return res.status(500).json({ error: 'Error al insertar el usuario' });
+                console.error('Error en el registro:', err);
+                return res.status(400).json({ error: err.error || 'Error en el registro' });
             }
-            res.status(201).json({ message: 'Usuario registrado exitosamente' });
+            res.json({ success: true, message: 'Registro exitoso' });
         });
-    });
+    } catch (error) {
+        console.error('Error en el proceso de registro:', error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
 });
 
 // Resto del código...

@@ -28,7 +28,43 @@
                 <input autocomplete="off" id="regpass" placeholder="Contraseña" class="input-field" name="contrasena" type="password" required>
             </div>
             <div class="field">
-                <input autocomplete="off" id="specialty" placeholder="Especialidad" class="input-field" name="especialidad" type="text" required>
+                <div class="especialidades-container">
+                    <label class="especialidad-label">Selecciona tus especialidades:</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="guitarra" name="especialidad" value="guitarra">
+                            <label for="guitarra">Guitarra</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="piano" name="especialidad" value="piano">
+                            <label for="piano">Piano</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="bateria" name="especialidad" value="bateria">
+                            <label for="bateria">Batería</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="canto" name="especialidad" value="canto">
+                            <label for="canto">Canto</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="bajo" name="especialidad" value="bajo">
+                            <label for="bajo">Bajo</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="cello" name="especialidad" value="cello">
+                            <label for="cello">Cello</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="acordeon" name="especialidad" value="acordeon">
+                            <label for="acordeon">Acordeón</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="ukelele" name="especialidad" value="ukelele">
+                            <label for="ukelele">Ukelele</label>
+                        </div>
+                    </div>
+                </div>
             </div>
             <button class="btn" type="submit">Registrar</button>
             <a href="#" class="btn-link">Ya tienes una cuenta?</a>
@@ -43,15 +79,31 @@
             const apellido = document.getElementById('lastname').value;
             const email = document.getElementById('regemail').value;
             const contrasena = document.getElementById('regpass').value;
-            const especialidad = document.getElementById('specialty').value;
+            
+            // Obtener especialidades seleccionadas
+            const especialidades = Array.from(document.querySelectorAll('input[name="especialidad"]:checked'))
+                .map(checkbox => checkbox.value);
 
+            if (especialidades.length === 0) {
+                const errorMessage = document.getElementById('error-message');
+                errorMessage.innerText = 'Debes seleccionar al menos una especialidad';
+                errorMessage.style.display = 'block';
+                return;
+            }
+            
             try {
                 const response = await fetch('/register2', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                     },
-                    body: JSON.stringify({ nombre, apellido, email, contrasena, especialidad }),
+                    body: JSON.stringify({ 
+                        nombre, 
+                        apellido, 
+                        email, 
+                        contrasena, 
+                        especialidad: especialidades // Enviar como array
+                    }),
                 });
                 
                 const data = await response.json();

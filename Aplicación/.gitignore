@@ -6,3 +6,6 @@ node_modules/
 
 # Ignorar Puppeteer
 Aplicación/node_modules/puppeteer-core/.local-chromium/
+
+#base de datos de prueba
+feeling_music_test(1).sql
