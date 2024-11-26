@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= title %></title>
+    <style>
+        /* Estilo de fondo y contenedor */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            --s: 200px;
+            --c1: #1d1d1d;
+            --c2: #4e4f51;
+            --c3: #3c3c3c;
+            background: repeating-conic-gradient(
+                from 30deg,
+                #0000 0 120deg,
+                var(--c3) 0 180deg
+              )
+              calc(0.5 * var(--s)) calc(0.5 * var(--s) * 0.577),
+              repeating-conic-gradient(
+                from 30deg,
+                var(--c1) 0 60deg,
+                var(--c2) 0 120deg,
+                var(--c3) 0 180deg
+              );
+            background-size: var(--s) calc(var(--s) * 0.577);
+        }
+
+        .container {
+            width: 90%;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
+            border-radius: 8px;
+            background-color: #000;
+            border: 1px solid #4e4f51;
+            color: #d1d1d1;
+        }
+
+        h2 {
+            text-align: center;
+            color: #d1d1d1;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            color: #d1d1d1;
+        }
+
+        table, th, td {
+            border: 1px solid #4e4f51;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #3c3c3c;
+        }
+
+        tr:hover {
+            background-color: #2c2c2c;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background: radial-gradient(ellipse farthest-corner at right bottom, #FEDB37 0%, #FDB931 8%, #9f7928 30%, #8A6E2F 40%, transparent 80%),
+            radial-gradient(ellipse farthest-corner at left top, #FFFFFF 0%, #FFFFAC 8%, #D1B464 25%, #5d4a1f 62.5%, #5d4a1f 100%);
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            border-radius: 4px;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 
+                0 6px 6px rgba(0, 0, 0, 0.23);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Horario Semanal</h2>
+        <table>
+            <thead>
+                <tr>
+                    <th>Lunes</th>
+                    <th>Martes</th>
+                    <th>Miércoles</th>
+                    <th>Jueves</th>
+                    <th>Viernes</th>
+                    <th>Sábado</th>
+                    <th>Domingo</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <% const daysOfWeek = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado', 'Domingo']; %>
+                    <% daysOfWeek.forEach((day, index) => { %>
+                        <td>
+                            <% weeklyHorarios.forEach(horario => { %>
+                                <% const date = new Date(horario.annio, horario.mes - 1, horario.dia); %>
+                                <% if (date.getDay() === (index + 1) % 7) { %>
+                                    <div>
+                                        <strong><%= horario.hora_inicio %> - <%= horario.hora_fin %></strong><br>
+                                        Sala: <%= horario.sala %><br>
+                                        Instrumento: <%= (horario.instrumento || 'Ninguno').charAt(0).toUpperCase() + (horario.instrumento || 'Ninguno').slice(1) %>
+                                    </div>
+                                <% } %>
+                            <% }) %>
+                        </td>
+                    <% }) %>
+                </tr>
+            </tbody>
+        </table>
+        <button onclick="window.history.back()" class="btn">Volver</button>
+    </div>
+</body>
+</html> 

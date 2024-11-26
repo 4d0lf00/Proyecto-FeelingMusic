@@ -1,6 +1,7 @@
 require('dotenv').config();
 const db = require('./db');
 const nodemailer = require('nodemailer');
+const jwt = require('jsonwebtoken');
 
 // Configuración del transportador de correo
 const transporter = nodemailer.createTransport({
@@ -228,12 +229,14 @@ function insertarUsuario(email, contrasena, nombre, callback) {
 // Función para obtener los horarios de un profesor
 const obtenerHorariosPorProfesor = (profesorId, callback) => {
     const query = `
-        SELECT h.id, h.dia, h.mes, h.annio, h.hora_inicio, h.hora_fin, s.nombre AS sala
+        SELECT h.id, h.dia, h.mes, h.annio, h.hora_inicio, h.hora_fin, s.nombre AS sala, COALESCE(i.nombre, '') AS instrumento
         FROM horarios h
-        JOIN profesor_horario ph ON h.id = ph.horario_id
         JOIN sala_horario sh ON h.id = sh.horario_id
         JOIN salas s ON sh.sala_id = s.id
-        WHERE ph.profesor_id = ?;
+        LEFT JOIN clases c ON h.id = c.horario_id
+        LEFT JOIN instrumentos i ON c.instrumento_id = i.id
+        WHERE sh.profesor_id = ?
+        ORDER BY h.annio, h.mes, h.dia, h.hora_inicio
     `;
     db.query(query, [profesorId], callback);
 };
@@ -252,6 +255,66 @@ const actualizarHorario = (horarioId, fecha, horaInicio, horaFin, salaNombre, ca
     db.query(query, [dia, mes, annio, horaInicio, horaFin, salaNombre, horarioId], callback);
 };
 
+// Función para eliminar un horario
+const eliminarHorario = (horarioId, profesorId, callback) => {
+    const query = `
+        DELETE FROM horarios
+        WHERE id = ? AND id IN (
+            SELECT horario_id FROM profesor_horario WHERE profesor_id = ?
+        );
+    `;
+
+    db.query(query, [horarioId, profesorId], callback);
+};
+
+// Función para obtener instrumentos
+const obtenerInstrumentos = (callback) => {
+    const query = 'SELECT nombre FROM instrumentos';
+    db.query(query, callback);
+};
+
+// Función para obtener el ID del instrumento por nombre
+const obtenerInstrumentoIdPorNombre = (nombre, callback) => {
+    const query = 'SELECT id FROM instrumentos WHERE nombre = ?';
+    db.query(query, [nombre], (error, results) => {
+        if (error) return callback(error);
+        callback(null, results[0]?.id);
+    });
+};
+
+// Función para guardar una clase
+const guardarClase = (horarioId, instrumentoId, profesorId, callback) => {
+    const query = `
+        INSERT INTO clases (horario_id, instrumento_id, profesor_id, estado, fecha)
+        VALUES (?, ?, ?, 'programada', CURDATE())
+    `;
+    db.query(query, [horarioId, instrumentoId, profesorId], callback);
+};
+
+// Función para guardar un horario
+const guardarHorario = (fecha, horaInicio, horaFin, profesorId, salaNombre, callback) => {
+    // Assuming you have a 'salas' table and a 'horarios' table
+    const query = `
+        INSERT INTO horarios (dia, mes, annio, hora_inicio, hora_fin, estado, color)
+        VALUES (DAY(?), MONTH(?), YEAR(?), ?, ?, 'programada', '#FFFFFF')
+    `;
+    db.query(query, [fecha, fecha, fecha, horaInicio, horaFin], (error, results) => {
+        if (error) return callback(error);
+
+        const horarioId = results.insertId;
+
+        // Assuming you have a 'sala_horario' table to link 'salas' and 'horarios'
+        const querySalaHorario = `
+            INSERT INTO sala_horario (sala_id, horario_id, profesor_id)
+            SELECT id, ?, ? FROM salas WHERE nombre = ?
+        `;
+        db.query(querySalaHorario, [horarioId, profesorId, salaNombre], (error) => {
+            if (error) return callback(error);
+            callback(null, horarioId);
+        });
+    });
+};
+
 // Exportar las funciones
 module.exports = {
     buscarAlumnos,
@@ -263,5 +326,10 @@ module.exports = {
     insertarUsuario,
     insertarHorario,
     obtenerHorariosPorProfesor,
-    actualizarHorario
+    actualizarHorario,
+    eliminarHorario,
+    obtenerInstrumentos,
+    obtenerInstrumentoIdPorNombre,
+    guardarClase,
+    guardarHorario
 };

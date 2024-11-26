@@ -39,7 +39,7 @@ router.get('/form', (req, res) => {
 
 // Ruta para el formulario de clase musical
 router.get('/formulario-class', (req, res) => {
-    if (req.userTipo === 3 || (req.userTipo !== 1 && req.userTipo !== 2)) {
+    if (req.userTipo === 2 || req.userTipo === 1) {
         return res.redirect('/login?error=' + encodeURIComponent('No tienes permiso para acceder a esta página'));
     }
     res.render('formulario-class', { title: 'Formulario de Clase Musical' });
@@ -299,8 +299,8 @@ router.get('/api/alumnos-por-mes', async (req, res) => {
 });
 
 // Ruta para el horario
-router.get('/horarios', (req, res) => {
-    if (req.userTipo === 2 && req.userTipo !== 1) {
+router.get('/horarios', verificarToken, (req, res) => {
+    if (req.userTipo !== 2) {
         return res.redirect('/login?error=' + encodeURIComponent('No tienes permiso para acceder a esta página'));
     }
 
@@ -310,35 +310,63 @@ router.get('/horarios', (req, res) => {
             return res.status(500).send('Error al obtener los profesores');
         }
 
-        // Obtener también las salas si es necesario
         queries.obtenerSalas((errorSalas, salas) => {
             if (errorSalas) {
                 console.error('Error al obtener las salas:', errorSalas);
                 return res.status(500).send('Error al obtener las salas');
             }
 
-            res.render('horarios', { 
-                title: 'Horario de Clases',
-                profesores: profesores,
-                salas: salas
+            queries.obtenerInstrumentos((errorInstrumentos, instrumentos) => {
+                if (errorInstrumentos) {
+                    console.error('Error al obtener los instrumentos:', errorInstrumentos);
+                    return res.status(500).send('Error al obtener los instrumentos');
+                }
+
+                queries.obtenerHorariosPorProfesor(req.userId, (errorHorarios, horarios) => {
+                    if (errorHorarios) {
+                        console.error('Error al obtener los horarios:', errorHorarios);
+                        return res.status(500).send('Error al obtener los horarios');
+                    }
+
+                    res.render('horarios', { 
+                        title: 'Horario de Clases',
+                        profesores: profesores,
+                        salas: salas,
+                        instrumentos: instrumentos,
+                        horarios: horarios,
+                        userId: req.userId
+                    });
+                });
             });
         });
     });
 });
 
-// Ruta para guardar el horario
-router.post('/guardar-horario', (req, res) => {
-    const { fecha, horaInicio, horaFin, profesorId, salaNombre } = req.body;
+// Ruta para guardar o actualizar un horario
+router.post('/guardar-horario', verificarToken, (req, res) => {
+    const { fecha, horaInicio, horaFin, profesorId, salaNombre, instrumentoNombre } = req.body;
 
-    queries.insertarHorario(fecha, horaInicio, horaFin, profesorId, salaNombre, (error, resultado) => {
-        if (error) {
-            console.error('Error al guardar el horario:', error);
-            if (error.message === 'La sala ya está ocupada en este horario') {
-                return res.status(409).json({ success: false, message: 'La sala ya está ocupada en este horario' });
-            }
-            return res.status(500).json({ success: false, message: 'Error al guardar el horario' });
+    queries.obtenerInstrumentoIdPorNombre(instrumentoNombre, (error, instrumentoId) => {
+        if (error || !instrumentoId) {
+            console.error('Error al obtener el ID del instrumento:', error);
+            return res.status(500).json({ success: false, message: 'Error al obtener el ID del instrumento' });
         }
-        res.json({ success: true, message: 'Horario guardado exitosamente' });
+
+        queries.guardarHorario(fecha, horaInicio, horaFin, profesorId, salaNombre, (error, horarioId) => {
+            if (error) {
+                console.error('Error al guardar el horario:', error);
+                return res.status(500).json({ success: false, message: 'Error al guardar el horario' });
+            }
+
+            queries.guardarClase(horarioId, instrumentoId, profesorId, (error) => {
+                if (error) {
+                    console.error('Error al guardar la clase:', error);
+                    return res.status(500).json({ success: false, message: 'Error al guardar la clase' });
+                }
+
+                res.json({ success: true, message: 'Clase guardada exitosamente' });
+            });
+        });
     });
 });
 
@@ -366,6 +394,59 @@ router.put('/actualizar-horario/:horarioId', (req, res) => {
             return res.status(500).json({ success: false, message: 'Error al actualizar el horario' });
         }
         res.json({ success: true, message: 'Horario actualizado exitosamente' });
+    });
+});
+
+// Ruta para ver el horario semanal
+router.get('/horarios-semana', verificarToken, (req, res) => {
+    if (req.userTipo !== 2) {
+        return res.redirect('/login?error=' + encodeURIComponent('No tienes permiso para acceder a esta página'));
+    }
+
+    queries.obtenerHorariosPorProfesor(req.userId, (error, horarios) => {
+        if (error) {
+            console.error('Error al obtener los horarios:', error);
+            return res.status(500).send('Error al obtener los horarios');
+        }
+
+        // Filter the schedules for the current week
+        const currentWeek = getCurrentWeek();
+        const weeklyHorarios = horarios.filter(horario => {
+            const horarioDate = new Date(horario.annio, horario.mes - 1, horario.dia);
+            return currentWeek.some(date => date.getTime() === horarioDate.getTime());
+        });
+
+        res.render('horarios-semana', { 
+            title: 'Horario Semanal',
+            weeklyHorarios: weeklyHorarios
+        });
+    });
+});
+
+// Helper function to get the current week's dates
+function getCurrentWeek() {
+    const currentDate = new Date();
+    const firstDayOfWeek = currentDate.getDate() - currentDate.getDay() + 1; // Monday
+    const week = [];
+
+    for (let i = 0; i < 7; i++) {
+        const date = new Date(currentDate.setDate(firstDayOfWeek + i));
+        week.push(new Date(date.getFullYear(), date.getMonth(), date.getDate()));
+    }
+
+    return week;
+}
+
+// Ruta para eliminar un horario
+router.delete('/eliminar-horario/:horarioId', verificarToken, (req, res) => {
+    const { horarioId } = req.params;
+
+    queries.eliminarHorario(horarioId, req.userId, (error, resultado) => {
+        if (error) {
+            console.error('Error al eliminar el horario:', error);
+            return res.status(500).json({ success: false, message: 'Error al eliminar el horario' });
+        }
+        res.json({ success: true, message: 'Horario eliminado exitosamente' });
     });
 });
 
