@@ -7,9 +7,7 @@
   botonFlotante.id = 'chat-bubble';
   botonFlotante.className = 'chat-bubble';
   botonFlotante.innerHTML = `
-    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z" />
-    </svg>
+    <img src="images/5733925.png" alt="Chat" />
   `;
   document.body.appendChild(botonFlotante);
 
@@ -47,30 +45,58 @@
   const respuestasPredefinidas = {
     'horarios': {
       palabrasClave: ['horario', 'horarios', 'atencion', 'atención', 'abierto', 'abren', 'cierran'],
-      respuesta: 'Nuestro horario de atención es de 08:00 a 19:00 horas, de lunes a viernes.'
+      respuesta: 'Nuestro horario de atención es de Lunes a Sábado de 9a.m - 10p.m.⏰'
     },
     'hola': {
       palabrasClave: ['hola', 'saludos', 'como', 'estas',],
-      respuesta: 'Hola, ¿en qué puedo ayudarte hoy?'
+      respuesta: 'Hola, ¿en qué puedo ayudarte hoy?👋'
     },
     'ubicacion': {
       palabrasClave: ['donde', 'ubicacion', 'ubicación', 'direccion', 'dirección', 'lugar'],
-      respuesta: 'Nos encontramos en [Tu dirección aquí].'
+      respuesta: 'Nos encontramos en San Miguel 594, Melipilla, Región Metropolitana.🗺️'
     },
     'contacto': {
       palabrasClave: ['telefono', 'teléfono', 'contacto', 'email', 'correo', 'contactar'],
-      respuesta: `puedes contactarnos directamente por WhatsApp al:  
-      <a href="https://wa.me/56934884214?text=Hola,%20necesito%20más%20información" target="_blank" class="whatsapp-link">
-          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#25D366">
-              <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.274.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.1.824zm-3.423-14.416c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm.029 18.88c-1.161 0-2.305-.292-3.318-.844l-3.677.964.984-3.595c-.607-1.052-.927-2.246-.926-3.468.001-3.825 3.113-6.937 6.937-6.937 1.856.001 3.598.723 4.907 2.034 1.31 1.311 2.031 3.054 2.03 4.908-.001 3.825-3.113 6.938-6.937 6.938z"/>
-          </svg>
-          Contactar por WhatsApp
-      </a>
-      o a nuestro correo: [tu correo aquí]` 
+      respuesta: `Puedes contactarnos directamente por WhatsApp:
+      <div class="social-button whatsapp-button">
+          <a href="https://wa.me/56934884214?text=Hola,%20necesito%20más%20información" target="_blank">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#ffffff">
+                  <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.274.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.1.824z"/>
+              </svg>
+              Contactar por WhatsApp
+          </a>
+      </div>
+
+      <div class="social-button instagram-button">
+          <a href="https://www.instagram.com/academia_feelingmusic/" target="_blank">
+              <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#ffffff">
+                  <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0 2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
+              </svg>
+              Síguenos en Instagram
+          </a>
+      </div>`
     },
+    
     'servicios': {
-      palabrasClave: ['servicios', 'ofrecen', 'tienen', 'productos'],
-      respuesta: 'Ofrecemos los siguientes servicios: [Lista de tus servicios]'
+  palabrasClave: ['servicios', 'ofrecen', 'tienen', 'productos'],
+  respuesta: 'Ofrecemos clases de música para aprender a tocar instrumentos🎸.'
+    },
+
+    'tipo-clases': {
+      palabrasClave: ['tipo', 'clases', 'grupales', 'individuales'],
+      respuesta: 'Nuestras clases pueden ser grupales o individuales, adaptándonos a las necesidades de cada estudiante🎒.'
+    },
+
+    'informacion': {
+      palabrasClave: ['informacion', 'quienes', 'que hacen'],
+      respuesta: 'Claro, te puedo dar información sobre nosotros. Somos una academia de música, ' +
+                'enfocada en enseñar aprender a tocar un instrumento, a cantar y adentrar a jóvenes y adultos al maravilloso mundo de la música ' +
+                'con nuestros profesores expertos.🥳🎵👨‍🏫👩‍🏫'
+    },
+
+    'profesores': {
+      palabrasClave: ['profesores', 'especializados', 'guitarra', 'piano', 'bateria', 'canto', 'cello', 'bajo'],
+      respuesta: 'Nuestro equipo de profesores está compuesto por especialistas en guitarra, piano, batería, canto, cello, bajo y otros instrumentos.🎶🎵'
     },
     'default': {
       respuesta: `Lo siento, no he entendido tu pregunta. Para más información, puedes contactarnos directamente por WhatsApp 
@@ -90,10 +116,10 @@
         'select', 'union', 'insert', 'delete', 'update', 'drop', 
         'alter', 'create', 'truncate', 'exec', 'or', 'and', '--', 
         ';', '#', 'sleep', 'benchmark', 'load_file', 'outfile', 
-        'information_schema', 'database()', "'", '"', '%', '=', 
+         'database()', "'", '"', '%', '=', 
         '1=1', 'union select', 'drop table'
       ],
-      respuesta: 'Advertencia: Se ha detectado un posible intento de inyección SQL. intentalo para la proxima jaja saludos👋 .'
+      respuesta: 'Advertencia: Se ha detectado un posible intento de inyección SQL. intentalo para la proxima saludos👋 .'
     },
   };
 
@@ -205,7 +231,7 @@
     elementoRespuesta.className = 'clearfix';
     elementoRespuesta.innerHTML = `
       <div class="botAvatar">
-        <img src="/images/botAvatar.png" alt="Bot" />
+        <img src="images/chat.png" alt="Bot" />
       </div>
       <div class="botMsg">
         <span class="message-icon">💬</span>
@@ -264,7 +290,7 @@
     elementoCarga.id = 'loadingAnimation';
     elementoCarga.innerHTML = `
         <div class="botAvatar">
-            <img src="/images/botAvatar.png" alt="Bot" />
+            <img src="/images/chat.png" alt="Bot" />
         </div>
         <div class="dots-container">
             <div class="dot"></div>
