@@ -39,13 +39,146 @@ router.get('/form', verificarToken, (req, res) => {
     res.render('form', { title: 'Formulario de Registro' });
 });
 
-// Ruta para el formulario de clase musical
-router.get('/formulario-class', (req, res) => {
-    if (req.userTipo === 2 || (req.userTipo === 1)) {
-        return res.redirect('/login2?error=' + encodeURIComponent('No tienes permiso para acceder a esta página'));
+// Ruta GET para mostrar el formulario
+router.get('/formulario-class', verificarToken, async (req, res) => {
+    try {
+        const alumnoId = req.query.alumnoId;
+        
+        // Verificar que tenemos el alumnoId
+        if (!alumnoId) {
+            return res.status(400).send('ID de alumno no proporcionado');
+        }
+
+        const profesorId = req.profesorId;
+
+        // Obtener instrumentos del profesor
+        const instrumentosQuery = `
+            SELECT id, nombre 
+            FROM instrumentos 
+            WHERE profesor_id = ? 
+            AND estado = 'activo'
+        `;
+
+        // Obtener horarios disponibles del profesor
+        const horariosQuery = `
+            SELECT h.id, h.dia, h.mes, h.annio, 
+                   h.hora_inicio, h.hora_fin, s.nombre as sala_nombre
+            FROM horarios h
+            LEFT JOIN sala_horario sh ON h.id = sh.horario_id
+            LEFT JOIN salas s ON sh.sala_id = s.id
+            WHERE h.profesor_id = ?
+            AND h.estado = 'Disponible'
+            ORDER BY h.annio, h.mes, h.dia, h.hora_inicio
+        `;
+
+        // Ejecutar ambas consultas
+        db.query(instrumentosQuery, [profesorId], (errorInstrumentos, instrumentos) => {
+            if (errorInstrumentos) {
+                console.error('Error al obtener instrumentos:', errorInstrumentos);
+                return res.status(500).send('Error al cargar los instrumentos');
+            }
+
+            db.query(horariosQuery, [profesorId], (errorHorarios, horarios) => {
+                if (errorHorarios) {
+                    console.error('Error al obtener horarios:', errorHorarios);
+                    return res.status(500).send('Error al cargar los horarios');
+                }
+
+                // Renderizar la vista con todos los datos necesarios
+                res.render('formulario-class', {
+                    alumnoId: alumnoId,
+                    instrumentosDisponibles: instrumentos,
+                    horariosProfesor: horarios
+                });
+            });
+        });
+    } catch (error) {
+        console.error('Error en formulario-class:', error);
+        res.status(500).send('Error al procesar la solicitud');
     }
-    res.render('formulario-class', { title: 'Formulario de Clase Musical' });
 });
+
+// Ruta para el formulario de clase musical
+router.post('/formulario-class', verificarToken, async (req, res) => {
+    try {
+        const { modalidad, instrumentoId, horarioId, alumnoId } = req.body;
+        const profesorId = req.profesorId;
+
+        // Primero insertar la modalidad
+        const insertModalidad = `
+            INSERT INTO modalidades (alumno_id, profesor_id, tipo) 
+            VALUES (?, ?, ?)
+        `;
+        
+        db.query(insertModalidad, [alumnoId, profesorId, modalidad], (err, resultModalidad) => {
+            if (err) {
+                console.error('Error al insertar modalidad:', err);
+                return res.status(500).json({ error: 'Error al crear la modalidad' });
+            }
+
+            // Obtener el nombre del instrumento
+            const getInstrumentoNombre = `
+                SELECT nombre FROM instrumentos WHERE id = ?
+            `;
+
+            db.query(getInstrumentoNombre, [instrumentoId], (errInst, resultInst) => {
+                if (errInst || !resultInst[0]) {
+                    console.error('Error al obtener instrumento:', errInst);
+                    return res.status(500).json({ error: 'Error al obtener información del instrumento' });
+                }
+
+                // Luego insertar la clase
+                const insertClase = `
+                    INSERT INTO clases (
+                        nombre, modalidad_id, instrumento_id, 
+                        horario_id, profesor_id, estado,
+                        fecha, alumno_id
+                    ) VALUES (?, ?, ?, ?, ?, 'activo', CURDATE(), ?)
+                `;
+
+                const nombreClase = `Clase de ${resultInst[0].nombre}`;
+
+                db.query(insertClase, [
+                    nombreClase,
+                    resultModalidad.insertId,
+                    instrumentoId,
+                    horarioId,
+                    profesorId,
+                    alumnoId
+                ], (errClase, resultClase) => {
+                    if (errClase) {
+                        console.error('Error al insertar clase:', errClase);
+                        return res.status(500).json({ error: 'Error al crear la clase' });
+                    }
+
+                    // Actualizar el estado del horario a 'Ocupado'
+                    const updateHorario = `
+                        UPDATE horarios 
+                        SET estado = 'Ocupado' 
+                        WHERE id = ?
+                    `;
+
+                    db.query(updateHorario, [horarioId], (errHorario) => {
+                        if (errHorario) {
+                            console.error('Error al actualizar horario:', errHorario);
+                            // No retornamos error aquí para no afectar la creación de la clase
+                        }
+
+                        res.json({ 
+                            success: true, 
+                            message: 'Clase registrada exitosamente' 
+                        });
+                    });
+                });
+            });
+        });
+
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+});
+
 
 router.get('/blocks', (req, res) => {
     res.render('blocks', { title: 'Blocks' });
@@ -66,6 +199,71 @@ router.get('/carousel', (req, res) => {
 router.get('/people', (req, res) => {
     res.render('people', { title: 'People' });
 }); 
+
+router.get('/horario', verificarToken, (req, res) => {
+    if (req.userTipo !== 3) {
+        return res.redirect('/login2?error=' + encodeURIComponent('No tienes permiso para acceder a esta página'));
+    }
+
+    // Consulta para obtener los datos del alumno
+    const alumnoQuery = `
+        SELECT a.nombre, a.apellido, a.email, a.numero_telefono
+        FROM alumno a
+        WHERE a.id = ?
+    `;
+
+    // Consulta para obtener las clases del alumno
+    const clasesQuery = `
+        SELECT 
+            c.nombre as nombre_clase,
+            i.nombre as instrumento,
+            p.nombre as profesor_nombre,
+            p.apellido as profesor_apellido,
+            s.nombre as sala_nombre,
+            h.dia,
+            h.mes,
+            h.annio,
+            h.hora_inicio,
+            h.hora_fin,
+            m.tipo as modalidad
+        FROM clases c
+        JOIN instrumentos i ON c.instrumento_id = i.id
+        JOIN profesor p ON c.profesor_id = p.id
+        JOIN horarios h ON c.horario_id = h.id
+        JOIN modalidades m ON c.modalidad_id = m.id
+        LEFT JOIN sala_horario sh ON h.id = sh.horario_id
+        LEFT JOIN salas s ON sh.sala_id = s.id
+        WHERE c.alumno_id = ?
+        AND c.estado = 'activo'
+        ORDER BY h.annio, h.mes, h.dia, h.hora_inicio
+    `;
+
+    // Ejecutar ambas consultas
+    db.query(alumnoQuery, [req.alumnoId], (errorAlumno, resultadosAlumno) => {
+        if (errorAlumno) {
+            console.error('Error al obtener datos del alumno:', errorAlumno);
+            return res.status(500).send('Error al cargar los datos del alumno');
+        }
+
+        if (resultadosAlumno.length === 0) {
+            return res.status(404).send('Alumno no encontrado');
+        }
+
+        db.query(clasesQuery, [req.alumnoId], (errorClases, resultadosClases) => {
+            if (errorClases) {
+                console.error('Error al obtener clases:', errorClases);
+                return res.status(500).send('Error al cargar las clases');
+            }
+
+            res.render('horario', { 
+                title: 'Mi Horario',
+                alumno: resultadosAlumno[0],
+                clases: resultadosClases,
+                alumnoId: req.alumnoId 
+            });
+        });
+    });
+});
 
 
 // Ruta para buscar alumnos
@@ -110,85 +308,94 @@ router.post('/alumnos', verificarToken, (req, res) => {
                 return res.status(500).json({ error: 'Error al insertar el alumno' });
             }
 
+            // Asegurarse de que result.insertId existe
+            if (!result.insertId) {
+                return res.status(500).json({ error: 'No se pudo obtener el ID del alumno' });
+            }
+
             // Crear el usuario para el alumno
             queries.crearUsuarioAlumno(result.insertId, email, nombre, rut, profesorId[0].profesor_id, (err) => {
                 if (err) {
-                    console.error('Error al crear el usuario para el alumno:', err);
-                    return res.status(500).json({ error: 'Error al crear el usuario para el alumno' });
+                    console.error('Error al crear usuario:', err);
+                    return res.status(500).json({ error: 'Error al crear el usuario' });
                 }
-                res.status(200).json({ message: 'Alumno registrado y usuario creado exitosamente' });
+
+                // Devolver el ID del alumno en la respuesta
+                res.json({ 
+                    success: true, 
+                    message: 'Alumno registrado exitosamente',
+                    alumnoId: result.insertId // Asegúrate de que este valor se está enviando
+                });
             });
         });
     });
 });
 //-------------------Inicio Rutas login
 
-router.post('/register2', [
-    body('email').isEmail().withMessage('Email inválido'),
-    body('contrasena').isLength({ min: 6 }).withMessage('La contraseña debe tener al menos 6 caracteres'),
-    body('nombre').notEmpty().withMessage('El nombre es requerido'),
-    body('apellido').notEmpty().withMessage('El apellido es requerido'),
-    body('especialidad').custom(value => {
-        const especialidadesPermitidas = [
-            'guitarra', 'piano', 'bateria', 'canto',
-            'bajo', 'cello', 'acordeon', 'ukelele'
-        ];
-        
-        // Verificar si value es un array o una cadena
-        const especialidades = Array.isArray(value) ? value : value.split(',');
-        
-        // Limpiar y validar cada especialidad
-        return especialidades
-            .map(esp => esp.trim().toLowerCase())
-            .every(esp => especialidadesPermitidas.includes(esp));
-    }).withMessage('Selecciona especialidades válidas')
-], async (req, res) => {
+router.post('/register2', async (req, res) => {
     try {
-        const errors = validationResult(req);
-        if (!errors.isEmpty()) {
-            return res.status(400).json({ error: errors.array()[0].msg });
-        }
-
-        const { email, contrasena, nombre, apellido, especialidad } = req.body;
+        const { nombre, apellido, email, contrasena, especialidad } = req.body;
         
-        // Asegurarse de que especialidad sea un array
-        const especialidades = Array.isArray(especialidad) ? especialidad : especialidad.split(',');
-        
-        // Formatear cada especialidad
-        const especialidadesFormateadas = especialidades
-            .map(esp => esp.trim())
-            .map(esp => esp.charAt(0).toUpperCase() + esp.slice(1).toLowerCase())
-            .join(', ');
+        console.log('Datos recibidos:', { nombre, apellido, email, especialidad });
 
-        // Encriptar contraseña
+        // Hashear la contraseña
         const hashedPassword = await bcrypt.hash(contrasena, 10);
 
-        // Insertar usuario con la especialidad formateada
-        queries.insertarUsuario(email, hashedPassword, nombre, apellido, especialidadesFormateadas, (err, result) => {
-            if (err) {
-                console.error('Error en el registro:', err);
-                return res.status(400).json({ error: err.error || 'Error en el registro' });
+        queries.insertarUsuario(
+            email, 
+            hashedPassword, 
+            nombre, 
+            apellido, 
+            especialidad, 
+            (error, resultado) => {
+                if (error) {
+                    console.error('Error en el registro:', error);
+                    return res.status(500).json(error);
+                }
+
+                console.log('Profesor registrado exitosamente:', resultado);
+                res.json(resultado);
             }
-            res.json({ success: true, message: 'Registro exitoso' });
-        });
+        );
+
     } catch (error) {
         console.error('Error en el proceso de registro:', error);
-        res.status(500).json({ error: 'Error interno del servidor' });
+        res.status(500).json({ error: 'Error en el proceso de registro' });
     }
 });
 
-// Resto del código...
+// Función auxiliar para generar token
+function generarToken(usuario, tipo, callback) {
+    if (tipo === 3) {
+        // Token para alumno
+        const token = jwt.sign({ 
+            id: usuario.id, 
+            tipo: usuario.tipo,
+            alumnoId: usuario.alumno_id
+        }, process.env.JWT_SECRET, { expiresIn: '4h' });
+        return callback(null, token, '/horario');
+    } else {
+        // Token para profesor o admin
+        queries.obtenerProfesorId(usuario.id, (err, profesorResult) => {
+            if (err) return callback(err);
+            
+            const token = jwt.sign({ 
+                id: usuario.id, 
+                tipo: usuario.tipo,
+                profesorId: profesorResult[0]?.profesor_id
+            }, process.env.JWT_SECRET, { expiresIn: '4h' });
+            
+            const redirectUrl = usuario.tipo === 2 ? '/form' : '/dashboard';
+            callback(null, token, redirectUrl);
+        });
+    }
+}
 
-// Ruta para el login
+// Modificar la ruta login2 existente
 router.post('/login2', [
     body('email').isEmail().withMessage('El email no es válido'),
     body('contrasena').isLength({ min: 4 }).withMessage('La contraseña debe tener al menos 4 caracteres'),
 ], (req, res) => {
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ errors: errors.array() });
-    }
-
     const { email, contrasena } = req.body;
 
     queries.obtenerUsuarioLogin(email, (err, results) => {
@@ -198,44 +405,53 @@ router.post('/login2', [
 
         const user = results[0];
 
-        bcrypt.compare(contrasena, user.contrasena, (err, match) => {
-            if (err || !match) {
-                return res.status(401).json({ error: 'Credenciales incorrectas' });
-            }
+        // Si es alumno (tipo 3), comparar contraseña directamente
+        if (user.tipo === 3) {
+            if (contrasena === user.contrasena) {
+                generarToken(user, user.tipo, (err, token, redirectUrl) => {
+                    if (err) {
+                        return res.status(500).json({ error: 'Error al generar el token' });
+                    }
 
-            // Obtener el ID del profesor correspondiente al ID de la tabla usuarios
-            queries.obtenerProfesorId(user.id, (err, profesorId) => {
-                if (err) {
-                    console.error('Error al obtener el ID del profesor:', err);
-                    return res.status(500).json({ error: 'Error al obtener el ID del profesor' });
-                }
+                    res.cookie('auth_token', `Bearer ${token}`, {
+                        httpOnly: true,
+                        secure: process.env.NODE_ENV === 'production'
+                    });
 
-                const token = jwt.sign({ id: user.id, tipo: user.tipo, profesorId: profesorId }, process.env.JWT_SECRET, { expiresIn: '4h' });
-                
-                // Configurar la cookie como una cookie de sesión
-                res.cookie('auth_token', `Bearer ${token}`, {
-                    httpOnly: true,
-                    secure: process.env.NODE_ENV === 'production',
-                    // No establecer maxAge ni expires para que sea una cookie de sesión
-                });
-                
-                // Redirigir a la página del formulario si es un profesor
-                if (user.tipo === 2) {
-                    return res.json({ 
+                    res.json({ 
                         success: true,
                         tipo: user.tipo,
-                        redirectUrl: '/form' // Redirigir a la página del formulario
+                        redirectUrl: redirectUrl
                     });
+                });
+            } else {
+                return res.status(401).json({ error: 'Credenciales incorrectas' });
+            }
+        } else {
+            // Para profesores y admins, usar bcrypt
+            bcrypt.compare(contrasena, user.contrasena, (err, match) => {
+                if (err || !match) {
+                    return res.status(401).json({ error: 'Credenciales incorrectas' });
                 }
 
-                // Enviar la URL de redirección según el tipo de usuario
-                res.json({ 
-                    success: true,
-                    tipo: user.tipo,
-                    redirectUrl: user.tipo === 1 ? '/dashboard' : '/'
+                generarToken(user, user.tipo, (err, token, redirectUrl) => {
+                    if (err) {
+                        return res.status(500).json({ error: 'Error al generar el token' });
+                    }
+
+                    res.cookie('auth_token', `Bearer ${token}`, {
+                        httpOnly: true,
+                        secure: process.env.NODE_ENV === 'production'
+                    });
+
+                    res.json({ 
+                        success: true,
+                        tipo: user.tipo,
+                        redirectUrl: redirectUrl
+                    });
                 });
             });
-        });
+        }
     });
 });
 
@@ -256,6 +472,8 @@ function verificarToken(req, res, next) {
         
         req.userId = decoded.id;
         req.userTipo = decoded.tipo;
+        req.profesorId = decoded.profesorId;
+        req.alumnoId = decoded.alumnoId;
         next();
     });
 }
@@ -285,13 +503,6 @@ router.get('/login2', (req, res) => {
         error: req.query.error || null
     });
 });
-
-
-
-// Ruta para el registrar
-// router.get('/registrar-profesor',  (req, res) => {
-//     res.render('registrar-profesor', { title: 'Registrar Nuevo Profesor' });
-// });
 
 //-------------------Fin Rutas login
 
@@ -378,15 +589,35 @@ router.get('/horarios', (req, res) => {
 router.post('/guardar-horario', async (req, res) => {
     try {
         const { fecha, horaInicio, horaFin, profesorId, salaNombre } = req.body;
+        
+        // Agregar logs para depuración
+        console.log('Datos recibidos:', {
+            fecha,
+            horaInicio,
+            horaFin,
+            profesorId,
+            salaNombre
+        });
+
+        if (!profesorId) {
+            return res.status(400).json({
+                success: false,
+                message: 'El ID del profesor es requerido'
+            });
+        }
 
         const resultado = await queries.insertarHorario(fecha, horaInicio, horaFin, profesorId, salaNombre);
-        res.json({ success: true, message: 'Horario guardado exitosamente' });
+        res.json({ 
+            success: true, 
+            message: 'Horario guardado exitosamente',
+            data: resultado
+        });
     } catch (error) {
         console.error('Error al guardar el horario:', error);
-        if (error.message === 'La sala ya está ocupada en este horario') {
-            return res.status(409).json({ success: false, message: 'La sala ya está ocupada en este horario' });
-        }
-        res.status(500).json({ success: false, message: 'Error al guardar el horario' });
+        res.status(500).json({ 
+            success: false, 
+            message: error.message || 'Error al guardar el horario'
+        });
     }
 });
 
@@ -417,14 +648,60 @@ router.put('/actualizar-horario/:horarioId', (req, res) => {
     });
 });
 
-// Nueva ruta para login2
+// Ruta para obtener las clases del alumno
+router.get('/clases-alumno', verificarToken, async (req, res) => {
+    try {
+        const alumnoId = req.alumnoId; // Asumiendo que está en el token
 
-//router.get('/login2', (req, res) => {
-    //res.render('login2', { 
-        //title: 'Inicio Sesion',
-        //error: req.query.error || null
-    //});
-//})
+        const query = `
+            SELECT 
+                c.nombre as nombre_clase,
+                i.nombre as instrumento,
+                p.nombre as profesor_nombre,
+                p.apellido as profesor_apellido,
+                s.nombre as sala_nombre,
+                h.dia,
+                h.mes,
+                h.annio,
+                h.hora_inicio,
+                h.hora_fin
+            FROM clases c
+            JOIN instrumentos i ON c.instrumento_id = i.id
+            JOIN profesor p ON c.profesor_id = p.id
+            JOIN horarios h ON c.horario_id = h.id
+            LEFT JOIN sala_horario sh ON h.id = sh.horario_id
+            LEFT JOIN salas s ON sh.sala_id = s.id
+            WHERE c.estado = 'activo'
+            AND EXISTS (
+                SELECT 1 FROM modalidades m 
+                WHERE m.id = c.modalidad_id 
+                AND m.alumno_id = ?
+            )
+            ORDER BY h.annio, h.mes, h.dia, h.hora_inicio;
+        `;
+
+        db.query(query, [alumnoId], (error, results) => {
+            if (error) {
+                console.error('Error al obtener clases:', error);
+                return res.status(500).json({ error: 'Error al obtener las clases' });
+            }
+            res.json(results);
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+});
 
 // Exportar el router
 module.exports = router;
+
+router.get('/logout', (req, res) => {
+    // Limpiar tanto la sesión como el token JWT
+    if (req.session) {
+        req.session.destroy();
+    }
+    res.clearCookie('auth_token');
+    res.clearCookie('connect.sid');
+    res.redirect('/');
+});

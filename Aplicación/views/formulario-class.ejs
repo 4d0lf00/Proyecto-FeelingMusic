@@ -8,6 +8,7 @@
     <link rel="stylesheet" href="./css/form-class.css"/>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
     <script src="https://kit.fontawesome.com/cd4f2f6156.js" crossorigin="anonymous"></script>
+    <link rel="icon" href="data:,">
 </head>
 <body>
     <div class="container">
@@ -17,54 +18,51 @@
                     <h1 class="fs-3">Formulario de Clase Musical</h1>
                     <i class="fas fa-music align-items-baseline ps-2 pt-1" style="color: orange; font-size: 1.5em;"></i>
                 </span>
-                <form action="#" method="POST" id="musicClassForm" name="music-class-form">
+                <form id="musicClassForm">
+                    <input type="hidden" id="alumnoId" name="alumnoId" value="<%= alumnoId %>">
                     <div class="mb-4">
-                        <label for="modalidad" class="form-label">Modalidad preferente</label>
+                        <label for="modalidad" class="form-label">Modalidad de clase</label>
                         <select class="form-select" id="modalidad" name="modalidad" required>
-                            <option value="">Seleccione una modalidad</option>
-                            <option value="presencial">Grupal</option>
-                            <option value="online">Individual</option>
+                            <option value="">Seleccione modalidad</option>
+                            <option value="individual">Individual</option>
+                            <option value="grupal">Grupal</option>
                         </select>
                     </div>
                     <div class="mb-4">
-                        <label for="instrumento" class="form-label">Instrumento a escoger</label>
+                        <label for="instrumento" class="form-label">Instrumento</label>
                         <select class="form-select" id="instrumento" name="instrumento" required>
-                            <option value="">Seleccione un instrumento</option>
-                            <option value="guitarra">Guitarra</option>
-                            <option value="piano">Piano</option>
-                            <option value="violin">Violín</option>
-                            <option value="bateria">Batería</option>
-                            <option value="otro">Otro</option>
+                            <option value="">Seleccione instrumento</option>
+                            <% instrumentosDisponibles.forEach(function(instrumento) { %>
+                                <option value="<%= instrumento.id %>">
+                                    <%= instrumento.nombre %>
+                                </option>
+                            <% }); %>
                         </select>
                     </div>
                     <div class="mb-4">
-                        <label class="form-label">Horario de clases disponible</label>
-                        <div id="horarios">
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="lunes-18-20" id="horario1">
-                                <label class="form-check-label" for="horario1">Lunes 18:00 - 20:00</label>
-                            </div>
-                            <div class="form-check">
-                                <input class="form-check-input" type="checkbox" value="miercoles-16-18" id="horario2">
-                                <label class="form-check-label" for="horario2">Miércoles 16:00 - 18:00</label>
-                            </div>
+                        <label class="form-label">Horario disponible</label>
+                        <div id="horariosDisponibles">
+                            <% if (horariosProfesor && horariosProfesor.length > 0) { %>
+                                <% horariosProfesor.forEach(function(horario) { %>
+                                    <div class="form-check">
+                                        <input class="form-check-input" 
+                                               type="radio" 
+                                               name="horarioId" 
+                                               value="<%= horario.id %>" 
+                                               required>
+                                        <label class="form-check-label">
+                                            <%= horario.dia %>/<%= horario.mes %>/<%= horario.annio %> 
+                                            <%= horario.hora_inicio %> - <%= horario.hora_fin %>
+                                            (<%= horario.sala_nombre %>)
+                                        </label>
+                                    </div>
+                                <% }); %>
+                            <% } else { %>
+                                <p class="text-muted">No hay horarios disponibles en este momento.</p>
+                            <% } %>
                         </div>
                     </div>
-                    <div class="mb-4">
-                        <label for="diaPago" class="form-label">Día preferente de pago</label>
-                        <select class="form-select" id="diaPago" name="diaPago" required>
-                            <option value="">Seleccione un día</option>
-                            <option value="5">5 de cada mes</option>
-                            <option value="15">15 de cada mes</option>
-                            <option value="20">20 de cada mes</option>
-                            <option value="30">30 de cada mes</option>
-                        </select>
-                    </div>
-                    <div class="button-container">
-                        <button type="submit">
-                            <span>Registrar</span>
-                        </button>
-                    </div>
+                    <button type="submit" class="btn btn-primary">Registrar</button>
                 </form>
             </div>
         </div>
@@ -72,31 +70,48 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js" integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM" crossorigin="anonymous"></script>
     <script>
-        document.getElementById('musicClassForm').addEventListener('submit', function(e) {
+        document.getElementById('musicClassForm').addEventListener('submit', async (e) => {
             e.preventDefault();
-            var today = new Date();
-            var selectedDay = parseInt(document.getElementById('diaPago').value);
-            var nextPaymentDate = new Date(today.getFullYear(), today.getMonth(), selectedDay);
             
-            if (today.getDate() > selectedDay) {
-                nextPaymentDate.setMonth(nextPaymentDate.getMonth() + 1);
+            const alumnoId = document.getElementById('alumnoId').value;
+            
+            console.log('alumnoId:', alumnoId);
+
+            if (!alumnoId) {
+                alert('Error: No se encontró el ID del alumno');
+                return;
             }
 
-            var closestDay;
+            const formData = {
+                alumnoId: alumnoId,
+                modalidad: document.getElementById('modalidad').value,
+                instrumentoId: document.getElementById('instrumento').value,
+                horarioId: document.querySelector('input[name="horarioId"]:checked').value
+            };
 
-            if (today.getDate() < 5) {
-                closestDay = 5;
-            } else if (today.getDate() < 15) {
-                closestDay = 15;
-            } else if (today.getDate() < 20) {
-                closestDay = 20;
-            } else {
-                closestDay = 30;
+            console.log('Datos a enviar:', formData);
+
+            try {
+                const response = await fetch('/formulario-class', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const data = await response.json();
+                if (data.success) {
+                    alert('Clase registrada exitosamente');
+                    window.location.href = '/dashboard';
+                } else {
+                    alert(data.error || 'Error al registrar la clase');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al registrar la clase');
             }
-
-            alert('Su próxima fecha de pago será el ' + closestDay + ' del mes.');
         });
-        
     </script>
 </body>
 </html>

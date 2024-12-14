@@ -132,38 +132,32 @@ const obtenerSalas = (callback) => {
 // Función para insertar un nuevo horario en la base de datos
 const insertarHorario = (fecha, horaInicio, horaFin, profesorId, salaNombre) => {
     return new Promise((resolve, reject) => {
-        if (!fecha || !horaInicio || !horaFin || !profesorId || !salaNombre) {
-            return reject(new Error('Todos los campos son requeridos'));
+        if (!profesorId) {
+            return reject(new Error('El ID del profesor es requerido'));
         }
 
-        // Descomponer la fecha en día, mes y año
         const [annio, mes, dia] = fecha.split('-');
 
-        // Verificar si ya existe un horario en la misma sala a la misma hora
-        const queryVerificar = `
-            SELECT COUNT(*) AS count FROM horarios h
-            JOIN sala_horario sh ON h.id = sh.horario_id
-            JOIN salas s ON sh.sala_id = s.id
-            WHERE h.dia = ? AND h.mes = ? AND h.annio = ? AND h.hora_inicio = ? AND s.nombre = ?;
+        // Log para depuración
+        console.log('Insertando horario con datos:', {
+            dia, mes, annio, horaInicio, horaFin, profesorId, salaNombre
+        });
+
+        const queryHorario = `
+            INSERT INTO horarios (
+                dia, mes, annio, 
+                hora_inicio, hora_fin, 
+                profesor_id, estado
+            )
+            VALUES (?, ?, ?, ?, ?, ?, 'Disponible');
         `;
 
-        db.query(queryVerificar, [dia, mes, annio, horaInicio, salaNombre], (errorVerificar, resultadosVerificar) => {
-            if (errorVerificar) {
-                return reject(errorVerificar);
-            }
-
-            if (resultadosVerificar[0].count > 0) {
-                return reject(new Error('La sala ya está ocupada en este horario'));
-            }
-
-            // Insertar el horario en la tabla horarios
-            const queryHorario = `
-                INSERT INTO horarios (dia, mes, annio, hora_inicio, hora_fin)
-                VALUES (?, ?, ?, ?, ?);
-            `;
-
-            db.query(queryHorario, [dia, mes, annio, horaInicio, horaFin], (error, resultados) => {
+        db.query(
+            queryHorario, 
+            [dia, mes, annio, horaInicio, horaFin, profesorId],
+            (error, resultados) => {
                 if (error) {
+                    console.error('Error en la inserción:', error);
                     return reject(error);
                 }
 
@@ -182,8 +176,8 @@ const insertarHorario = (fecha, horaInicio, horaFin, profesorId, salaNombre) => 
 
                     resolve({ mensaje: 'Horario creado con éxito', horarioId });
                 });
-            });
-        });
+            }
+        );
     });
 };
 
@@ -243,86 +237,126 @@ const actualizarEstado = (horarioId, callback) => {
 
 // Obtener usuario por email
 function obtenerUsuarioLogin(email, callback) {
-    const sql = 'SELECT * FROM usuarios WHERE email_personal = ?';
+    const sql = `
+        SELECT u.*, 
+               a.id as alumno_id 
+        FROM usuarios u 
+        LEFT JOIN alumno a ON u.alumno_id = a.id 
+        WHERE u.email_personal = ?
+    `;
+    
     db.query(sql, [email], (err, results) => {
-        callback(err, results);
+        if (err) {
+            console.error('Error en obtenerUsuarioLogin:', err);
+            return callback(err);
+        }
+        callback(null, results);
     });
 }
 
 // Insertar un nuevo usuario
 function insertarUsuario(email, contrasena, nombre, apellido, especialidad, callback) {
-    // Comenzar transacción
     db.beginTransaction(function(err) {
         if (err) {
             console.error('Error al iniciar transacción:', err);
             return callback({ error: 'Error al iniciar la transacción' });
         }
 
-        // 1. Insertar profesor
+        // Convertir array de especialidades a string
+        const especialidadString = Array.isArray(especialidad) ? 
+            especialidad.join(', ') : especialidad;
+
+        // 1. Insertar profesor con especialidad
         const queryProfesor = `
-            INSERT INTO profesor (nombre, apellido, email, tipo, especialidad) 
-            VALUES (?, ?, ?, ?, ?)
+            INSERT INTO profesor (nombre, apellido, email, tipo, especialidad)
+            VALUES (?, ?, ?, 2, ?)
         `;
 
-        db.query(queryProfesor, [nombre, apellido, email, 2, especialidad], (errProfesor, profesorResult) => {
+        console.log('Insertando profesor:', { 
+            nombre, 
+            apellido, 
+            email, 
+            especialidad: especialidadString 
+        });
+
+        db.query(queryProfesor, [nombre, apellido, email, especialidadString], (errProfesor, profesorResult) => {
             if (errProfesor) {
+                console.error('Error al insertar profesor:', errProfesor);
                 return db.rollback(() => {
-                    console.error('Error al insertar profesor:', errProfesor);
                     callback({ error: 'Error al registrar el profesor' });
                 });
             }
 
             const profesorId = profesorResult.insertId;
-            console.log('ID del profesor insertado:', profesorId);
+            console.log('Profesor insertado con ID:', profesorId);
 
-            // 2. Insertar en instrumentos
-            // Si hay múltiples especialidades, las separamos
-            const especialidades = especialidad.split(',').map(e => e.trim());
-            
-            // Crear consultas para cada especialidad
-            const valoresInstrumentos = especialidades.map(esp => [esp, profesorId, 'activo']);
-            const queryInstrumentos = `
-                INSERT INTO instrumentos (nombre, profesor_id, estado) 
-                VALUES ?
+            // 2. Insertar usuario
+            const queryUsuario = `
+                INSERT INTO usuarios (
+                    email_personal, 
+                    contrasena, 
+                    tipo, 
+                    profesor_id,
+                    alumno_id,
+                    profesor_id_profesor
+                ) VALUES (?, ?, 2, ?, NULL, NULL)
             `;
 
-            db.query(queryInstrumentos, [valoresInstrumentos], (errInstrumento) => {
-                if (errInstrumento) {
+            console.log('Insertando usuario:', { 
+                email_personal: email,
+                tipo: 2,
+                profesor_id: profesorId
+            });
+
+            db.query(queryUsuario, [email, contrasena, profesorId], (errUsuario) => {
+                if (errUsuario) {
+                    console.error('Error al insertar usuario:', errUsuario);
                     return db.rollback(() => {
-                        console.error('Error al insertar instrumentos:', errInstrumento);
-                        callback({ error: 'Error al registrar las especialidades' });
+                        callback({ error: 'Error al crear el usuario' });
                     });
                 }
 
-                // 3. Insertar usuario
-                const queryUsuario = `
-                    INSERT INTO usuarios (email_personal, contrasena, tipo, profesor_id) 
-                    VALUES (?, ?, ?, ?)
-                `;
+                console.log('Usuario insertado correctamente');
 
-                db.query(queryUsuario, [email, contrasena, 2, profesorId], (errUsuario) => {
-                    if (errUsuario) {
-                        return db.rollback(() => {
-                            console.error('Error al insertar usuario:', errUsuario);
-                            callback({ error: 'Error al crear el usuario' });
-                        });
-                    }
+                // 3. Insertar especialidades en tabla instrumentos
+                const especialidades = Array.isArray(especialidad) ? especialidad : [especialidad];
+                let especialidadesInsertadas = 0;
 
-                    // Confirmar transacción
-                    db.commit((errCommit) => {
-                        if (errCommit) {
+                console.log('Insertando especialidades en instrumentos:', especialidades);
+
+                especialidades.forEach(esp => {
+                    const queryInstrumento = `
+                        INSERT INTO instrumentos (nombre, profesor_id, estado)
+                        VALUES (?, ?, 'activo')
+                    `;
+
+                    db.query(queryInstrumento, [esp, profesorId], (errInstrumento) => {
+                        if (errInstrumento) {
+                            console.error('Error al insertar instrumento:', errInstrumento);
                             return db.rollback(() => {
-                                console.error('Error al confirmar transacción:', errCommit);
-                                callback({ error: 'Error al confirmar el registro' });
+                                callback({ error: 'Error al registrar las especialidades' });
                             });
                         }
 
-                        console.log('Registro completado con éxito');
-                        callback(null, {
-                            success: true,
-                            message: 'Registro exitoso',
-                            profesorId: profesorId
-                        });
+                        especialidadesInsertadas++;
+
+                        if (especialidadesInsertadas === especialidades.length) {
+                            db.commit((errCommit) => {
+                                if (errCommit) {
+                                    console.error('Error al confirmar transacción:', errCommit);
+                                    return db.rollback(() => {
+                                        callback({ error: 'Error al confirmar el registro' });
+                                    });
+                                }
+
+                                console.log('Registro completado con éxito');
+                                callback(null, {
+                                    success: true,
+                                    message: 'Registro exitoso',
+                                    profesorId: profesorId
+                                });
+                            });
+                        }
                     });
                 });
             });

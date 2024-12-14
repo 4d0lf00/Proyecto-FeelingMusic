@@ -161,7 +161,7 @@
           <label for="profesor">Profesor:</label>
           <select id="profesor" name="profesorId" required>
             <% profesores.forEach(profesor => { %>
-              <option value="<%= profesor.id %>"><%= profesor.nombre %></option>
+              <option value="<%= profesor.id %>"><%= profesor.nombre %> <%= profesor.apellido %></option>
             <% }) %>
           </select>
         </div>
@@ -191,43 +191,40 @@
       document.getElementById('horarioForm').addEventListener('submit', function(event) {
         event.preventDefault();
   
-        // Obtener los valores del formulario
-        const fecha = document.getElementById('fecha').value;
-        const horaInicio = document.getElementById('horaInicio').value;
-        const horaFin = document.getElementById('horaFin').value;
+        // Agregar console.log para depuración
         const profesorId = document.getElementById('profesor').value;
-        const salaNombre = document.getElementById('sala').options[document.getElementById('sala').selectedIndex].text;
+        console.log('ID del profesor seleccionado:', profesorId);
   
-        // Enviar los datos al servidor usando fetch
+        const formData = {
+            fecha: document.getElementById('fecha').value,
+            horaInicio: document.getElementById('horaInicio').value,
+            horaFin: document.getElementById('horaFin').value,
+            profesorId: profesorId, // Asegurarse de que este valor se envíe
+            salaNombre: document.getElementById('sala').value
+        };
+  
+        console.log('Datos a enviar:', formData); // Para depuración
+  
         fetch('/guardar-horario', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json'
-          },
-          body: JSON.stringify({
-            fecha,
-            horaInicio,
-            horaFin,
-            profesorId,
-            salaNombre
-          })
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
         })
-        .then(response => {
-          if (!response.ok) {
-            throw new Error('Error en la respuesta del servidor');
-          }
-          return response.json();
-        })
+        .then(response => response.json())
         .then(data => {
-          if (data.success) {
-            // Manejar el éxito
-          } else {
-            alert(data.message || 'Error al guardar el horario');
-          }
+            if (data.success) {
+                alert('Horario guardado exitosamente');
+                // Opcional: recargar la página o actualizar la lista
+                window.location.reload();
+            } else {
+                alert(data.message || 'Error al guardar el horario');
+            }
         })
         .catch(error => {
-          console.error('Error:', error);
-          alert(error.message || 'Hubo un error al guardar el horario');
+            console.error('Error:', error);
+            alert('Error al guardar el horario');
         });
       });
     </script>
