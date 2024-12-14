@@ -7,8 +7,6 @@ body {
     font-family: 'Raleway', sans-serif;
 }
 
-/* ============= css related to chats =============== */
-
 .widget {
     display: none;
     position: fixed;
@@ -251,10 +249,10 @@ video:focus {
     border: 1px solid rgba(0,0,0,0.1);
 }
 
-.chat-bubble svg {
+.chat-bubble img {
     width: 30px;
     height: 30px;
-    color: white;
+    object-fit: contain;
 }
 
 .userAvatar, .botAvatar {
@@ -412,4 +410,40 @@ video:focus {
         transform: scale(0.8);
         background-color: #ffffff;
     }
+}
+
+.social-button {
+    margin: 10px 0;
+}
+
+.social-button a {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 15px;
+    border-radius: 25px;
+    color: white;
+    text-decoration: none;
+    font-weight: 500;
+    transition: all 0.3s ease;
+}
+
+.social-button svg {
+    flex-shrink: 0;
+}
+
+.whatsapp-button a {
+    background-color: #25D366;
+}
+
+.whatsapp-button a:hover {
+    background-color: #128C7E;
+}
+
+.instagram-button a {
+    background: linear-gradient(45deg, #405DE6, #5851DB, #833AB4, #C13584, #E1306C, #FD1D1D);
+}
+
+.instagram-button a:hover {
+    opacity: 0.9;
 }
