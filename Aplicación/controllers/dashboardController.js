@@ -13,7 +13,15 @@ const getDashboardData = (req, res) => {
             ORDER BY mes
         `;
 
-        // Consulta modificada para contar alumnos por instrumento a través del profesor
+        // Consulta para obtener la suma de pagos del mes actual
+        const pagosQuery = `
+            SELECT COALESCE(SUM(monto), 0) as total_ganancias
+            FROM pagos
+            WHERE MONTH(fecha_pago) = MONTH(CURRENT_DATE())
+            AND YEAR(fecha_pago) = YEAR(CURRENT_DATE())
+        `;
+
+        // Consulta para instrumentos
         const instrumentQuery = `
             SELECT 
                 LOWER(i.nombre) as instrumento,
@@ -26,74 +34,74 @@ const getDashboardData = (req, res) => {
             ORDER BY total DESC
         `;
 
-        // Consulta para obtener el conteo de visualizaciones
+        // Consulta para visualizaciones
         const viewsQuery = `
             SELECT SUM(contador) as total_views
             FROM page_views
         `;
 
-        // Ejecutar ambas consultas
-        db.query(monthlyQuery, (err, monthlyResults) => {
+        // Ejecutar consultas
+        db.query(pagosQuery, (err, pagosResults) => {
             if (err) {
-                console.error('Error al obtener datos mensuales:', err);
+                console.error('Error al obtener pagos:', err);
                 return res.status(500).render('error', { message: 'Error al cargar el dashboard' });
             }
 
-            db.query(instrumentQuery, (err, instrumentResults) => {
+            db.query(monthlyQuery, (err, monthlyResults) => {
                 if (err) {
-                    console.error('Error al obtener datos de instrumentos:', err);
+                    console.error('Error al obtener datos mensuales:', err);
                     return res.status(500).render('error', { message: 'Error al cargar el dashboard' });
                 }
 
-                db.query(viewsQuery, (err, viewsResults) => {
+                db.query(instrumentQuery, (err, instrumentResults) => {
                     if (err) {
-                        console.error('Error al obtener visualizaciones:', err);
+                        console.error('Error al obtener datos de instrumentos:', err);
                         return res.status(500).render('error', { message: 'Error al cargar el dashboard' });
                     }
 
-                    const totalViews = viewsResults[0].total_views || 0;
-
-                    // Inicializar array con 12 meses en 0
-                    const monthlyData = new Array(12).fill(0);
-                    
-                    // Llenar con datos reales mensuales
-                    monthlyResults.forEach(row => {
-                        monthlyData[row.mes - 1] = row.total;
-                    });
-
-                    // Preparar datos para el gráfico de instrumentos
-                    const instrumentLabels = [];
-                    const instrumentValues = [];
-                    
-                    instrumentResults.forEach(row => {
-                        // Capitalizar primera letra del instrumento
-                        const instrumentName = row.instrumento.charAt(0).toUpperCase() + 
-                                            row.instrumento.slice(1).toLowerCase().trim();
-                        instrumentLabels.push(instrumentName);
-                        instrumentValues.push(row.total);
-                    });
-
-                    console.log('Datos de instrumentos:', instrumentResults); // Para debugging
-
-                    const dashboardData = {
-                        monthly: monthlyData,
-                        users: monthlyResults.reduce((acc, curr) => acc + curr.total, 0),
-                        revenue: 45600,
-                        orders: totalViews,
-                        categoryData: {
-                            labels: instrumentLabels,
-                            values: instrumentValues
-                        },
-                        trafficSources: {
-                            labels: ['Direct', 'Social', 'Email', 'Ads', 'Organic'],
-                            values: [1200, 900, 800, 600, 500]
+                    db.query(viewsQuery, (err, viewsResults) => {
+                        if (err) {
+                            console.error('Error al obtener visualizaciones:', err);
+                            return res.status(500).render('error', { message: 'Error al cargar el dashboard' });
                         }
-                    };
 
-                    res.render('dashboard', {
-                        title: 'Dashboard',
-                        data: dashboardData,
-                        userTipo: req.userTipo
+                        const totalViews = viewsResults[0].total_views || 0;
+                        const monthlyData = new Array(12).fill(0);
+                        
+                        monthlyResults.forEach(row => {
+                            monthlyData[row.mes - 1] = row.total;
+                        });
+
+                        const instrumentLabels = [];
+                        const instrumentValues = [];
+                        
+                        instrumentResults.forEach(row => {
+                            const instrumentName = row.instrumento.charAt(0).toUpperCase() + 
+                                                row.instrumento.slice(1).toLowerCase().trim();
+                            instrumentLabels.push(instrumentName);
+                            instrumentValues.push(row.total);
+                        });
+
+                        const dashboardData = {
+                            monthly: monthlyData,
+                            users: monthlyResults.reduce((acc, curr) => acc + curr.total, 0),
+                            revenue: pagosResults[0].total_ganancias, // Aquí asignamos las ganancias del mes
+                            orders: totalViews,
+                            categoryData: {
+                                labels: instrumentLabels,
+                                values: instrumentValues
+                            },
+                            trafficSources: {
+                                labels: ['Direct', 'Social', 'Email', 'Ads', 'Organic'],
+                                values: [1200, 900, 800, 600, 500]
+                            }
+                        };
+
+                        res.render('dashboard', {
+                            title: 'Dashboard',
+                            data: dashboardData,
+                            userTipo: req.userTipo
+                        });
                     });
                 });
             });
@@ -105,6 +113,24 @@ const getDashboardData = (req, res) => {
     }
 };
 
+const getGananciasMes = (req, res) => {
+    const query = `
+        SELECT COALESCE(SUM(monto), 0) as total_ganancias
+        FROM pagos
+        WHERE MONTH(fecha_pago) = MONTH(CURRENT_DATE())
+        AND YEAR(fecha_pago) = YEAR(CURRENT_DATE())
+    `;
+    
+    db.query(query, (err, results) => {
+        if (err) {
+            console.error('Error al obtener ganancias:', err);
+            return res.status(500).json({ error: 'Error al obtener ganancias' });
+        }
+        res.json({ total: results[0].total_ganancias });
+    });
+};
+
 module.exports = {
-    getDashboardData
+    getDashboardData,
+    getGananciasMes
 }; 
