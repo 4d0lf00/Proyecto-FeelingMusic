@@ -705,3 +705,5 @@ router.get('/logout', (req, res) => {
     res.clearCookie('connect.sid');
     res.redirect('/');
 });
+
+router.get('/api/ganancias-mes', dashboardController.getGananciasMes);

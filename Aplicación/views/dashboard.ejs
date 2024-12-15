@@ -59,7 +59,7 @@
             <div class="stats-grid">
                 <div class="stat-card">
                     <h3><i class="fas fa-dollar-sign"></i> Ganancias del mes</h3>
-                    <p>$<%= data && data.revenue ? data.revenue.toLocaleString() : 0 %></p>
+                    <p>$<span id="totalGanancias"><%= data && data.revenue ? data.revenue.toLocaleString() : 0 %></span></p>
                 </div>
                 <div class="stat-card">
                     <h3><i class="fas fa-shopping-cart"></i> Visualizacion de la pagina</h3>
@@ -107,13 +107,22 @@
                 const dataAlumnos = await responseAlumnos.json();
                 const elementoAlumnos = document.getElementById('totalAlumnos');
                 
+                // Actualizar ganancias
+                const responseGanancias = await fetch('/api/ganancias-mes');
+                const dataGanancias = await responseGanancias.json();
+                const elementoGanancias = document.getElementById('totalGanancias');
+                
                 // Agregar clase para animación
                 elementoAlumnos.classList.add('updating');
                 elementoAlumnos.textContent = dataAlumnos.total;
                 
+                elementoGanancias.classList.add('updating');
+                elementoGanancias.textContent = dataGanancias.total.toLocaleString();
+                
                 // Remover clase después de la animación
                 setTimeout(() => {
                     elementoAlumnos.classList.remove('updating');
+                    elementoGanancias.classList.remove('updating');
                 }, 300);
                 
             } catch (error) {
