@@ -655,7 +655,7 @@ ul.nav.navbar-nav li a.active::before {
     text-align: center;
 }
 
-.w3-agile1-sectn-social ul li a i.fa.fa-facebook,
+.w3-agile1-sectn-social ul li a i.fa.fa-instagram,
 .w3-agile1-sectn-social ul li a i.fa.fa-twitter,
 .w3-agile1-sectn-social ul li a i.fa.fa-google-plus {
     height: 35px;
@@ -686,8 +686,8 @@ ul.nav.navbar-nav li a.active::before {
     color: #FFFFFF;
 }
 
-.w3-agile1-sectn-social ul li a i.fa.fa-google-plus:hover {
-    background: #dd4b39;
+.w3-agile1-sectn-social ul li a i.fa.fa-whatsapp:hover {
+    background: #39dd41;
     color: #FFFFFF;
 }
 
@@ -1517,16 +1517,16 @@ li.nbs-flexisel-item img {
     -ms-transition: 0.5s all;
 }
 
-.team-caption ul li a i.fa.fa-facebook:hover {
-    background: #3b5998;
+.team-caption ul li a i.fa.fa-instagram:hover {
+    background: #e28ede;
 }
 
 .team-caption ul li a i.fa.fa-twitter:hover {
     background: #55acee;
 }
 
-.team-caption ul li a i.fa.fa-rss:hover {
-    background: #f26522;
+.team-caption ul li a i.fa.fa-whatsapp:hover {
+    background: #29f222;
 }
 
 .team-caption {
@@ -1882,16 +1882,79 @@ li.nbs-flexisel-item img {
 /*-- contact --*/
 
 .contact-sectn {
-    background: url(../images/contact.jpg) no-repeat;
-    background-position: center;
+    background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('../images/fondo-contacto.jpg');
     background-size: cover;
-    -webkit-background-size: cover;
-    -moz-background-size: cover;
-    -o-background-size: cover;
-    -ms-background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    background-attachment: fixed;
+    padding: 4em 0;
+    position: relative;
+}
+
+.contact-sectn .w3layouts-heading {
+    color: #fff; /* Para asegurar que el título sea visible sobre el fondo oscuro */
+}
+
+/* Para asegurar compatibilidad en móviles */
+@media (max-width: 768px) {
+    .contact-sectn {
+        background-attachment: scroll;
+    }
 }
 
 /*-- mail --*/
+
+.w3-agile_mail_grid_right {
+    display: flex;
+    justify-content: center; /* Centra las tarjetas */
+    gap: 2em;
+    padding: 2em;
+    flex-wrap: wrap; /* Permite que las tarjetas se envuelvan en pantallas pequeñas */
+}
+
+.card-link {
+    text-decoration: none;
+    flex: 0 1 300px; /* Ancho base de 300px pero flexible */
+    max-width: 300px;
+}
+
+.card {
+    background: var(--bg);
+    width: 100%;
+    height: 100%;
+    padding: 2em;
+    border-radius: 5px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1.5em;
+    position: relative;
+    overflow: hidden;
+    transition: .3s cubic-bezier(.6,.4,0,1),transform .15s ease;
+}
+
+/* Media queries */
+@media (max-width: 992px) {
+    .w3-agile_mail_grid_right {
+        gap: 1em;
+    }
+    
+    .card-link {
+        flex: 0 1 280px;
+    }
+}
+
+@media (max-width: 768px) {
+    .contact-sectn {
+        padding: 2em 0;
+    }
+    
+    .card-link {
+        flex: 0 1 100%;
+        max-width: 280px;
+    }
+}
 
 .w3-agile_mail_grid_right input[type="text"],
 .w3-agile_mail_grid_right input[type="email"],
@@ -2815,3 +2878,191 @@ textarea:-ms-input-placeholder {
 }
 
 /*--responsive--*/
+
+.card-link {
+    text-decoration: none;
+    display: block;
+    width: 100%;
+}
+
+.card {
+    --bg: #f7f7f8;
+    --hover-bg: #FFE5F4;
+    --hover-text: #E50087;
+    max-width: 35ch;
+    text-align: center;
+    background: var(--bg);
+    padding: 2em;
+    padding-block: 2.3em;
+    border-radius: 5px;
+    position: relative;
+    overflow: hidden;
+    transition: .3s cubic-bezier(.6,.4,0,1),transform .15s ease;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1.5em;
+    margin-left: auto;
+    margin-right: 2em;
+}
+
+/* Estilos responsive */
+@media (max-width: 768px) {
+    .card {
+        max-width: 90%;
+        margin: 0 auto;
+        padding: 1.5em;
+        gap: 1em;
+    }
+
+    .card__body {
+        font-size: 1em;
+    }
+
+    .card > strong {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .w3-agile_mail_grid_right {
+        padding-right: 0;
+    }
+
+    .card {
+        margin: 0 auto;
+        padding: 1.2em;
+    }
+
+    .card .icon svg {
+        height: 28px;
+        width: 28px;
+    }
+}
+
+.card__body {
+    color: #464853;
+    line-height: 1.6em;
+    font-size: 1.2em;
+}
+
+.card > :not(span) {
+    transition: .3s cubic-bezier(.6,.4,0,1);
+}
+
+.card > strong {
+    display: block;
+    font-size: 1.8rem;
+    letter-spacing: -.035em;
+    color: #333;
+}
+
+.card span {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    color: var(--hover-text);
+    border-radius: 5px;
+    font-weight: bold;
+    top: 100%;
+    transition: all .3s cubic-bezier(.6,.4,0,1);
+    font-size: 1.4em;
+}
+
+.card:hover span {
+    top: 0;
+    font-size: 1.6em;
+}
+
+.card:hover {
+    background: var(--hover-bg);
+    transform: scale(1.02);
+}
+
+.card:hover > div,
+.card:hover > strong {
+    opacity: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    .w3-agile_mail_grid_right {
+        padding: 1em;
+    }
+
+    .card {
+        max-width: 90%;
+        margin: 0 auto;
+        padding: 1.5em;
+        gap: 1em;
+    }
+
+    .card__body {
+        font-size: 1em;
+    }
+
+    .card > strong {
+        font-size: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .w3-agile_mail_grid_right {
+        padding-right: 0;
+    }
+
+    .card {
+        margin: 0 auto;
+        padding: 1.2em;
+    }
+
+    .card .icon svg {
+        height: 28px;
+        width: 28px;
+    }
+}
+
+/* Colores específicos para cada tarjeta */
+/* Instagram */
+.card-link:nth-child(1) .card {
+    --bg: #f7f7f8;
+    --hover-bg: #fcf1ff;
+    --hover-text: #E1306C;
+}
+
+/* WhatsApp */
+.card-link:nth-child(2) .card {
+    --bg: #f7f7f8;
+    --hover-bg: #e7ffec;
+    --hover-text: #25D366;
+}
+
+/* Google Maps */
+.card-link:nth-child(3) .card {
+    --bg: #f7f7f8;
+    --hover-bg: #e8f0fe;
+    --hover-text: #4285F4;
+}
+
+/* Ajuste de los iconos SVG para que usen los colores correspondientes */
+.card .icon svg {
+    fill: currentColor;
+    transition: color 0.3s ease;
+}
+
+.card-link:nth-child(1) .card .icon svg {
+    color: #E1306C;
+}
+
+.card-link:nth-child(2) .card .icon svg {
+    color: #25D366;
+}
+
+.card-link:nth-child(3) .card .icon svg {
+    color: #4285F4;
+}
