@@ -44,8 +44,41 @@
   // Objeto con las respuestas predefinidas
   const respuestasPredefinidas = {
     'horarios': {
-      palabrasClave: ['horario', 'horarios', 'atencion', 'atención', 'abierto', 'abren', 'cierran'],
-      respuesta: 'Nuestro horario de atención es de Lunes a Sábado de 9a.m - 10p.m.⏰'
+      palabrasClave: ['horario', 'horarios', 'atencion', 'atención', 'abierto', 'abren', 'cierran', 'dias', 'días', 'cuando'],
+      respuesta: 'Nuestros horarios de atención son:\n\n' +
+                '📅 Lunes a Viernes: 09:00 - 22:00\n' +
+                '📅 Sábados: 09:00 - 22:00\n' +
+                '📅 Domingos: Cerrado\n\n' +
+                'Para agendar tu clase, contáctanos por WhatsApp:\n' +
+                '<div class="social-button whatsapp-button">' +
+                '<a href="https://wa.me/56956425461?text=Hola,%20quisiera%20agendar%20una%20clase" target="_blank">Agendar Clase ⏰</a></div>'
+    },
+    'informacion_general': {
+        palabrasClave: ['quisiera saber', 'me gustaría conocer', 'pueden darme', 'información', 'detalles', 'más datos', 'cuéntame'],
+        respuesta: 'Con gusto te cuento sobre nuestra academia 🎵: \n\n' +
+                  '• Somos una academia especializada en formación musical\n' +
+                  '• Contamos con profesores certificados y con amplia experiencia\n' +
+                  '• Metodología personalizada según tus objetivos\n\n' +
+                  '¿Te gustaría conocer algo específico sobre nuestros servicios o programas? 🎸'
+    },
+    'precios_planes': {
+        palabrasClave: ['cuánto cuesta', 'precio', 'valor', 'planes', 'costos', 'mensualidad', 'pago'],
+        respuesta: 'Tenemos diferentes planes adaptados a tus necesidades:\n\n' +
+                  '• Clases individuales personalizadas\n' +
+                  '• Clases grupales (máximo 4 estudiantes)\n' +
+                  '• Planes mensuales o por clase\n\n' +
+                  'Para recibir información detallada sobre precios, te invito a contactarnos por WhatsApp:' +
+                  '<div class="social-button whatsapp-button">' +
+                  '<a href="https://wa.me/56956425461?text=Hola,%20me%20interesa%20conocer%20los%20precios%20de%20los%20planes" target="_blank">Consultar Precios 💰</a></div>'
+    },
+    'metodologia_aprendizaje': {
+        palabrasClave: ['como enseñan', 'metodologia', 'aprendizaje', 'metodo', 'forma de enseñar', 'sistema'],
+        respuesta: 'Nuestra metodología de enseñanza se basa en 4 pilares fundamentales:\n\n' +
+                  '1. Diagnóstico inicial personalizado 📋\n' +
+                  '2. Plan de estudio adaptado a tus objetivos 🎯\n' +
+                  '3. Práctica guiada con retroalimentación constante 🎼\n' +
+                  '4. Evaluaciones periódicas de progreso 📈\n\n' +
+                  'Además, complementamos las clases con material instrumental.'
     },
     'hola': {
       palabrasClave: ['hola', 'saludos', 'como', 'estas',],
@@ -59,7 +92,7 @@
       palabrasClave: ['telefono', 'teléfono', 'contacto', 'email', 'correo', 'contactar'],
       respuesta: `Puedes contactarnos directamente por WhatsApp:
       <div class="social-button whatsapp-button">
-          <a href="https://wa.me/56934884214?text=Hola,%20necesito%20más%20información" target="_blank">
+          <a href="https://wa.me/56956425461?text=Hola,%20necesito%20más%20información%20de%20la%20academia" target="_blank">
               <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="#ffffff">
                   <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.274.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.1.824z"/>
               </svg>
@@ -76,15 +109,9 @@
           </a>
       </div>`
     },
-    
-    'servicios': {
-  palabrasClave: ['servicios', 'ofrecen', 'tienen', 'productos'],
-  respuesta: 'Ofrecemos clases de música para aprender a tocar instrumentos🎸.'
-    },
-
     'tipo-clases': {
       palabrasClave: ['tipo', 'clases', 'grupales', 'individuales'],
-      respuesta: 'Nuestras clases pueden ser grupales o individuales, adaptándonos a las necesidades de cada estudiante🎒.'
+      respuesta: 'Nuestras clases pueden ser grupales o individuales, adapt��ndonos a las necesidades de cada estudiante🎒.'
     },
 
     'informacion': {
@@ -93,14 +120,27 @@
                 'enfocada en enseñar aprender a tocar un instrumento, a cantar y adentrar a jóvenes y adultos al maravilloso mundo de la música ' +
                 'con nuestros profesores expertos.🥳🎵👨‍🏫👩‍🏫'
     },
-
     'profesores': {
       palabrasClave: ['profesores', 'especializados', 'guitarra', 'piano', 'bateria', 'canto', 'cello', 'bajo'],
       respuesta: 'Nuestro equipo de profesores está compuesto por especialistas en guitarra, piano, batería, canto, cello, bajo y otros instrumentos.🎶🎵'
     },
+    'instrumentos_disponibles': {
+        palabrasClave: ['que instrumentos', 'cuales instrumentos', 'que puedo aprender', 'enseñan', 'guitarra', 'piano', 'bateria', 'batería', 'canto', 'violin', 'violín', 'bajo', 'teclado', 'saxofon', 'saxofón', 'flauta'],
+        respuesta: '¡Genial! Me alegro que estés interesado en aprender música. Ofrecemos clases de:\n\n' +
+                  '🎸 Guitarra (acústica y eléctrica)\n' +
+                  '🎹 Piano y teclado\n' +
+                  '🥁 Batería\n' +
+                  '🎤 Canto\n' +
+                  '🎻 Violín\n' +
+                  '🎸 Bajo eléctrico\n' +
+                  '🎺 Instrumentos de viento\n\n' +
+                  'Para más información sobre horarios y precios, contáctanos por WhatsApp:\n' +
+                  '<div class="social-button whatsapp-button">' +
+                  '<a href="https://wa.me/56956425461?text=Hola,%20me%20interesa%20tomar%20clases%20de%20música" target="_blank">Consultar Disponibilidad 📅</a></div>'
+    },
     'default': {
       respuesta: `Lo siento, no he entendido tu pregunta. Para más información, puedes contactarnos directamente por WhatsApp 
-      <a href="https://wa.me/56934884214?text=Hola,%20necesito%20más%20información" target="_blank" class="whatsapp-link">
+      <a href="https://wa.me/56956425461?text=Hola,%20necesito%20más%20información%20de%20la%20academia" target="_blank" class="whatsapp-link">
           <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="#25D366">
               <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.771-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.274.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.1.824zm-3.423-14.416c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm.029 18.88c-1.161 0-2.305-.292-3.318-.844l-3.677.964.984-3.595c-.607-1.052-.927-2.246-.926-3.468.001-3.825 3.113-6.937 6.937-6.937 1.856.001 3.598.723 4.907 2.034 1.31 1.311 2.031 3.054 2.03 4.908-.001 3.825-3.113 6.938-6.937 6.938z"/>
           </svg>
@@ -120,6 +160,16 @@
         '1=1', 'union select', 'drop table'
       ],
       respuesta: 'Advertencia: Se ha detectado un posible intento de inyección SQL. intentalo para la proxima saludos👋 .'
+    },
+    'metodos_pago': {
+        palabrasClave: ['como pago', 'metodo de pago', 'método de pago', 'formas de pago', 'pagar', 'transferencia', 'efectivo', 'debito', 'débito', 'credito', 'crédito'],
+        respuesta: 'Nuestros métodos de pago aceptados son:\n\n' +
+                  '💵 Efectivo\n' +
+                  '🏦 Transferencia bancaria\n\n' +
+                  'El pago debe realizarse antes de iniciar las clases del mes.\n' +
+                  'Para más detalles sobre precios y planes, contáctanos:'
+                  '<div class="social-button whatsapp-button">' +
+                  '<a href="https://wa.me/56956425461?text=Hola,%20quisiera%20información%20sobre%20los%20métodos%20de%20pago" target="_blank">Consultar Precios y Pagos 💰</a></div>'
     },
   };
 
