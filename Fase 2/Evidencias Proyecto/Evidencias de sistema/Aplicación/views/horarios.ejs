@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta http-equiv="Content-Security-Policy" content="
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' 
+      https://code.jquery.com 
+      https://maxcdn.bootstrapcdn.com 
+      https://cdn.jsdelivr.net 
+      https://kit.fontawesome.com;
+    ">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horarios de Clases y Asignación de Instrumentos</title>
+    <style>
+        /* Estilo de fondo y contenedor */
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            --s: 200px;
+            --c1: #1d1d1d;
+            --c2: #4e4f51;
+            --c3: #3c3c3c;
+            background: repeating-conic-gradient(
+                from 30deg,
+                #0000 0 120deg,
+                var(--c3) 0 180deg
+              )
+              calc(0.5 * var(--s)) calc(0.5 * var(--s) * 0.577),
+              repeating-conic-gradient(
+                from 30deg,
+                var(--c1) 0 60deg,
+                var(--c2) 0 120deg,
+                var(--c3) 0 180deg
+              );
+            background-size: var(--s) calc(var(--s) * 0.577);
+        }
+
+        .container {
+            width: 80%;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
+            border-radius: 8px;
+            background-color: #000;
+            border: 1px solid #4e4f51;
+            color: #d1d1d1;
+        }
+
+        h1 {
+            text-align: center;
+            color: #d1d1d1;
+        }
+
+        /* Estilo de formulario */
+        .form-container {
+            margin-bottom: 20px;
+            padding: 20px;
+            background-color: #2c2c2c;
+            border-radius: 8px;
+        }
+
+        .form-group {
+            margin-bottom: 10px;
+        }
+
+        .form-group label {
+            display: block;
+            color: #d1d1d1;
+            margin-bottom: 5px;
+        }
+
+        .form-group input, .form-group select {
+            width: 100%;
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #4e4f51;
+            background-color: #3c3c3c;
+            color: #d1d1d1;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            background: radial-gradient(ellipse farthest-corner at right bottom, #FEDB37 0%, #FDB931 8%, #9f7928 30%, #8A6E2F 40%, transparent 80%),
+            radial-gradient(ellipse farthest-corner at left top, #FFFFFF 0%, #FFFFAC 8%, #D1B464 25%, #5d4a1f 62.5%, #5d4a1f 100%);
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            border-radius: 4px;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .btn:hover {
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 
+                0 6px 6px rgba(0, 0, 0, 0.23);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            color: #d1d1d1;
+        }
+
+        table, th, td {
+            border: 1px solid #4e4f51;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #3c3c3c;
+            cursor: pointer;
+        }
+
+        tr:hover {
+            background-color: #2c2c2c;
+        }
+
+        .edit-btn {
+            padding: 6px 12px;
+            background-color: #4e4f51;
+            border: none;
+            color: #d1d1d1;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .edit-btn:hover {
+            background-color: #6b6c6e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container mt-5">
+      <h2>Horario de Clases</h2>
+      <form id="horarioForm" method="POST">
+        <div class="form-group">
+          <label for="fecha">Fecha:</label>
+          <input type="date" id="fecha" name="fecha" required>
+        </div>
+  
+        <div class="form-group">
+          <label for="horaInicio">Hora de inicio:</label>
+          <input type="time" id="horaInicio" name="horaInicio" required>
+        </div>
+  
+        <div class="form-group">
+          <label for="horaFin">Hora de fin:</label>
+          <input type="time" id="horaFin" name="horaFin" required>
+        </div>
+  
+        <div class="form-group">
+          <label for="profesor">Profesor:</label>
+          <select id="profesor" name="profesorId" required>
+            <% profesores.forEach(profesor => { %>
+              <option value="<%= profesor.id %>" 
+                      <%= profesor.id === userId ? 'selected' : '' %>>
+                <%= profesor.nombre %> <%= profesor.apellido %>
+              </option>
+            <% }) %>
+          </select>
+        </div>
+  
+        <div class="form-group">
+          <label for="sala">Sala:</label>
+          <select id="sala" name="salaNombre" required>
+            <% if (typeof debug !== 'undefined') { %>
+                <p>Debug info: <%= JSON.stringify(debug) %></p>
+            <% } %>
+            
+            <% if (typeof salas !== 'undefined' && Array.isArray(salas) && salas.length > 0) { %>
+                <% salas.forEach(function(sala) { %>
+                    <option value="<%= sala.nombre %>"><%= sala.nombre %></option>
+                <% }); %>
+            <% } else { %>
+                <option value="">No hay salas disponibles</option>
+            <% } %>
+          </select>
+        </div>
+  
+        <button type="submit" class="btn btn-primary">Guardar</button>
+      </form>
+  
+      <h3 class="mt-5">Horarios Guardados</h3>
+      <ul id="listaHorarios" class="list-group mt-3">
+        <!-- Los horarios guardados se mostrarán aquí -->
+      </ul>
+    </div>
+  
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+      document.getElementById('horarioForm').addEventListener('submit', function(event) {
+        event.preventDefault();
+  
+        // Agregar console.log para depuración
+        const profesorId = document.getElementById('profesor').value;
+        console.log('ID del profesor seleccionado:', profesorId);
+  
+        const formData = {
+            fecha: document.getElementById('fecha').value,
+            horaInicio: document.getElementById('horaInicio').value,
+            horaFin: document.getElementById('horaFin').value,
+            profesorId: profesorId, // Asegurarse de que este valor se envíe
+            salaNombre: document.getElementById('sala').value
+        };
+  
+        console.log('Datos a enviar:', formData); // Para depuración
+  
+        fetch('/guardar-horario', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(formData)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert('Horario guardado exitosamente');
+                // Opcional: recargar la página o actualizar la lista
+                window.location.reload();
+            } else {
+                alert(data.message || 'Error al guardar el horario');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Error al guardar el horario');
+        });
+      });
+    </script>
+  </body>
+  </html>
