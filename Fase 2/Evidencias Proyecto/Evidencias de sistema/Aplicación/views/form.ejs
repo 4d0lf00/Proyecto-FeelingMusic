@@ -55,6 +55,41 @@
         </form>
         <div id="mensaje" style="color: red;"></div> <!-- Mensaje de error -->
     </div>
-    <script src="/js/validacion.js"></script>
+    <script>
+        document.querySelector('.form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const formDataObject = {};
+            formData.forEach((value, key) => {
+                formDataObject[key] = value;
+            });
+
+            try {
+                const response = await fetch('/alumnos', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formDataObject)
+                });
+
+                const data = await response.json();
+                if (response.ok) {
+                    console.log('Alumno registrado:', data); // Para debugging
+                    if (data.alumnoId) {
+                        window.location.href = `/formulario-class?alumnoId=${data.alumnoId}`;
+                    } else {
+                        alert('Error: No se recibió el ID del alumno');
+                    }
+                } else {
+                    alert('Error al registrar al alumno: ' + data.error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Error al procesar la solicitud');
+            }
+        });
+    </script>
 </body>
 </html>

@@ -1,10 +1,30 @@
 const express = require('express');
-const queries = require('./queries'); // Importar las funciones de consulta
+const jwt = require('jsonwebtoken');
+const queries = require('./queries');
 const router = express.Router();
+const bcrypt = require('bcrypt');
+const { body, validationResult } = require('express-validator');
+const dashboardController = require('./controllers/dashboardController');
+const path = require('path');
+const db = require('./db');
+const dashboardControllerProfesor = require('./controllers/dashboardControllerProfesor');
 
 // Ruta para el filtro
-router.get('/filtro', (req, res) => {
-    res.render('filtro', { title: 'Filtro de Alumnos' });
+router.get('/filtro', verificarToken, (req, res) => {
+    if (req.userTipo === 2 || req.userTipo === 1) {
+        res.render('filtro', { title: 'Filtro de Alumnos' });
+    } else {
+        // Si no es profesor ni admin, redirigir
+        return res.redirect('/login2?error=' + encodeURIComponent('No tienes permiso para acceder a esta página'));
+    }
+});
+
+// Ruta para el filtro2
+router.get('/filtro2', (req, res) => {
+    if (req.userTipo === 2 && req.userTipo !== 1) {
+        return res.redirect('/login2?error=' + encodeURIComponent('No tienes permiso para acceder a esta página'));
+    }
+    res.render('filtro2', { title: 'Filtro de Alumnos 2' });
 });
 
 // Ruta para la página de inicio
@@ -13,14 +33,240 @@ router.get('/', (req, res) => {
 });
 
 // Ruta para el formulario
-router.get('/form', (req, res) => {
+router.get('/form', verificarToken, (req, res) => {
+    if (req.userTipo !== 2) {
+        return res.redirect('/login2?error=' + encodeURIComponent('No tienes permiso para acceder a esta página'));
+    }
     res.render('form', { title: 'Formulario de Registro' });
 });
 
-// Ruta para el formulario de clase musical
-router.get('/formulario-class', (req, res) => {
-    res.render('formulario-class', { title: 'Formulario de Clase Musical' });
+// Ruta GET para mostrar el formulario
+router.get('/formulario-class', verificarToken, async (req, res) => {
+    try {
+        const alumnoId = req.query.alumnoId;
+        
+        // Verificar que tenemos el alumnoId
+        if (!alumnoId) {
+            return res.status(400).send('ID de alumno no proporcionado');
+        }
+
+        const profesorId = req.profesorId;
+
+        // Obtener instrumentos del profesor
+        const instrumentosQuery = `
+            SELECT id, nombre 
+            FROM instrumentos 
+            WHERE profesor_id = ? 
+            AND estado = 'activo'
+        `;
+
+        // Obtener horarios disponibles del profesor
+        const horariosQuery = `
+            SELECT h.id, h.dia, h.mes, h.annio, 
+                   h.hora_inicio, h.hora_fin, s.nombre as sala_nombre
+            FROM horarios h
+            LEFT JOIN sala_horario sh ON h.id = sh.horario_id
+            LEFT JOIN salas s ON sh.sala_id = s.id
+            WHERE h.profesor_id = ?
+            AND h.estado = 'Disponible'
+            ORDER BY h.annio, h.mes, h.dia, h.hora_inicio
+        `;
+
+        // Ejecutar ambas consultas
+        db.query(instrumentosQuery, [profesorId], (errorInstrumentos, instrumentos) => {
+            if (errorInstrumentos) {
+                console.error('Error al obtener instrumentos:', errorInstrumentos);
+                return res.status(500).send('Error al cargar los instrumentos');
+            }
+
+            db.query(horariosQuery, [profesorId], (errorHorarios, horarios) => {
+                if (errorHorarios) {
+                    console.error('Error al obtener horarios:', errorHorarios);
+                    return res.status(500).send('Error al cargar los horarios');
+                }
+
+                // Renderizar la vista con todos los datos necesarios
+                res.render('formulario-class', {
+                    alumnoId: alumnoId,
+                    instrumentosDisponibles: instrumentos,
+                    horariosProfesor: horarios
+                });
+            });
+        });
+    } catch (error) {
+        console.error('Error en formulario-class:', error);
+        res.status(500).send('Error al procesar la solicitud');
+    }
 });
+
+// Ruta para el formulario de clase musical
+router.post('/formulario-class', verificarToken, async (req, res) => {
+    try {
+        const { modalidad, instrumentoId, horarioId, alumnoId } = req.body;
+        const profesorId = req.profesorId;
+
+        // Primero insertar la modalidad
+        const insertModalidad = `
+            INSERT INTO modalidades (alumno_id, profesor_id, tipo) 
+            VALUES (?, ?, ?)
+        `;
+        
+        db.query(insertModalidad, [alumnoId, profesorId, modalidad], (err, resultModalidad) => {
+            if (err) {
+                console.error('Error al insertar modalidad:', err);
+                return res.status(500).json({ error: 'Error al crear la modalidad' });
+            }
+
+            // Obtener el nombre del instrumento
+            const getInstrumentoNombre = `
+                SELECT nombre FROM instrumentos WHERE id = ?
+            `;
+
+            db.query(getInstrumentoNombre, [instrumentoId], (errInst, resultInst) => {
+                if (errInst || !resultInst[0]) {
+                    console.error('Error al obtener instrumento:', errInst);
+                    return res.status(500).json({ error: 'Error al obtener información del instrumento' });
+                }
+
+                // Luego insertar la clase
+                const insertClase = `
+                    INSERT INTO clases (
+                        nombre, modalidad_id, instrumento_id, 
+                        horario_id, profesor_id, estado,
+                        fecha, alumno_id
+                    ) VALUES (?, ?, ?, ?, ?, 'activo', CURDATE(), ?)
+                `;
+
+                const nombreClase = `Clase de ${resultInst[0].nombre}`;
+
+                db.query(insertClase, [
+                    nombreClase,
+                    resultModalidad.insertId,
+                    instrumentoId,
+                    horarioId,
+                    profesorId,
+                    alumnoId
+                ], (errClase, resultClase) => {
+                    if (errClase) {
+                        console.error('Error al insertar clase:', errClase);
+                        return res.status(500).json({ error: 'Error al crear la clase' });
+                    }
+
+                    // Actualizar el estado del horario a 'Ocupado'
+                    const updateHorario = `
+                        UPDATE horarios 
+                        SET estado = 'Ocupado' 
+                        WHERE id = ?
+                    `;
+
+                    db.query(updateHorario, [horarioId], (errHorario) => {
+                        if (errHorario) {
+                            console.error('Error al actualizar horario:', errHorario);
+                            // No retornamos error aquí para no afectar la creación de la clase
+                        }
+
+                        res.json({ 
+                            success: true, 
+                            message: 'Clase registrada exitosamente' 
+                        });
+                    });
+                });
+            });
+        });
+
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+});
+
+
+router.get('/blocks', (req, res) => {
+    res.render('blocks', { title: 'Blocks' });
+});
+
+router.get('/elements', (req, res) => {
+    res.render('elements', { title: 'Elements' });
+});
+
+router.get('/cards', (req, res) => {
+    res.render('cards', { title: 'Cards' });
+});
+
+router.get('/carousel', (req, res) => {
+    res.render('carousel', { title: 'Carousel' });
+});
+
+router.get('/people', (req, res) => {
+    res.render('people', { title: 'People' });
+});
+
+//Ruta para visualizar el horario del alumno
+router.get('/horario', verificarToken, (req, res) => {
+    if (req.userTipo !== 3) {
+        return res.redirect('/login2?error=' + encodeURIComponent('No tienes permiso para acceder a esta página'));
+    }
+
+    // Consulta para obtener los datos del alumno
+    const alumnoQuery = `
+        SELECT a.nombre, a.apellido, a.email, a.numero_telefono
+        FROM alumno a
+        WHERE a.id = ?
+    `;
+
+    // Consulta para obtener las clases del alumno
+    const clasesQuery = `
+        SELECT 
+            c.nombre as nombre_clase,
+            i.nombre as instrumento,
+            p.nombre as profesor_nombre,
+            p.apellido as profesor_apellido,
+            s.nombre as sala_nombre,
+            h.dia,
+            h.mes,
+            h.annio,
+            h.hora_inicio,
+            h.hora_fin,
+            m.tipo as modalidad
+        FROM clases c
+        JOIN instrumentos i ON c.instrumento_id = i.id
+        JOIN profesor p ON c.profesor_id = p.id
+        JOIN horarios h ON c.horario_id = h.id
+        JOIN modalidades m ON c.modalidad_id = m.id
+        LEFT JOIN sala_horario sh ON h.id = sh.horario_id
+        LEFT JOIN salas s ON sh.sala_id = s.id
+        WHERE c.alumno_id = ?
+        AND c.estado = 'activo'
+        ORDER BY h.annio, h.mes, h.dia, h.hora_inicio
+    `;
+
+    // Ejecutar ambas consultas
+    db.query(alumnoQuery, [req.alumnoId], (errorAlumno, resultadosAlumno) => {
+        if (errorAlumno) {
+            console.error('Error al obtener datos del alumno:', errorAlumno);
+            return res.status(500).send('Error al cargar los datos del alumno');
+        }
+
+        if (resultadosAlumno.length === 0) {
+            return res.status(404).send('Alumno no encontrado');
+        }
+
+        db.query(clasesQuery, [req.alumnoId], (errorClases, resultadosClases) => {
+            if (errorClases) {
+                console.error('Error al obtener clases:', errorClases);
+                return res.status(500).send('Error al cargar las clases');
+            }
+
+            res.render('horario', { 
+                title: 'Mi Horario',
+                alumno: resultadosAlumno[0],
+                clases: resultadosClases,
+                alumnoId: req.alumnoId 
+            });
+        });
+    });
+});
+
 
 // Ruta para buscar alumnos
 router.post('/buscar_alumnos', (req, res) => {
@@ -46,27 +292,610 @@ router.get('/profesores', (req, res) => {
     });
 });
 
-router.post('/alumnos', (req, res) => {
+// Ruta para insertar un nuevo alumno
+router.post('/alumnos', verificarToken, (req, res) => {
     const { nombre, apellido, email, numero_telefono, rut, comentarios } = req.body;
-    console.log('Datos recibidos:', req.body);
 
-    // Verificar si los datos esenciales están presentes
-    if (!nombre || !apellido || !email || !numero_telefono || !rut) {
-        return res.status(400).json({ error: 'Todos los campos son requeridos' });
+    // Obtener el ID del profesor correspondiente al ID de la tabla usuarios
+    queries.obtenerProfesorId(req.userId, (err, profesorId) => {
+        if (err) {
+            console.error('Error al obtener el ID del profesor:', err);
+            return res.status(500).json({ error: 'Error al obtener el ID del profesor' });
+        }
+
+        // Insertar el alumno en la base de datos
+        queries.insertarAlumno(nombre, apellido, email, numero_telefono, rut, comentarios, profesorId[0].profesor_id, (err, result) => {
+            if (err) {
+                console.error('Error al insertar el alumno:', err);
+                return res.status(500).json({ error: 'Error al insertar el alumno' });
+            }
+
+            // Asegurarse de que result.insertId existe
+            if (!result.insertId) {
+                return res.status(500).json({ error: 'No se pudo obtener el ID del alumno' });
+            }
+
+            // Crear el usuario para el alumno
+            queries.crearUsuarioAlumno(result.insertId, email, nombre, rut, profesorId[0].profesor_id, (err) => {
+                if (err) {
+                    console.error('Error al crear usuario:', err);
+                    return res.status(500).json({ error: 'Error al crear el usuario' });
+                }
+
+                // Devolver el ID del alumno en la respuesta
+                res.json({ 
+                    success: true, 
+                    message: 'Alumno registrado exitosamente',
+                    alumnoId: result.insertId
+                });
+            });
+        });
+    });
+});
+//-------------------Inicio Rutas login
+
+router.post('/register2', [
+    body('email').isEmail().withMessage('Email inválido'),
+    body('contrasena').isLength({ min: 6 }).withMessage('La contraseña debe tener al menos 6 caracteres'),
+    body('nombre').notEmpty().withMessage('El nombre es requerido'),
+    body('apellido').notEmpty().withMessage('El apellido es requerido'),
+    body('especialidad').custom(value => {
+        const especialidadesPermitidas = [
+            'guitarra', 'piano', 'bateria', 'canto',
+            'bajo', 'cello', 'acordeon', 'ukelele'
+        ];
+        const especialidades = Array.isArray(value) ? value : value.split(',');
+        return especialidades
+            .map(esp => esp.trim().toLowerCase())
+            .every(esp => especialidadesPermitidas.includes(esp));
+    }).withMessage('Selecciona especialidades válidas')
+], async (req, res) => {
+    try {
+        const { nombre, apellido, email, contrasena, especialidad } = req.body;
+        
+        console.log('Datos recibidos:', { nombre, apellido, email, especialidad });
+
+        // Hashear la contraseña
+        const hashedPassword = await bcrypt.hash(contrasena, 10);
+
+        queries.insertarUsuario(
+            email, 
+            hashedPassword, 
+            nombre, 
+            apellido, 
+            especialidad, 
+            (error, resultado) => {
+                if (error) {
+                    console.error('Error en el registro:', error);
+                    return res.status(500).json(error);
+                }
+
+                console.log('Profesor registrado exitosamente:', resultado);
+                res.json(resultado);
+            }
+        );
+
+    } catch (error) {
+        console.error('Error en el proceso de registro:', error);
+        res.status(500).json({ error: 'Error en el proceso de registro' });
+    }
+});
+
+// Función auxiliar para generar token
+function generarToken(usuario, tipo, callback) {
+    if (tipo === 3) {
+        // Token para alumno
+        const token = jwt.sign({ 
+            id: usuario.id, 
+            tipo: usuario.tipo,
+            alumnoId: usuario.alumno_id
+        }, process.env.JWT_SECRET, { expiresIn: '4h' });
+        return callback(null, token, '/horario');
+    } else {
+        // Token para profesor o admin
+        queries.obtenerProfesorId(usuario.id, (err, profesorResult) => {
+            if (err) return callback(err);
+            
+            const token = jwt.sign({ 
+                id: usuario.id, 
+                tipo: usuario.tipo,
+                profesorId: profesorResult[0]?.profesor_id
+            }, process.env.JWT_SECRET, { expiresIn: '4h' });
+            
+            const redirectUrl = usuario.tipo === 2 ? '/form' : '/dashboard';
+            callback(null, token, redirectUrl);
+        });
+    }
+}
+
+// Modificar la ruta login2 existente
+router.post('/login2', [
+    body('email').isEmail().withMessage('El email no es válido'),
+    body('contrasena').isLength({ min: 4 }).withMessage('La contraseña debe tener al menos 4 caracteres'),
+], (req, res) => {
+    const { email, contrasena } = req.body;
+
+    queries.obtenerUsuarioLogin(email, (err, results) => {
+        if (err || results.length === 0) {
+            return res.status(401).json({ error: 'Credenciales incorrectas' });
+        }
+
+        const user = results[0];
+
+        // Si es alumno (tipo 3), comparar contraseña directamente
+        if (user.tipo === 3) {
+            if (contrasena === user.contrasena) {
+                generarToken(user, user.tipo, (err, token, redirectUrl) => {
+                    if (err) {
+                        return res.status(500).json({ error: 'Error al generar el token' });
+                    }
+
+                    res.cookie('auth_token', `Bearer ${token}`, {
+                        httpOnly: true,
+                        secure: process.env.NODE_ENV === 'production'
+                    });
+
+                    res.json({ 
+                        success: true,
+                        tipo: user.tipo,
+                        redirectUrl: redirectUrl
+                    });
+                });
+            } else {
+                return res.status(401).json({ error: 'Credenciales incorrectas' });
+            }
+        } else {
+            // Para profesores y admins, usar bcrypt
+            bcrypt.compare(contrasena, user.contrasena, (err, match) => {
+                if (err || !match) {
+                    return res.status(401).json({ error: 'Credenciales incorrectas' });
+                }
+
+                generarToken(user, user.tipo, (err, token, redirectUrl) => {
+                    if (err) {
+                        return res.status(500).json({ error: 'Error al generar el token' });
+                    }
+
+                    res.cookie('auth_token', `Bearer ${token}`, {
+                        httpOnly: true,
+                        secure: process.env.NODE_ENV === 'production'
+                    });
+
+                    res.json({ 
+                        success: true,
+                        tipo: user.tipo,
+                        redirectUrl: redirectUrl
+                    });
+                });
+            });
+        }
+    });
+});
+
+// Middleware para verificar el token JWT
+function verificarToken(req, res, next) {
+    const token = req.cookies.auth_token;
+    
+    if (!token) {
+        return res.redirect('/login2?error=' + encodeURIComponent('Debes iniciar sesión para acceder a esta página'));
     }
 
-    queries.insertarAlumno(nombre, apellido, email, numero_telefono, rut, comentarios, (err, result) => {
+    const tokenPart = token.split(' ')[1];
+    
+    jwt.verify(tokenPart, process.env.JWT_SECRET, (err, decoded) => {
         if (err) {
-            console.error('Error al insertar el alumno:', err.message);
-            if (err.message === 'El email ya está registrado') {
-                return res.status(409).json({ error: err.message });
-            }
-            return res.status(500).json({ error: 'Error al insertar el alumno' });
+            return res.redirect('/login2?error=' + encodeURIComponent('Tu sesión ha expirado. Por favor, inicia sesión nuevamente'));
         }
-        console.log('Inserción exitosa:', result);
-        res.status(200).json({ message: 'Alumno insertado correctamente' });
+        
+        req.userId = decoded.id;
+        req.userTipo = decoded.tipo;
+        req.profesorId = decoded.profesorId;
+        req.alumnoId = decoded.alumnoId;
+        next();
     });
+}
+
+
+// Ruta protegida para administradores
+router.get('/dashboard', verificarToken, (req, res) => {
+    if (req.userTipo !== 1) {
+        return res.redirect('/login2?error=' + encodeURIComponent('No tienes permiso para acceder a esta página'));
+    }
+    dashboardController.getDashboardData(req, res);
+});
+
+// Ruta protegida para administradores
+router.get('/register2', verificarToken, (req, res) => {
+    if (req.userTipo !== 1) {
+        return res.redirect('/login2?error=' + encodeURIComponent('No tienes permiso para acceder a esta página'));
+    }
+    res.render('register2', { title: 'Registrar Profesor' });
+});
+
+
+// Ruta GET para mostrar el formulario de login
+router.get('/login2', (req, res) => {
+    res.render('login2', { 
+        title: 'Inicio Sesion',
+        error: req.query.error || null
+    });
+});
+
+//-------------------Fin Rutas login
+
+// Ruta para obtener el total de alumnos
+router.get('/api/total-alumnos', async (req, res) => {
+    try {
+        db.query('SELECT COUNT(*) as total FROM alumno', (err, results) => {
+            if (err) {
+                console.error('Error al obtener total de alumnos:', err);
+                return res.status(500).json({ error: 'Error al obtener datos' });
+            }
+            res.json({ total: results[0].total });
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ error: 'Error del servidor' });
+    }
+});
+
+// Agregar esta nueva ruta para obtener alumnos por mes
+router.get('/api/alumnos-por-mes', async (req, res) => {
+    try {
+        const query = `
+            SELECT 
+                MONTH(fecha_registro) as mes,
+                COUNT(*) as total
+            FROM alumno
+            WHERE YEAR(fecha_registro) = YEAR(CURRENT_DATE())
+            GROUP BY MONTH(fecha_registro)
+            ORDER BY mes
+        `;
+
+        db.query(query, (err, results) => {
+            if (err) {
+                console.error('Error al obtener alumnos por mes:', err);
+                return res.status(500).json({ error: 'Error al obtener datos' });
+            }
+
+            // Crear array con 12 meses inicializados en 0
+            const monthlyData = new Array(12).fill(0);
+            
+            // Llenar con los datos reales
+            results.forEach(row => {
+                monthlyData[row.mes - 1] = row.total;
+            });
+
+            res.json({ monthly: monthlyData });
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ error: 'Error del servidor' });
+    }
+});
+
+// Ruta para el horario
+router.get('/horarios', verificarToken, (req, res) => {
+    if (req.userTipo !== 2 && req.userTipo !== 1) {
+        return res.redirect('/login2?error=' + encodeURIComponent('No tienes permiso para acceder a esta página'));
+    }
+
+    // Consulta para obtener los horarios guardados
+    const queryHorarios = `
+        SELECT h.*, s.nombre as sala_nombre, p.nombre as profesor_nombre, p.apellido as profesor_apellido
+        FROM horarios h
+        LEFT JOIN sala_horario sh ON h.id = sh.horario_id
+        LEFT JOIN salas s ON sh.sala_id = s.id
+        LEFT JOIN profesor p ON h.profesor_id = p.id
+        ORDER BY h.annio, h.mes, h.dia, h.hora_inicio
+    `;
+
+    db.query(queryHorarios, (errorHorarios, horarios) => {
+        if (errorHorarios) {
+            console.error('Error al obtener horarios:', errorHorarios);
+            return res.status(500).send('Error al obtener los horarios');
+        }
+
+        // Consulta para las salas
+        const querySalas = 'SELECT * FROM salas';
+        db.query(querySalas, (errorSalas, salas) => {
+            if (errorSalas) {
+                console.error('Error al obtener salas:', errorSalas);
+                return res.status(500).send('Error al obtener las salas');
+            }
+
+            queries.obtenerProfesores((errorProfesores, profesores) => {
+                if (errorProfesores) {
+                    console.error('Error al obtener profesores:', errorProfesores);
+                    return res.status(500).send('Error al obtener los profesores');
+                }
+
+                queries.obtenerInstrumentos((errorInstrumentos, instrumentos) => {
+                    if (errorInstrumentos) {
+                        console.error('Error al obtener instrumentos:', errorInstrumentos);
+                        return res.status(500).send('Error al obtener los instrumentos');
+                    }
+
+                    res.render('horarios', { 
+                        title: 'Horario de Clases',
+                        profesores: profesores || [],
+                        instrumentos: instrumentos || [],
+                        salas: salas || [],
+                        horarios: horarios || [], // Agregar los horarios a la vista
+                        userId: req.userId
+                    });
+                });
+            });
+        });
+    });
+});
+
+// Ruta para guardar el horario
+router.post('/guardar-horario', async (req, res) => {
+    try {
+        const { fecha, horaInicio, horaFin, profesorId, salaNombre } = req.body;
+        
+        // Agregar logs para depuración
+        console.log('Datos recibidos:', {
+            fecha,
+            horaInicio,
+            horaFin,
+            profesorId,
+            salaNombre
+        });
+
+        if (!profesorId) {
+            return res.status(400).json({
+                success: false,
+                message: 'El ID del profesor es requerido'
+            });
+        }
+
+        // Asegurarse de que el profesor existe
+        const checkProfesorQuery = 'SELECT id FROM profesor WHERE id = ?';
+        db.query(checkProfesorQuery, [profesorId], async (err, results) => {
+            if (err || results.length === 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Profesor no encontrado'
+                });
+            }
+
+            const resultado = await queries.insertarHorario(fecha, horaInicio, horaFin, profesorId, salaNombre);
+            res.json({ 
+                success: true, 
+                message: 'Horario guardado exitosamente',
+                data: resultado
+            });
+        });
+    } catch (error) {
+        console.error('Error al guardar el horario:', error);
+        res.status(500).json({ 
+            success: false, 
+            message: error.message || 'Error al guardar el horario' 
+        });
+    }
+});
+
+// Ruta para obtener los horarios de un profesor
+router.get('/horarios/:profesorId', (req, res) => {
+    const { profesorId } = req.params;
+
+    queries.obtenerHorariosPorProfesor(profesorId, (error, horarios) => {
+        if (error) {
+            console.error('Error al obtener los horarios:', error);
+            return res.status(500).json({ error: 'Error al obtener los horarios' });
+        }
+        res.json(horarios);
+    });
+});
+
+// Ruta para actualizar un horario
+router.put('/actualizar-horario/:horarioId', (req, res) => {
+    const { horarioId } = req.params;
+    const { fecha, horaInicio, horaFin, salaNombre } = req.body;
+
+    queries.actualizarHorario(horarioId, fecha, horaInicio, horaFin, salaNombre, (error, resultado) => {
+        if (error) {
+            console.error('Error al actualizar el horario:', error);
+            return res.status(500).json({ success: false, message: 'Error al actualizar el horario' });
+        }
+        res.json({ success: true, message: 'Horario actualizado exitosamente' });
+    });
+});
+
+// Ruta para obtener las clases del alumno
+router.get('/clases-alumno', verificarToken, async (req, res) => {
+    try {
+        const alumnoId = req.alumnoId;
+
+        const query = `
+            SELECT 
+                c.nombre as nombre_clase,
+                i.nombre as instrumento,
+                p.nombre as profesor_nombre,
+                p.apellido as profesor_apellido,
+                s.nombre as sala_nombre,
+                h.dia,
+                h.mes,
+                h.annio,
+                h.hora_inicio,
+                h.hora_fin
+            FROM clases c
+            JOIN instrumentos i ON c.instrumento_id = i.id
+            JOIN profesor p ON c.profesor_id = p.id
+            JOIN horarios h ON c.horario_id = h.id
+            LEFT JOIN sala_horario sh ON h.id = sh.horario_id
+            LEFT JOIN salas s ON sh.sala_id = s.id
+            WHERE c.estado = 'activo'
+            AND EXISTS (
+                SELECT 1 FROM modalidades m 
+                WHERE m.id = c.modalidad_id 
+                AND m.alumno_id = ?
+            )
+            ORDER BY h.annio, h.mes, h.dia, h.hora_inicio;
+        `;
+
+        db.query(query, [alumnoId], (error, results) => {
+            if (error) {
+                console.error('Error al obtener clases:', error);
+                return res.status(500).json({ error: 'Error al obtener las clases' });
+            }
+            res.json(results);
+        });
+    } catch (error) {
+        console.error('Error:', error);
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
 });
 
 // Exportar el router
 module.exports = router;
+
+router.get('/logout', (req, res) => {
+    // Limpiar tanto la sesión como el token JWT
+    if (req.session) {
+        req.session.destroy();
+    }
+    res.clearCookie('auth_token');
+    res.clearCookie('connect.sid');
+    res.redirect('/');
+});
+
+router.get('/api/ganancias-mes', dashboardController.getGananciasMes);
+
+router.get('/dashboard-profesor', verificarToken, (req, res) => {
+    if (req.userTipo !== 2) {
+        return res.redirect('/login2?error=' + encodeURIComponent('No tienes permiso para acceder a esta página'));
+    }
+    dashboardControllerProfesor.getDashboardData(req, res);
+});
+
+router.get('/actualizar-contrasena', verificarToken, async (req, res) => {
+    if (req.userTipo !== 2 && req.userTipo !== 1 && req.userTipo !== 3 ) {
+        return res.redirect('/login2?error=' + encodeURIComponent('No tienes permiso para acceder a esta página'));
+    }
+
+    queries.obtenerUsuarioProfesorPorId(req.userId, (err, usuario) => {
+        if (err) {
+            console.error('Error al obtener los datos del profesor:', err);
+            return res.status(500).json({ error: 'Error al obtener los datos del profesor' });
+        }
+
+        if (!usuario || !usuario.email_personal) {
+            return res.status(404).json({ error: 'Profesor no encontrado o sin email' });
+        }
+
+        res.render('actualizar-contrasena', { usuario });
+    });
+});
+
+router.post('/actualizar-contrasena', verificarToken, async (req, res) => {
+    const { email_personal, contrasenaAnterior, nuevaContrasena, confirmarContrasena } = req.body;
+
+    if (req.userTipo !== 2 && req.userTipo !== 1 && req.userTipo !== 3 ) {
+        return res.status(403).json({ error: 'No tienes permiso para acceder a esta acción' });
+    }
+
+    try {
+        queries.obtenerUsuarioProfesorPorId(req.userId, async (err, usuario) => {
+            if (err) {
+                return res.status(500).json({ error: 'Error al obtener los datos del profesor' });
+            }
+
+            const match = await bcrypt.compare(contrasenaAnterior, usuario.contrasena);
+            if (!match) {
+                return res.status(400).json({ error: 'La contraseña anterior no es correcta' });
+            }
+
+            if (nuevaContrasena !== confirmarContrasena) {
+                return res.status(400).json({ error: 'Las nuevas contraseñas no coinciden' });
+            }
+
+            const hashedPassword = await bcrypt.hash(nuevaContrasena, 10);
+
+            queries.actualizarUsuarioProfesor(req.userId, email_personal, hashedPassword, (err) => {
+                if (err) {
+                    return res.status(500).json({ error: 'Error al actualizar la contraseña' });
+                }
+
+                let redirectUrl;
+                if (req.userTipo === 1) {
+                    redirectUrl = '/dashboard-admin';
+                } else if (req.userTipo === 2) {
+                    redirectUrl = '/dashboard-profesor';
+                } else {
+                    redirectUrl = '/dashboard-alumno';
+                }
+
+                res.status(200).json({ message: 'Contraseña y correo actualizados exitosamente', redirectUrl });
+            });
+        });
+    } catch (error) {
+        res.status(500).json({ error: 'Error interno del servidor' });
+    }
+});
+
+router.get('/api/buscar-alumno', async (req, res) => {
+    const nombre = req.query.nombre;
+    queries.buscarAlumnosPorNombre(nombre, (err, alumnos) => {
+        if (err) {
+            return res.status(500).json({ error: 'Error al buscar alumnos' });
+        }
+        res.json(alumnos);
+    });
+});
+
+router.get('/registro-de-pagos', verificarToken, (req, res) => {
+    if (req.userTipo !== 2 && req.userTipo !== 1) {
+        return res.redirect('/login2?error=' + encodeURIComponent('No tienes permiso para acceder a esta página'));
+    }
+    res.render('registro-de-pagos', { title: 'Registro De Pagos' });
+});
+
+router.post('/registro-de-pagos', verificarToken, [
+    body('monto').isNumeric().withMessage('El monto debe ser un número válido'),
+    body('fecha_pago').isISO8601().withMessage('La fecha de pago debe ser una fecha válida'),
+    body('metodo_de_pago').isIn(['efectivo', 'transferencia']).withMessage('Método de pago no válido'),
+    body('alumno_id').isNumeric().withMessage('ID de alumno debe ser un número válido'),
+    body('notas').optional().isString().withMessage('Notas debe ser una cadena')
+], (req, res) => {
+    // ... código de la ruta ...
+});
+
+router.post('/logout', (req, res) => {
+    if (req.session) {
+        req.session.destroy();
+    }
+    res.clearCookie('auth_token');
+    res.clearCookie('connect.sid');
+    res.sendStatus(200);
+});
+
+// Ruta para buscar pagos
+router.post('/buscar_registro_pagos', (req, res) => {
+    const { busqueda } = req.body;
+    queries.buscarPagos(busqueda, (err, results) => {
+        if (err) {
+            console.error('Error ejecutando la consulta:', err);
+            res.status(500).send('Error en la consulta');
+            return;
+        }
+        res.json(results);
+    });
+});
+
+// Ruta para ver los registros de pagos
+router.get('/ver-pagos', (req, res) => {
+    if (req.userTipo === 2 && req.userTipo !== 1) {
+        return res.redirect('/login2?error=' + encodeURIComponent('No tienes permiso para acceder a esta página'));
+    }
+    res.render('ver-pagos', { title: 'Ver Pagos Mensualidad' });
+});
+
+router.get('/login', (req, res) => {
+    res.render('login2', { 
+        title: 'Inicio Sesion',
+        error: req.query.error || null
+    });
+});

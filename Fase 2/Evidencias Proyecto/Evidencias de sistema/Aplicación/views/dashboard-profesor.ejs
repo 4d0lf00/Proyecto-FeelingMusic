@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel del Profesor</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/dashboard-profesor.css">
+</head>
+<body>
+    <div class="container-profesor">
+        <nav class="sidebar-profesor">
+            <div class="logo-profesor">
+                <h2><i class="fas fa-chalkboard-teacher"></i> Menu Profesor</h2>
+            </div>
+            <ul>
+                <li class="active">
+                    <a href="/" title="Panel">
+                        <i class="fas fa-home"></i> 
+                        <span class="menu-text-profesor">Panel Principal</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="dropdown-trigger-profesor" title="Mis Alumnos">
+                        <i class="fas fa-user-graduate"></i> 
+                        <span class="menu-text-profesor">Mis Alumnos</span>
+                        <i class="fas fa-chevron-down arrow-profesor"></i>
+                    </a>
+                    <ul class="submenu-profesor">
+                        <li>
+                            <a href="/form">
+                                <i class="fas fa-user-plus"></i>
+                                <span>Inscribir Alumnos</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/filtro2">
+                                <i class="fas fa-users"></i>
+                                <span>Ver Alumnos</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#" class="dropdown-trigger-profesor" title="Mis Alumnos">
+                        <i class="fas fa-dollar-sign"></i> 
+                        <span class="menu-text-profesor">Pagos</span>
+                        <i class="fas fa-chevron-down arrow-profesor"></i>
+                    </a>
+                    <ul class="submenu-profesor">
+                        <li>
+                            <a href="/registro-de-pagos">
+                                <i class="fas fa-wallet"></i>
+                                <span>Registrar Nuevo Pago</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/ver-pagos">
+                                <i class="fas fa-list-alt"></i>
+                                <span>Lista de pagos</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>  
+                <li>
+                    <a href="/horarios" title="Mi Horario">
+                        <i class="fas fa-calendar-alt"></i> 
+                        <span class="menu-text-profesor">Mi Horario</span>
+                    </a>
+                </li>
+                
+                <li>
+                    <a href="/actualizar-contrasena" title="Actualizar Contraseña">
+                        <i class="fas fa-lock"></i> 
+                        <span class="menu-text-profesor">Actualizar Contraseña</span>
+                    </a>
+                </li>
+
+                <li>
+                    <a href="#" onclick="logout(); return false;" title="Cerrar Sesión">
+                        <i class="fas fa-sign-out-alt"></i> 
+                        <span class="menu-text-profesor">Cerrar Sesión</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <main class="content-profesor">
+            <header class="header-profesor">
+                <h1>Panel del Profesor</h1>
+                <div class="user-info-profesor">
+                    <span><i class="fas fa-user"></i> Profesor User</span>
+                </div>
+            </header>
+
+            <div class="stats-grid-profesor">
+                <div class="stat-card-profesor">
+                    <h3><i class="fas fa-users"></i> Mis Alumnos</h3>
+                    <p id="totalMisAlumnos"><%= data.totalAlumnos %></p>
+                </div>
+                <div class="stat-card-profesor">
+                    <h3><i class="fas fa-clock"></i> Horas Semanales</h3>
+                    <p id="horasSemanales">0</p>
+                </div>
+                <div class="stat-card-profesor">
+                    <h3><i class="fas fa-book"></i> Cursos Activos</h3>
+                    <p id="cursosActivos">0</p>
+                </div>
+            </div>
+
+            <div class="charts-grid-profesor">
+                <div class="chart-card-profesor">
+                    <h3>Alumnos por Instrumento</h3>
+                    <canvas id="instrumentosChart"></canvas>
+                </div>
+                <div class="chart-card-profesor">
+                    <h3>Asistencia Mensual</h3>
+                    <canvas id="asistenciaChart"></canvas>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function logout() {
+    fetch('/logout', {
+        method: 'POST',
+        credentials: 'same-origin'
+    }).then(() => {
+        window.location.href = '/';
+            });
+        }
+    </script>
+
+    <script>
+        // Pasar los datos del servidor al cliente
+        window.dashboardData = <%- JSON.stringify(data) %>;
+        console.log('Datos recibidos en el cliente:', window.dashboardData);
+    </script>
+    <script src="/js/graficos.js"></script>
+    <script src="/js/dashboard-profesor.js"></script>
+    <script>
+        async function actualizarContadores() {
+            try {
+                // Actualizar alumnos
+                const responseAlumnos = await fetch('/api/total-alumnos');
+                const dataAlumnos = await responseAlumnos.json();
+                const elementoAlumnos = document.getElementById('totalAlumnos');
+                
+                // Agregar clase para animación
+                elementoAlumnos.classList.add('updating');
+                elementoAlumnos.textContent = dataAlumnos.total;
+                
+                // Remover clase después de la animación
+                setTimeout(() => {
+                    elementoAlumnos.classList.remove('updating');
+                }, 300);
+                
+            } catch (error) {
+                console.error('Error al actualizar contadores:', error);
+            }
+        }
+
+        // Actualizar cada 30 segundos
+        actualizarContadores();
+        setInterval(actualizarContadores, 30000);
+    </script>
+</body>
+</html>
