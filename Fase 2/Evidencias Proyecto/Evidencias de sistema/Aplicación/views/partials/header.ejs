@@ -1,83 +1,338 @@
-<header>
-    <div class="header-main">
-        <div class="container">
-            <nav class="navbar navbar-default" role="navigation" aria-label="Navegación principal">
-                <div class="navbar-header">
-                    <button type="button" class="navbar-toggle" 
-                            aria-expanded="false" 
-                            aria-controls="bs-example-navbar-collapse-1"
-                            aria-label="Toggle navigation">
-                        <span class="sr-only">Toggle navigation</span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                        <span class="icon-bar"></span>
-                    </button>
-                </div>
-                <h1>
-                    <a href="/"><span class="golden-header">Feeling</span> <span class="silver-header">Music</span></a>
-                </h1>
-                <!-- navbar-header -->
-                <div class="collapse navbar-collapse cl-effect-13" id="bs-example-navbar-collapse-1">
-                    <ul class="nav navbar-nav navbar-right">
-                        <li>
-                            <a href="/" class="active scroll">Inicio</a>
-                        </li>
-                        <li>
-                            <a href="#about" class="scroll">La Academia</a>
-                        </li>
-                        <li>
-                            <a href="#services" class="scroll">Servicios</a>
-                        </li>
-                        <li>
-                            <a href="#team" class="scroll">Profesores</a>
-                        </li>
-                        <li>
-                            <a href="#gallery" class="scroll">Galería</a>
-                        </li>
-                        <li>
-                            <a href="#contact" class="scroll">Contacto</a>
-                        </li>
-                        <li>
-                            <% if (typeof isAuthenticated !== 'undefined' && isAuthenticated) { %>
-                                <a href="#" onclick="logout(); return false;"><i class="fa fa-sign-out"></i> Cerrar Sesión</a>
-                            <% } else { %>
-                                <a href="/login2"><i class="fa fa-user"></i> Iniciar Sesión</a>
-                            <% } %>
-                        </li>
-                    </ul>
-                </div>
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title><%= typeof title !== 'undefined' ? title : 'Feeling Music' %></title>
 
-                <!-- Agregar barra de búsqueda -->
-                <div class="w3-agile-sectn_search">
-                    <div class="cd-main-header">
-                        <ul class="cd-header-buttons">
-                            <li>
-                                <a class="cd-search-trigger" href="#cd-search">
-                                    <span></span>
-                                </a>
-                            </li>
-                        </ul>
-                    </div>
-                    <div id="cd-search" class="cd-search">
-                        <form action="#" method="post">
-                            <input name="Search" type="search" placeholder="Click enter after typing">
-                        </form>
-                    </div>
-                </div>
+    <!-- Favicon -->
+    <link rel="icon" href="/images/favicon.ico" type="image/x-icon">
 
-                <div class="clearfix"> </div>
-            </nav>
-        </div>
-    </div>
-</header>
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 
-<script>
-    function logout() {
-        fetch('/logout', {
-            method: 'POST',
-            credentials: 'same-origin'
-        }).then(() => {
-            window.location.href = '/login2';
-        });
-    }
-</script>
+    <!-- Bootstrap CSS (si se usa en varias páginas, si no, puede ir en páginas específicas) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-SgOJa3DmI69IUzQ2PVdRZhwQ+dy64/BUtbMJw1MZ8t5HZApcHrRKUc4W0kG879m7" crossorigin="anonymous">
+    
+    <!-- Estilos Comunes y Layout -->
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            min-height: 100vh;
+            background-color: #1d1d1d;
+            color: #d1d1d1;
+            display: flex; /* Para el layout de top-bar y page-wrapper */
+            flex-direction: column; /* Apilar top-bar encima de page-wrapper */
+        }
+
+        .top-bar {
+            width: 100%;
+            background-color: #222;
+            padding: 10px 20px; /* Ajustar padding si es necesario */
+            display: flex;
+            align-items: center;
+            /* justify-content: space-between; se maneja con el placeholder */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+            position: fixed;
+            top: 0;
+            left: 0;
+            z-index: 1010;
+            height: 60px;
+            box-sizing: border-box;
+        }
+
+        .hamburger-btn {
+            background: none;
+            border: none;
+            /* color: #FEDB37; Se define en media query */
+            font-size: 1.8rem;
+            cursor: pointer;
+            padding: 5px 10px;
+            /* display: block; Se define en media query */
+        }
+        .hamburger-btn:hover {
+            /* Mantener hover solo si es visible y relevante */
+            /* color: #fff; Lo quitamos para que no haya efecto hover si está "oculto" por color */
+        }
+
+        /* Estilos para el placeholder en la top-bar */
+        .top-bar-content-container { /* Cambiado de top-bar-placeholder-right */
+            display: flex; /* Para alinear items dentro si es necesario */
+            justify-content: flex-start; /* Alinea el contenido (ej. título) a la izquierda de este contenedor */
+            flex-grow: 1; /* Toma el espacio restante */
+            margin-left: 10px; /* Pequeño margen respecto al botón hamburguesa */
+        }
+
+        /* Por defecto (móvil <= 768px) */
+        @media (max-width: 1295px) {
+            .hamburger-btn {
+                display: inline-flex; /* O block, según cómo quieras que se comporte el padding */
+                align-items: center;
+                justify-content: center;
+                color: #FEDB37;
+            }
+            .hamburger-btn:hover {
+                color: #fff; /* Efecto hover solo en móvil donde es visible y amarillo */
+            }
+        }
+
+        /* Escritorio (> 768px) */
+        @media (min-width: 1296px) {
+            .hamburger-btn {
+                display: none; /* Ocultar el botón de hamburguesa en escritorio */
+            }
+        }
+
+        .page-title-header {
+            color: #FEDB37;
+            font-size: 1.5rem;
+            margin: 0;
+            /* Si quieres que esté centrado con la hamburguesa a la izq: */
+            /* flex-grow: 1; text-align: center; margin-right: 50px; /*Ajustar margen para compensar hamburguesa*/
+        }
+
+        .page-wrapper {
+            display: flex; /* Para el layout sidebar + main-content */
+            flex-grow: 1; /* Ocupa el resto de la altura */
+            margin-top: 60px; /* Dejar espacio para la top-bar fija */
+            width: 100%;
+        }
+
+        .sidebar {
+            width: 250px;
+            background-color: #111; /* Asegurar color de fondo explícito */
+            color: #fff;
+            height: calc(100vh - 60px); /* Altura completa menos la top-bar */
+            position: fixed; 
+            top: 60px; /* Asegura que el sidebar fijo comience debajo de la top-bar fija */
+            left: 0;
+            /* top: 60px;  Ya no se necesita top, page-wrapper lo posiciona */
+            z-index: 1000;
+            transition: transform 0.3s ease-in-out, width 0.3s ease-in-out; /* Añadir transform para slide en móvil */
+            box-shadow: 2px 0 5px rgba(0,0,0,0.5);
+            overflow-y: auto; /* Para scroll interno del sidebar */
+        }
+        
+        /* Estilos para ocultar sidebar en móviles por defecto */
+        @media (max-width: 1295px) {
+            .sidebar {
+                transform: translateX(-100%); /* Oculto fuera de la pantalla */
+                box-shadow: none; /* Quitar sombra cuando está oculto/overlay */
+            }
+            .sidebar.active { /* Cuando se muestre en móvil */
+                transform: translateX(0);
+                width: 250px !important; /* Asegurar ancho completo al mostrar y darle prioridad */
+                box-shadow: 2px 0 10px rgba(0,0,0,0.5); 
+                z-index: 1015; /* Aumentado: Debe estar sobre el overlay (999) y la top-bar (1010) */
+                overflow-y: auto; /* Permitir scroll interno en el sidebar si el contenido es largo */
+            }
+            .main-content {
+                 margin-left: 0 !important; /* El contenido principal ocupa todo el ancho en móvil */
+            }
+            /* Aseguramos que en móvil, incluso si el body tiene la clase de colapso de escritorio, el margen sea 0 */
+            body.sidebar-desktop-collapsed .main-content {
+                margin-left: 0 !important;
+            }
+            
+             body.sidebar-active .main-content-overlay { /* Overlay para el contenido principal en móvil */
+                position: fixed;
+                top: 60px; /* Debajo del top-bar */
+                left: 0;
+                width: 100%;
+                height: calc(100% - 60px);
+                background-color: rgba(0,0,0,0.5);
+                z-index: 999; /* Detrás del sidebar, encima del contenido */
+                display: block;
+            }
+        }
+
+
+        .sidebar .logo { 
+            padding: 20px; 
+            text-align: center; border-bottom: 1px solid #333; }
+        .sidebar .logo h2 { margin: 0; color: #FEDB37; font-size: 1.5rem; }
+        .sidebar .logo i { margin-right: 10px; }
+        .sidebar ul { list-style: none; padding: 0; margin: 0; flex-grow: 1; }
+        .sidebar ul li a { display: flex; align-items: center; padding: 15px 20px; color: #ccc; text-decoration: none; transition: background-color 0.2s ease, color 0.2s ease; white-space: nowrap; overflow: hidden; }
+        .sidebar ul li a i { min-width: 20px; margin-right: 15px; font-size: 1.1rem; }
+        .sidebar ul li a:hover, .sidebar ul li.active > a { background-color: #333; color: #FEDB37; }
+        .submenu { list-style: none; padding: 0; margin: 0; background-color: #222; max-height: 0; overflow: hidden; opacity: 0; transition: max-height 0.3s ease-out, opacity 0.3s ease-out; }
+        .submenu.active { opacity: 1; }
+        .submenu li a { padding-left: 50px; font-size: 0.9rem; }
+        .submenu li a i { font-size: 0.9rem; margin-right: 10px; }
+        .sidebar ul li a .arrow { margin-left: auto; transition: transform 0.3s ease; font-size: 0.8rem; }
+        .sidebar ul li a .arrow.active { transform: rotate(180deg); }
+
+        /* Sidebar Colapsado (Escritorio) */
+        .sidebar.collapsed {
+            width: 70px;
+        }
+
+        .main-content {
+            flex-grow: 1;
+            padding: 20px;
+            transition: margin-left 0.3s ease-in-out;
+            margin-left: 250px; /* Estado por defecto: sidebar expandido */
+            overflow-y: auto;
+            height: calc(100vh - 60px);
+            box-sizing: border-box;
+        }
+
+        
+        
+
+        /* Ajuste de margen para escritorio cuando el sidebar está colapsado */
+        body.sidebar-desktop-collapsed .main-content {
+            margin-left: 70px;
+        }
+        
+        /* Media query para móviles */
+        @media (max-width: 1295px) {
+            .main-content,
+            body.sidebar-desktop-collapsed .main-content { /* Asegura que en móvil, el margen siempre sea 0 */
+                margin-left: 0 !important;
+            }
+
+            .sidebar {
+                transform: translateX(-100%); 
+                box-shadow: none; 
+            }
+            .sidebar.active { 
+                transform: translateX(0);
+                width: 250px !important; /* Asegurar ancho completo al mostrar y darle prioridad */
+                box-shadow: 2px 0 10px rgba(0,0,0,0.5); 
+                z-index: 1015; /* Aumentado: Debe estar sobre el overlay (999) y la top-bar (1010) */
+                overflow-y: auto; /* Permitir scroll interno en el sidebar si el contenido es largo */
+            }
+
+            /* Anular específicamente estilos de .collapsed cuando .active está presente en móvil */
+            .sidebar.active.collapsed .logo span,
+            .sidebar.active.collapsed ul li a span,
+            .sidebar.active.collapsed ul li a .arrow {
+                display: inline !important; /* O el valor que tuvieran por defecto, ej. block o flex */
+                opacity: 1 !important;
+            }
+            .sidebar.active.collapsed .submenu {
+                max-height: none !important; /* Permitir que el submenu tome su altura natural */
+                opacity: 1 !important;
+                display: block !important; /* O list-item, etc., según corresponda */
+            }
+            .sidebar.active.collapsed ul li a {
+                justify-content: flex-start !important; /* Revertir la justificación del centro */
+                padding-left: 20px !important; /* Revertir padding */
+                padding-right: 20px !important;
+            }
+            .sidebar.active.collapsed ul li a i {
+                margin-right: 15px !important; /* Revertir margen del icono */
+                font-size: 1.1rem !important; /* Revertir tamaño de fuente del icono */
+            }
+            .sidebar.active.collapsed .logo h2 {
+                font-size: 1.5rem !important; /* Revertir tamaño de fuente del logo */
+                justify-content: flex-start !important; /* Revertir justificación */
+            }
+            .sidebar.active.collapsed .logo {
+                padding: 20px !important; /* Revertir padding del logo */
+                text-align: left !important; /* Revertir alineación del texto */
+            }
+
+            body.sidebar-active .main-content-overlay {
+                position: fixed;
+                top: 60px;
+                left: 0;
+                width: 100%;
+                height: calc(100% - 60px);
+                background-color: rgba(0,0,0,0.5);
+                z-index: 999;
+                display: block;
+            }
+        }
+
+        /* Estilos para cuando el sidebar está colapsado (iconos y texto) */
+        .sidebar.collapsed .logo span,
+        .sidebar.collapsed ul li a span,
+        .sidebar.collapsed ul li a .arrow {
+            display: none; opacity: 0; transition: opacity 0.1s ease-out;
+        }
+        .sidebar.collapsed .submenu {
+             max-height: 0 !important; opacity: 0 !important; display: none;
+        }
+        .sidebar.collapsed ul li a {
+             justify-content: center; padding-left: 10px; padding-right: 10px;
+        }
+        .sidebar.collapsed ul li a i {
+            margin-right: 0; font-size: 1.3rem;
+        }
+        /* Ajuste para el logo colapsado (similar al que ya tenías en sidebar.ejs) */
+        .sidebar.collapsed .logo h2 {
+            font-size: 1.5rem; display: flex; align-items: center; justify-content: center; overflow: hidden;
+        }
+        .sidebar.collapsed .logo h2 span { display: none; }
+        .sidebar.collapsed .logo { padding: 10px 5px; text-align: center; }
+        .sidebar.collapsed .logo h2 i { margin-right: 0; }
+
+        /* Estilos para el sidebar expandido por hover (solo escritorio) */
+        .sidebar.sidebar-hover-expand {
+            width: 250px !important; /* Forzar expansión */
+        }
+        .sidebar.sidebar-hover-expand .logo span,
+        .sidebar.sidebar-hover-expand ul li a span,
+        .sidebar.sidebar-hover-expand ul li a .arrow {
+            display: inline !important; /* Mostrar texto y flechas */
+            opacity: 1 !important;
+        }
+        .sidebar.sidebar-hover-expand ul li a {
+            justify-content: flex-start !important; /* Alinear items al inicio */
+            padding-left: 20px !important;
+            padding-right: 20px !important;
+        }
+        .sidebar.sidebar-hover-expand ul li a i {
+            margin-right: 15px !important; /* Espacio para el texto del icono */
+            font-size: 1.1rem !important;
+        }
+        .sidebar.sidebar-hover-expand .logo h2 {
+            justify-content: flex-start !important;
+            font-size: 1.5rem !important;
+        }
+        .sidebar.sidebar-hover-expand .logo {
+            padding: 20px !important;
+            text-align: left !important;
+        }
+        /* No es necesario .sidebar.sidebar-hover-expand .submenu, ya que los submenús
+           se manejan con JS y clases 'active', y al expandir el sidebar, se deberían poder abrir.
+           Si el sidebar está colapsado (incluso con hover-expand), los submenús no deberían ser clickeables,
+           lo cual ya está manejado por el script que previene la apertura de submenús
+           cuando sidebar.classList.contains('collapsed') (antes de quitarlo temporalmente). */
+
+    </style>
+
+    <!-- Incluir CSS específicos si es necesario -->
+    <% if (typeof pageStylesheets !== 'undefined' && Array.isArray(pageStylesheets)) { %>
+        <% pageStylesheets.forEach(sheet => { %>
+            <link rel="stylesheet" href="<%= sheet %>">
+        <% }); %>
+    <% } %>
+
+</head>
+<body>
+    <header class="top-bar">
+        <button id="hamburger-menu" class="hamburger-btn" aria-label="Toggle Menu">
+            <i class="fas fa-bars"></i>
+        </button>
+        <div class="top-bar-content-container"> 
+            <% if (typeof title !== 'undefined' && title) { %>
+                 <!-- Descomentado y movido aquí para prueba -->
+                <!-- <h1 class="page-title-header"><%= title %></h1> -->
+            <% } %>
+        </div> 
+    </header>
+
+    <div class="page-wrapper">
+        <%- include('../partials/sidebar', { userTipo: userTipo, currentPath: currentPath || '/' }) %> 
+        <main class="main-content">
+            <div class="main-content-overlay" style="display: none;"></div> <!-- Overlay para móvil -->
+            <!-- Aquí comienza el contenido principal de la página -->
+
+    <!-- NO DEBERÍA HABER NADA MÁS AQUÍ HASTA EL CIERRE EN FOOTER.EJS -->
+</body>
+</html>

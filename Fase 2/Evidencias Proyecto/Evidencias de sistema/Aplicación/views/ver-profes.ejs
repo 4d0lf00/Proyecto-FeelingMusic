@@ -1,10 +1,11 @@
-<%- include('partials/header', { title: title, userTipo: userTipo, currentPath: '/filtro2' }) %>
+<%- include('partials/header', { title: title, userTipo: userTipo, currentPath: '/ver-profes' }) %>
+
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gestión de Alumnos</title>
+    <title>Ver Profesores</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -34,7 +35,7 @@
             display: flex; /* Necesario para el layout con sidebar */
         }
 
-        .container-alumnos { /* Renombrado de .container para especificidad */
+        .container-profesores { /* Renombrado de .container para especificidad */
             width: 100%; /* Ocupará el espacio restante al lado del sidebar */
             padding: 20px;
             color: #d1d1d1;
@@ -44,7 +45,7 @@
             box-sizing: border-box;
         }
         
-        .container-alumnos h1 {
+        .container-profesores h1 {
             text-align: center;
             color: #FEDB37; /* Color dorado para el título */
             background: linear-gradient(to bottom, #FEDB37, #c4a34e);
@@ -97,14 +98,14 @@
 
 
         /* ESTILOS PARA LA TABLA RESPONSIVA DE ALUMNOS */
-        .table-wrapper-alumnos { /* Contenedor general para la tabla, similar a schedule-content-wrapper */
+        .table-wrapper-profesores { /* Contenedor general para la tabla, similar a schedule-content-wrapper */
             background-color: #000;
             padding: 15px;
             border-radius: 8px;
             border: 1px solid #4e4f51;
             box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
             margin-top: 20px;
-            width: 100%; /* Ocupar todo el ancho del .container-alumnos */
+            width: 100%; /* Ocupar todo el ancho del .container-profesores */
             box-sizing: border-box;
         }
 
@@ -114,7 +115,7 @@
              width: 100%;
         }
         
-        .table-alumnos-responsive {
+        .table-profesores-responsive {
             table-layout: fixed; /* Columnas de ancho fijo en escritorio */
             width: 100%;
             min-width: 1200px; /* Un min-width grande para forzar scroll horizontal si es necesario */
@@ -123,8 +124,8 @@
             background-color: #1c1c1c; 
         }
 
-        .table-alumnos-responsive th,
-        .table-alumnos-responsive td {
+        .table-profesores-responsive th,
+        .table-profesores-responsive td {
             vertical-align: middle;
             padding: 12px 10px; 
             border: none; 
@@ -135,22 +136,22 @@
             white-space: nowrap; /* Evitar que el texto se parta en múltiples líneas por defecto */
         }
         
-        .table-alumnos-responsive th {
+        .table-profesores-responsive th {
              background-color: #333;
              color: #FEDB37; /* Dorado para cabeceras */
              text-align: center;
              white-space: nowrap; /* Evitar que el texto de cabecera se parta */
         }
-        .table-alumnos-responsive tbody tr td {
+        .table-profesores-responsive tbody tr td {
             background-color: #2a2a2a;
         }
-        .table-alumnos-responsive tbody tr:hover td {
+        .table-profesores-responsive tbody tr:hover td {
             background-color: #313131; /* Un poco más claro en hover */
         }
 
         /* Columna de Acciones Fija */
-        .table-alumnos-responsive th:first-child,
-        .table-alumnos-responsive td:first-child { 
+        .table-profesores-responsive th:first-child,
+        .table-profesores-responsive td:first-child { 
             width: 100px; 
             min-width: 100px; 
             max-width: 100px;
@@ -160,7 +161,7 @@
             z-index: 2;
             background-color: #333; /* Fondo para la cabecera de acciones */
         }
-        .table-alumnos-responsive tbody td:first-child {
+        .table-profesores-responsive tbody td:first-child {
             background-color: #2a2a2a; /* Fondo para las celdas de acciones en el body */
              /* Para asegurar que los botones no se corten si el contenido es poco */
             display: flex;
@@ -170,25 +171,25 @@
         }
 
         /* Anchos sugeridos para otras columnas (ajustar según necesidad) */
-        .table-alumnos-responsive th.col-nombre, .table-alumnos-responsive td.col-nombre { width: 150px; min-width: 150px; }
-        .table-alumnos-responsive th.col-apellido, .table-alumnos-responsive td.col-apellido { width: 150px; min-width: 150px; }
-        .table-alumnos-responsive th.col-instrumento, .table-alumnos-responsive td.col-instrumento { width: 120px; min-width: 120px; }
-        .table-alumnos-responsive th.col-modalidad, .table-alumnos-responsive td.col-modalidad { width: 100px; min-width: 100px; }
-        .table-alumnos-responsive th.col-monto, .table-alumnos-responsive td.col-monto { width: 90px; min-width: 90px; text-align: right; padding-right: 15px;}
-        .table-alumnos-responsive th.col-dia-pago, .table-alumnos-responsive td.col-dia-pago { width: 80px; min-width: 80px; text-align: center;}
-        .table-alumnos-responsive th.col-comentarios, .table-alumnos-responsive td.col-comentarios { 
+        .table-profesores-responsive th.col-nombre, .table-profesores-responsive td.col-nombre { width: 150px; min-width: 150px; }
+        .table-profesores-responsive th.col-apellido, .table-profesores-responsive td.col-apellido { width: 150px; min-width: 150px; }
+        .table-profesores-responsive th.col-instrumento, .table-profesores-responsive td.col-instrumento { width: 120px; min-width: 120px; }
+        .table-profesores-responsive th.col-modalidad, .table-profesores-responsive td.col-modalidad { width: 100px; min-width: 100px; }
+        .table-profesores-responsive th.col-monto, .table-profesores-responsive td.col-monto { width: 90px; min-width: 90px; text-align: right; padding-right: 15px;}
+        .table-profesores-responsive th.col-dia-pago, .table-profesores-responsive td.col-dia-pago { width: 80px; min-width: 80px; text-align: center;}
+        .table-profesores-responsive th.col-comentarios, .table-profesores-responsive td.col-comentarios { 
             width: 200px; min-width: 200px; 
             white-space: normal; /* Permitir wrap para comentarios */
             overflow-wrap: break-word;
         }
-        .table-alumnos-responsive th.col-celular, .table-alumnos-responsive td.col-celular { width: 130px; min-width: 130px; }
-        .table-alumnos-responsive th.col-rut, .table-alumnos-responsive td.col-rut { width: 120px; min-width: 120px; }
-        .table-alumnos-responsive th.col-fecha-registro, .table-alumnos-responsive td.col-fecha-registro { width: 120px; min-width: 120px; text-align: center;}
-        .table-alumnos-responsive th.col-email, .table-alumnos-responsive td.col-email { width: 180px; min-width: 180px; }
+        .table-profesores-responsive th.col-celular, .table-profesores-responsive td.col-celular { width: 130px; min-width: 130px; }
+        .table-profesores-responsive th.col-rut, .table-profesores-responsive td.col-rut { width: 120px; min-width: 120px; }
+        .table-profesores-responsive th.col-fecha-registro, .table-profesores-responsive td.col-fecha-registro { width: 120px; min-width: 120px; text-align: center;}
+        .table-profesores-responsive th.col-email, .table-profesores-responsive td.col-email { width: 180px; min-width: 180px; }
 
 
         /* Permitir wrap en celdas editables cuando el input está activo */
-        .table-alumnos-responsive td .editing-field {
+        .table-profesores-responsive td .editing-field {
             white-space: normal;
         }
 
@@ -303,20 +304,20 @@
              box-shadow: none;
         }
 
-        .btn-save-alumno { /* Estilo específico para guardar */
+        .btn-save-profesor { /* Estilo específico para guardar */
             /* border-color: #28a745; */
             /* color: #28a745; */
         }
-         .btn-save-alumno:hover {
+         .btn-save-profesor:hover {
             /* border-color: #218838; */
             /* color: #fff; */
             /* background-color: #218838; */
         }
-        .btn-delete-alumno {
+        .btn-delete-profesor {
             /* border-color: #dc3545; */
             /* color: #dc3545; */
         }
-        .btn-delete-alumno:hover {
+        .btn-delete-profesor:hover {
             /* border-color: #c82333; */
             /* color: #fff; */
             /* background-color: #c82333; */
@@ -366,10 +367,10 @@
                 margin-left: 0 !important; /* Sin margen para el sidebar en móviles (se ocultará o será overlay) */
                 padding: 10px;
             }
-            .container-alumnos {
+            .container-profesores {
                 padding: 10px;
             }
-            .container-alumnos h1 {
+            .container-profesores h1 {
                 font-size: 1.8rem;
                 margin-bottom: 15px;
             }
@@ -381,19 +382,19 @@
                 max-height: 65vh; /* Altura máxima para el scroll vertical */
                 overflow-y: auto;
             }
-            .table-alumnos-responsive {
+            .table-profesores-responsive {
                 table-layout: auto; /* Permitir que las columnas se ajusten */
                 width: max-content !important; /* La tabla toma el ancho de su contenido */
                 min-width: 0; /* Resetear el min-width de escritorio */
             }
-            .table-alumnos-responsive th, .table-alumnos-responsive td {
+            .table-profesores-responsive th, .table-profesores-responsive td {
                 white-space: nowrap; /* Forzar no-wrap en móvil para que el scroll X funcione bien con table-layout:auto */
                  font-size: 0.85rem; /* Fuente más pequeña en móviles */
                  padding: 8px 6px;
             }
              /* Ajustar la columna de acciones fija para móviles */
-            .table-alumnos-responsive th:first-child,
-            .table-alumnos-responsive td:first-child {
+            .table-profesores-responsive th:first-child,
+            .table-profesores-responsive td:first-child {
                 width: 80px; min-width: 80px; max-width: 80px;
                 font-size: 0.8rem; /* Más pequeño para botones de acción */
             }
@@ -405,8 +406,8 @@
 
 
             /* Ejemplo de ocultar algunas columnas menos importantes en móvil */
-            /* .table-alumnos-responsive .col-comentarios,
-            .table-alumnos-responsive .col-fecha-registro {
+            /* .table-profesores-responsive .col-comentarios,
+            .table-profesores-responsive .col-fecha-registro {
                 display: none;
             } */
         }
@@ -415,43 +416,38 @@
 </head>
 <body>
     <main class="main-content">
-        <div class="container-alumnos">
-            <h1><i class="fas fa-users"></i> Gestión de Alumnos</h1>
+        <div class="container-profesores">
+            <h1><i class="fas fa-users"></i> Lista de profesores</h1>
 
             <div id="feedbackArea" class="feedback-area"></div>
 
+            <!-- Formulario de filtro -->
             <form id="buscarForm">
                 <div class="form-group">
-                    <label for="busqueda">Buscar Alumno:</label>
+                    <label for="busqueda">Buscar Profesor:</label>
                     <input type="text" id="busqueda" name="busqueda" placeholder="Nombre, Apellido, RUT, Email...">
                 </div>
                 <button type="submit" class="btn"><i class="fas fa-search"></i> Buscar</button>
             </form>
 
-            <div class="table-wrapper-alumnos">
-                <div class="table-responsive-custom">
-                    <table id="tablaAlumnos" class="table-alumnos-responsive">
-                        <thead>
-                            <tr>
-                                <!-- La primera TH es para Acciones y es sticky -->
-                                <th>Acciones</th> 
-                                <th class="col-nombre">Nombre <img src="/images/sort-icon.png" class="sort-icon" alt="ordenar"></th>
-                                <th class="col-apellido">Apellido <img src="/images/sort-icon.png" class="sort-icon" alt="ordenar"></th>
-                                <th class="col-instrumento">Instrumento <img src="/images/sort-icon.png" class="sort-icon" alt="ordenar"></th>
-                                <th class="col-modalidad">Modalidad <img src="/images/sort-icon.png" class="sort-icon" alt="ordenar"></th>
-                                <th class="col-monto">Monto <img src="/images/sort-icon.png" class="sort-icon" alt="ordenar"></th>
-                                <th class="col-dia-pago">Día Pago <img src="/images/sort-icon.png" class="sort-icon" alt="ordenar"></th>                        
-                                <th class="col-comentarios">Comentarios <img src="/images/sort-icon.png" class="sort-icon" alt="ordenar"></th>
-                                <th class="col-celular">Celular <img src="/images/sort-icon.png" class="sort-icon" alt="ordenar"></th>                    
-                                <th class="col-fecha-registro">F. Registro <img src="/images/sort-icon.png" class="sort-icon" alt="ordenar"></th>
-                                <th class="col-email">Email <img src="/images/sort-icon.png" class="sort-icon" alt="ordenar"></th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Aquí se mostrarán los resultados -->
-                        </tbody>
-                    </table>
-                </div>
+            <!-- Contenedor de resultados con scroll -->
+             <div class="table-wrapper-profesores">
+            <div class="table-responsive-custom">
+                <table id="tablaProfesores" class="table-profesores-responsive">
+                    <thead>
+                        <tr>                    
+                            <th>Acciones</th> 
+                            <th class="col-nombre">Nombre <img src="/images/sort-icon.png" class="sort-icon" alt="ordenar"></th>
+                            <th class="col-apellido">Apellido <img src="/images/sort-icon.png" class="sort-icon" alt="ordenar"></th>                    
+                            <th class="col-email">Email <img src="/images/sort-icon.png" class="sort-icon" alt="ordenar"></th>
+                            <th class="col-disciplina">Disciplina <img src="/images/sort-icon.png" class="sort-icon" alt="ordenar"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Aquí se mostrarán los resultados -->
+                    </tbody>
+                </table>
+            </div>
             </div>
         </div>
     </main>
@@ -485,55 +481,49 @@
             }, 4000);
         }
 
-        function renderizarTablaAlumnos(alumnos) {
-            const tbody = document.querySelector('#tablaAlumnos tbody');
+        function renderizarTablaProfesores(profesores) {
+            const tbody = document.querySelector('#tablaProfesores tbody');
             if (!tbody) return;
             tbody.innerHTML = '';
-            if (alumnos.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="11" style="text-align:center; padding: 20px; background-color: #2a2a2a;">No se encontraron alumnos.</td></tr>';
+            if (profesores.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="12" style="text-align:center; padding: 20px; background-color: #2a2a2a;">No se encontraron profesores.</td></tr>';
                 return;
             }
-            alumnos.forEach(alumno => {
+            profesores.forEach(profesor => {
                 const row = document.createElement('tr');
-                row.dataset.alumnoId = alumno.id;
+                row.dataset.profesorId = profesor.id;   
 
                 const accionesCell = row.insertCell();
                 accionesCell.innerHTML = `
-                    <button class="btn btn-sm btn-action btn-save-alumno" style="display:none;" title="Guardar Cambios"><i class="fas fa-save"></i></button>
-                    <button class="btn btn-sm btn-action btn-delete-alumno" title="Eliminar Alumno"><i class="fas fa-trash-alt"></i></button>
+                    <button class="btn btn-sm btn-action btn-save-profesor" style="display:none;" title="Guardar Cambios"><i class="fas fa-save"></i></button>
+                    <button class="btn btn-sm btn-action btn-delete-profesor" title="Eliminar Profesor"><i class="fas fa-trash-alt"></i></button>
                 `;
 
-                // Añadir clases de columna a las celdas de datos
-                row.insertCell().outerHTML = `<td class="editable-field col-nombre" data-field="nombre">${alumno.nombre || ''}</td>`;
-                row.insertCell().outerHTML = `<td class="editable-field col-apellido" data-field="apellido">${alumno.apellido || ''}</td>`;
-                row.insertCell().outerHTML = `<td class="col-instrumento">${alumno.instrumento_alumno || 'N/A'}</td>`;
-                row.insertCell().outerHTML = `<td class="col-modalidad">${alumno.modalidad_alumno || 'N/A'}</td>`;
-                row.insertCell().outerHTML = `<td class="col-monto" style="text-align: right; padding-right: 15px;">${alumno.monto !== null && alumno.monto !== undefined ? alumno.monto : 'N/A'}</td>`;
-                row.insertCell().outerHTML = `<td class="col-dia-pago" style="text-align: center;">${alumno.dia_pago !== null && alumno.dia_pago !== undefined ? alumno.dia_pago : 'N/A'}</td>`;
-                row.insertCell().outerHTML = `<td class="editable-field col-comentarios" data-field="comentarios" style="white-space: normal; overflow-wrap: break-word;">${alumno.comentarios || ''}</td>`;
-                row.insertCell().outerHTML = `<td class="editable-field col-celular" data-field="numero_telefono">${alumno.numero_telefono || ''}</td>`;
-                row.insertCell().outerHTML = `<td class="col-fecha-registro" style="text-align: center;">${alumno.fecha_registro || 'N/A'}</td>`;
-                row.insertCell().outerHTML = `<td class="editable-field col-email" data-field="email">${alumno.email || ''}</td>`;
-                
-                tbody.appendChild(row);
+               //añadir clases de columna a las celdas de datos
+               row.insertCell().outerHTML = `<td class="editable-field col-nombre" data-field="nombre">${profesor.nombre || ''}</td>`;
+               row.insertCell().outerHTML = `<td class="editable-field col-apellido" data-field="apellido">${profesor.apellido || ''}</td>`;
+               row.insertCell().outerHTML = `<td class="editable-field col-email" data-field="email">${profesor.email || ''}</td>`;
+               row.insertCell().outerHTML = `<td class="editable-field col-disciplina" data-field="especialidad">${profesor.especialidad || ''}</td>`;
+
+               tbody.appendChild(row);
             });
         }
 
         document.addEventListener('DOMContentLoaded', function() {
-            // Cargar todos los alumnos al inicio
-            fetch('/api/buscar-alumno?nombre=')
+            //cargar todos los profesores al inicio
+            fetch('/api/buscar-profesores?nombre=')
                 .then(response => response.json())
-                .then(data => renderizarTablaAlumnos(data))
+                .then(data => renderizarTablaProfesores(data))
                 .catch(error => {
-                    console.error('Error cargando alumnos inicialmente:', error);
-                    showFeedback('Error al cargar la lista inicial de alumnos.', 'error');
+                    console.error('Error cargando profesores inicialmente:', error);
+                    showFeedback('Error al cargar la lista inicial de profesores.', 'error');
                 });
-            
-            // Listener para el sidebar (si existe y tiene el toggle)
-            const sidebarToggle = document.querySelector('.sidebar-toggle-btn'); // Asumiendo que tu sidebar tiene un botón con esta clase
-            const mainContent = document.querySelector('.main-content');
-            const sidebar = document.querySelector('.sidebar'); // Asumiendo clase .sidebar para el nav
 
+            //listener para el sidebar
+            const sidebarToggle = document.querySelector('.sidebar-toggle-btn');
+            const mainContent = document.querySelector('.main-content');
+            const sidebar = document.querySelector('.sidebar');
+            
             if (sidebarToggle && mainContent && sidebar) {
                 sidebarToggle.addEventListener('click', () => {
                     sidebar.classList.toggle('collapsed');
@@ -543,11 +533,13 @@
         });
 
 
+
+        // Evento para buscar profesores
         document.getElementById('buscarForm').addEventListener('submit', function(e) {
             e.preventDefault();
-            const busqueda = document.getElementById('busqueda').value.trim();
+            const busqueda = document.getElementById('busqueda').value;
 
-            fetch(`/api/buscar-alumno?nombre=${encodeURIComponent(busqueda)}`)
+            fetch(`/api/buscar-profesores?nombre=${encodeURIComponent(busqueda)}`)
             .then(response => {
                 if (!response.ok) {
                     return response.text().then(text => { 
@@ -555,20 +547,19 @@
                     });
                 }
                 return response.json();
-            })
+            })  
             .then(data => {
-                renderizarTablaAlumnos(data);
+                renderizarTablaProfesores(data);
             })
             .catch(error => {
                 console.error('Error en búsqueda:', error);
-                showFeedback('Error al buscar alumnos: ' + error.message, 'error');
-                const tbody = document.querySelector('#tablaAlumnos tbody');
-                if(tbody) tbody.innerHTML = `<tr><td colspan="11" style="text-align:center; padding: 20px; background-color: #2a2a2a;">Error al cargar datos. Intente nuevamente.</td></tr>`;
+                showFeedback('Error al buscar profesores: ' + error.message, 'error');
+                const tbody = document.querySelector('#tablaProfesores tbody');
+                if(tbody) tbody.innerHTML = `<tr><td colspan="12" style="text-align:center; padding: 20px; background-color: #2a2a2a;">Error al cargar datos. Intente nuevamente.</td></tr>`;
             });
         });
-        
 
-        const tablaResultados = document.getElementById('tablaAlumnos');
+        const tablaResultados = document.getElementById('tablaProfesores');
 
         if (tablaResultados) {
             tablaResultados.addEventListener('click', function(event) {
@@ -580,7 +571,7 @@
                 const originalValue = targetCell.textContent.trim();
                 const fieldName = targetCell.dataset.field;
                 targetCell.dataset.originalValue = originalValue; // GUARDAR VALOR ORIGINAL
-                
+
                 let inputElement;
                 if (fieldName === 'comentarios') {
                     inputElement = document.createElement('textarea');
@@ -600,7 +591,7 @@
                 if (typeof inputElement.select === 'function') inputElement.select();
 
                 const row = targetCell.closest('tr');
-                const saveButton = row.querySelector('.btn-save-alumno');
+                const saveButton = row.querySelector('.btn-save-profesor');
                 if (saveButton) saveButton.style.display = 'inline-flex'; // Para alinear icono y texto si lo tuviera
 
                 function revertToTextView(useOriginal = false) {
@@ -616,35 +607,38 @@
                 }
                 
                 function handleInputKeyDown(e){
-                    if (e.key === 'Enter') {
-                        e.preventDefault(); 
-                        if (saveButton) saveButton.click(); 
-                        // revertToTextView se llamará después del guardado exitoso o fallido desde el saveButton.click
-                    } else if (e.key === 'Escape') {
-                        revertToTextView(true); // Revertir al valor original
-                    }
-                }
-
-                function handleOutsideClickOrEsc(e) {
-                    // No revertir si el clic fue en el botón de guardar
-                    if (e.target.closest('.btn-save-alumno')) return;
-                    
-                    if (!targetCell.contains(e.target) && e.target !== saveButton) {
-                    revertToTextView(); // Revertir al valor actual del input si no se guardó
+                    if (e.key === 'Escape') {
+                        revertToTextView(true);
+                    } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const saveButton = targetCell.closest('tr').querySelector('.btn-save-profesor');
+                        if (saveButton) saveButton.click();
                     }
                 }
                 
+                function handleOutsideClickOrEsc(e){
+                    // No revertir si el clic fue en el botón de guardar
+                    if (e.target.closest('.btn-save-profesor')) return; 
+
+                    // Usar la misma lógica que en filtro2.ejs para evitar problemas con el saveButton
+                    const row = targetCell.closest('tr');
+                    const saveButton = row.querySelector('.btn-save-profesor');
+                    if (!targetCell.contains(e.target) && e.target !== saveButton) {
+                        revertToTextView();
+                    }
+                }
+
                 document.addEventListener('click', handleOutsideClickOrEsc, true);
                 inputElement.addEventListener('keydown', handleInputKeyDown);
             });
 
             tablaResultados.addEventListener('click', async function(event) {
-                const saveButton = event.target.closest('.btn-save-alumno');
-                const deleteButton = event.target.closest('.btn-delete-alumno');
+                const saveButton = event.target.closest('.btn-save-profesor');
+                const deleteButton = event.target.closest('.btn-delete-profesor');
 
                 if (saveButton) {
                     const row = saveButton.closest('tr');
-                    const alumnoId = row.dataset.alumnoId;
+                    const profesorId = row.dataset.profesorId;
                     const editableInputs = row.querySelectorAll('input.editing-field, textarea.editing-field');
                     const updatedData = {};
                     let isValid = true;
@@ -659,13 +653,14 @@
                             const newValue = input.value.trim();
                             const originalStoredValue = cell.dataset.originalValue !== undefined ? cell.dataset.originalValue : ''; // Obtener el original almacenado
 
-                            console.log(`[Guardar Alumno] Campo: ${fieldName}, Nuevo Valor: '${newValue}', Valor Original Almacenado: '${originalStoredValue}'`); // LOG FRONTEND
+                            console.log(`[Guardar Profesor] Campo: ${fieldName}, Nuevo Valor: '${newValue}', Valor Original Almacenado: '${originalStoredValue}'`); // LOG FRONTEND
 
                             if (newValue !== originalStoredValue) {
                                 updatedData[fieldName] = newValue; // Solo añadir a updatedData si cambió
                                 changesMade = true;
                             }
 
+                            // Validaciones específicas por campo si son necesarias (ej. email)
                             if (fieldName === 'email' && newValue && !/^\S+@\S+\.\S+$/.test(newValue)) {
                                 showFeedback(`Email inválido para el campo ${fieldName}.`, 'error');
                                 isValid = false;
@@ -673,9 +668,9 @@
                             } else {
                                 input.style.borderColor = ''; // Limpiar marca de error
                             }
-                        } 
-                    });
 
+                        }
+                    });
 
                     if (!isValid) return;
 
@@ -697,7 +692,7 @@
                     saveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
                     try {
-                        const response = await fetch(`/api/alumnos/${alumnoId}`, {
+                        const response = await fetch(`/api/profesores/${profesorId}`, {
                             method: 'PUT',
                             headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                             body: JSON.stringify(updatedData)
@@ -705,7 +700,7 @@
                         const result = await response.json();
 
                         if (response.ok && result.success) {
-                            showFeedback(result.message || 'Alumno actualizado.', 'success');
+                            showFeedback(result.message || 'Profesor actualizado.', 'success');
                             // Actualizar celdas y quitar inputs
                             row.querySelectorAll('td.editable-field').forEach(cell => {
                                 const input = cell.querySelector('input.editing-field, textarea.editing-field');
@@ -713,78 +708,73 @@
                                 if (input && updatedData.hasOwnProperty(fieldName)) {
                                     // Revertir al valor actualizado
                                     cell.textContent = updatedData[fieldName];
-                                } else if (input) { 
-                                     // Si estaba editando pero no se guardó el campo (ej. solo se editó otro campo en la misma fila)
-                                     // Revertir al valor original que tenía cuando se empezó a editar.
+                                } else if (input) { // Esto maneja campos editables que no se incluyeron en updatedData (no cambiaron)
                                      cell.textContent = cell.dataset.originalValue !== undefined ? cell.dataset.originalValue : input.value; 
                                 }
-                                // Limpiar el originalValue después de guardar exitosamente o revertir
+                                // Limpiar el originalValue después de guardar exitosamente o revertir (en cualquier caso)
                                 delete cell.dataset.originalValue;
                             });
                         } else {
-                            showFeedback(result.message || 'Error al actualizar alumno.', 'error');
-                             // No quitar los inputs si hubo error, para que el usuario pueda corregir
-                             // Asegurarse de que el valor original no se pierda si hay un nuevo intento.
-                             // La lógica de revertToTextView ya maneja esto en caso de Escape.
+                            showFeedback(result.message || 'Error al actualizar profesor.', 'error');
+                             // Si hubo error, los inputs se quedan para que el usuario corrija
+                             // El originalValue permanece para futuros intentos o escape.
                         }
                     } catch (err) {
-                        console.error('Error al actualizar alumno:', err);
+                        console.error('Error al actualizar profesor:', err);
                         showFeedback('Error de conexión al actualizar.', 'error');
+                        // Si hubo un error de conexión, los inputs se quedan.
+                        // El originalValue permanece.
                     } finally {
                         saveButton.disabled = false;
                         saveButton.innerHTML = '<i class="fas fa-save"></i>';
-                        // Ocultar después del intento y revertir la celda si no hubo error
+                        // Ocultar después del intento. Si hubo error, los inputs *no* se quitan aquí.
                         saveButton.style.display = 'none';
-                        if (response && response.ok && result && result.success) {
-                             // Si el guardado fue exitoso, la celda ya fue actualizada en el bloque `if (response.ok && result.success)`
-                             // Asegurarse de que el input sea removido si no se hizo ya (aunque el textContent = ... debería reemplazarlo)
-                             row.querySelectorAll('input.editing-field, textarea.editing-field').forEach(input => { input.remove(); });
-                        } else { // Si hubo error o no se guardó (ej. sin cambios)
-                            // Revertir explícitamente las celdas que tenían input a su valor original
-                            row.querySelectorAll('td.editable-field').forEach(cell => {
-                                const input = cell.querySelector('input.editing-field, textarea.editing-field');
-                                if (input) {
-                                    cell.textContent = cell.dataset.originalValue !== undefined ? cell.dataset.originalValue : input.value; // Revertir al original
-                                }
-                                // Limpiar el originalValue después de un intento fallido o sin cambios
-                                delete cell.dataset.originalValue;
-                            });
-                        }
+
+                        // Lógica para limpiar inputs y originalValue DESPUÉS del intento.
+                        // Si el guardado fue exitoso, ya se manejó en el bloque success.
+                        // Si hubo un error, el usuario puede querer corregir, así que NO eliminamos los inputs/originalValue aquí si hubo error.
+                        // Solo eliminamos si no hubo cambios (ya manejado) o si fue exitoso (manejado arriba).
+                        // Si llegó aquí después de un error, los inputs y originalValue deben persistir.
+                        
+                        // Vamos a refinar esto: si el guardado falló, NO remover inputs/originalValue.
+                        // Solo remover si hubo éxito (ya hecho arriba) o si no hubo cambios (ya hecho arriba).
+                        // Este `finally` ya no necesita una lógica compleja de remoción condicional.
+                        // Los inputs y originalValue solo se quitan en los casos de éxito o 'no changes'.
                     }
                 }
-    
+
                 if (deleteButton) {
                     const row = deleteButton.closest('tr');
-                    const alumnoId = row.dataset.alumnoId;
-                    const alumnoNombreCell = row.querySelector('td[data-field="nombre"]');
-                    const alumnoApellidoCell = row.querySelector('td[data-field="apellido"]');
-                    let alumnoNombre = 'este alumno';
-                    if (alumnoNombreCell && alumnoApellidoCell) {
-                        alumnoNombre = (alumnoNombreCell.textContent + ' ' + alumnoApellidoCell.textContent).trim();
+                    const profesorId = row.dataset.profesorId;
+                    const profesorNombreCell = row.querySelector('td[data-field="nombre"]');
+                    const profesorApellidoCell = row.querySelector('td[data-field="apellido"]');
+                    let profesorNombre = 'este profesor';
+                    if (profesorNombreCell && profesorApellidoCell) {
+                        profesorNombre = (profesorNombreCell.textContent + ' ' + profesorApellidoCell.textContent).trim();
                     }
 
                     // Mensaje de confirmación actualizado para eliminación PERMANENTE
-                    if (confirm(`¿Estás seguro de que deseas ELIMINAR PERMANENTEMENTE a "${alumnoNombre}"? Esta acción no se puede deshacer.`)) {
+                    if (confirm(`¿Estás seguro de que deseas ELIMINAR PERMANENTEMENTE a "${profesorNombre}"? Esta acción no se puede deshacer.`)) {
                         deleteButton.disabled = true;
                         deleteButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
                         try {
-                            const response = await fetch(`/api/alumnos/${alumnoId}`, {
+                            const response = await fetch(`/api/profesores/${profesorId}`, {
                                 method: 'DELETE',
                                 headers: { 'Accept': 'application/json' }
                             });
                             const result = await response.json();
                             if (response.ok && result.success) {
-                                showFeedback(result.message || 'Alumno eliminado permanentemente.', 'success'); // Mensaje actualizado
+                                showFeedback(result.message || 'Profesor eliminado permanentemente.', 'success'); // Mensaje actualizado
                                 row.remove(); // Eliminar la fila de la tabla
-                                if (document.querySelector('#tablaAlumnos tbody').rows.length === 0) {
-                                   document.querySelector('#tablaAlumnos tbody').innerHTML = '<tr><td colspan="11" style="text-align:center; padding: 20px; background-color: #2a2a2a;">No hay alumnos para mostrar.</td></tr>';
+                                if (document.querySelector('#tablaProfesores tbody').rows.length === 0) {
+                                    document.querySelector('#tablaProfesores tbody').innerHTML = '<tr><td colspan="12" style="text-align:center; padding: 20px; background-color: #2a2a2a;">No hay profesores para mostrar.</td></tr>';
                                 }
                             } else {
-                                showFeedback(result.message || 'Error al eliminar alumno.', 'error');
+                                showFeedback(result.message || 'Error al eliminar profesor.', 'error');
                             }
                         } catch (err) {
-                            console.error('Error al eliminar alumno:', err);
-                            showFeedback('Error de conexión al eliminar alumno.', 'error');
+                            console.error('Error al eliminar profesor:', err);
+                            showFeedback('Error de conexión al eliminar profesor.', 'error');
                         } finally {
                             deleteButton.disabled = false;
                             deleteButton.innerHTML = '<i class="fas fa-trash-alt"></i>';
@@ -794,9 +784,9 @@
             });
         }
 
-
-        // Funcionalidad de ordenamiento (existente, adaptada)
-        document.querySelectorAll('#tablaAlumnos th .sort-icon').forEach(function(icon) {
+        
+        // Funcionalidad de ordenamiento al hacer clic en el icono
+        document.querySelectorAll('#tablaProfesores th .sort-icon').forEach(function(icon) {
             icon.addEventListener('click', function() {
                 const th = this.parentElement;
                 const columnClass = Array.from(th.classList).find(cls => cls.startsWith('col-') || cls === 'acciones-header'); // O una clase específica si la tiene la cabecera
@@ -843,9 +833,10 @@
                 rows.forEach(row => tbody.appendChild(row));
             });
         });
-    </script>
-</div> 
 
-<%- include('partials/footer') %>
+        
+    </script>
 </body>
 </html>
+
+<%- include('partials/footer') %>

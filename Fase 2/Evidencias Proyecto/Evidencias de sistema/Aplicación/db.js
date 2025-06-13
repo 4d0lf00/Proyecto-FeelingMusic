@@ -1,21 +1,16 @@
-const mysql = require('mysql2');
+const mysql = require('mysql2/promise');
 
-// Crear la conexión a la base de datos
-const db = mysql.createConnection({
+// Crear el pool de conexiones a la base de datos
+const pool = mysql.createPool({
     host: 'localhost',
-    user: 'root',         
-    password: '',   
-    database: 'feeling_music'  
+    user: 'root',
+    password: '12345678',
+    database: 'feeling_musicDB',
+    waitForConnections: true,
+    connectionLimit: 10, // Puedes ajustar este límite según tus necesidades
+    queueLimit: 0
 });
 
-// Conectar a la base de datos
-db.connect((err) => {
-    if (err) {
-        console.error('Error conectando a la base de datos:', err.message);
-        return;
-    }
-    console.log('Conexión exitosa a la base de datos MySQL');
-});
-
-// Exportar la conexión para su uso en otras partes de la aplicación
-module.exports = db;
+// Exportar el pool para su uso en otras partes de la aplicación
+// El pool ya maneja las conexiones y las reconexiones
+module.exports = pool;

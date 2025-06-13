@@ -1,0 +1,2085 @@
+<%
+// Función para determinar si usar texto negro o blanco según el color de fondo
+function getContrastYIQ(hexcolor) {
+    // Si no hay color o es inválido, devolver blanco
+    if (!hexcolor || typeof hexcolor !== 'string' || !hexcolor.startsWith('#')) {
+        return '#ffffff';
+    }
+    
+    // Eliminar el # y convertir shorthand (3 dígitos) a formato completo (6 dígitos)
+    hexcolor = hexcolor.replace('#', '');
+    if (hexcolor.length === 3) {
+        hexcolor = hexcolor[0] + hexcolor[0] + hexcolor[1] + hexcolor[1] + hexcolor[2] + hexcolor[2];
+    }
+    
+    // Convertir a RGB
+    const r = parseInt(hexcolor.substr(0, 2), 16);
+    const g = parseInt(hexcolor.substr(2, 2), 16);
+    const b = parseInt(hexcolor.substr(4, 2), 16);
+    
+    // Calcular YIQ (fórmula para luminosidad percibida)
+    const yiq = ((r * 299) + (g * 587) + (b * 114)) / 1000;
+    
+    // Retornar negro o blanco según luminosidad
+    return (yiq >= 128) ? '#000000' : '#ffffff';
+}
+%>
+<%- include('partials/header', { title: 'Horarios Generales', userTipo: userTipo, currentPath: '/horarios-generales' }) %>
+
+<!-- Incluir el Sidebar Condicional -->
+
+
+<!-- Contenido Principal de la Página -->
+<main class="main-content">
+
+    <!-- Estilos específicos para esta página -->
+    <style>
+        /* --- Fondo Original Restaurado --- */
+        body {
+             /* Sobreescribir el fondo base del header para esta página específica */
+            --s: 200px;
+            --c1: #1d1d1d;
+            --c2: #4e4f51;
+            --c3: #3c3c3c;
+            background: repeating-conic-gradient(
+                from 30deg,
+                #0000 0 120deg,
+                var(--c3) 0 180deg
+              )
+              calc(0.5 * var(--s)) calc(0.5 * var(--s) * 0.577),
+              repeating-conic-gradient(
+                from 30deg,
+                var(--c1) 0 60deg,
+                var(--c2) 0 120deg,
+                var(--c3) 0 180deg
+              );
+            background-size: var(--s) calc(var(--s) * 0.577);
+            /* background-attachment: fixed; Puedes añadirlo si lo prefieres */
+            /* Layout Flexbox para Sidebar + Contenido (Solo en esta página) */
+            display: flex; /* Activado para layout con sidebar */
+        }
+        /* --- Fin Fondo Restaurado --- */
+
+            
+            
+            
+
+
+        
+        /* --- Estilos Tema Oscuro para Pestañas de Días --- */
+        .nav-tabs {
+            border-bottom: 1px solid #4e4f51;
+        }
+        .nav-tabs .nav-link {
+            background-color: transparent;
+            border: 1px solid transparent;
+            border-bottom: none;
+            color: #a0a0a0;
+            transition: background-color 0.2s ease, color 0.2s ease;
+        }
+        .nav-tabs .nav-link:hover {
+            border-color: transparent;
+            background-color: #333;
+            color: #FEDB37;
+        }
+        .nav-tabs .nav-link.active {
+            background-color: #2a2a2a;
+            border-color: #4e4f51;
+            border-bottom-color: #2a2a2a;
+            color: #FEDB37;
+            font-weight: bold;
+        }
+        .nav-tabs .nav-link:focus, .nav-tabs .nav-link.active:focus {
+            outline: none;
+            box-shadow: none;
+        }
+
+        /* --- Estilo Gradiente para TEXTO del Título H2 --- */
+        .main-content h2 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            background: linear-gradient(to bottom, #FEDB37, #c4a34e);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 0;
+        }
+
+        /* --- Ajustar .main-content para layout con sidebar (Solo aquí) --- */
+        .main-content {
+             display: flex; /* Activado: Hacer que .main-content sea un contenedor flex */
+             flex-direction: column; /* Para que sus hijos se apilen verticalmente */
+             /* align-items: center; */ /* Comentado - puede que no lo necesites, depende del contenido interno */
+             width: auto; 
+             box-sizing: border-box; 
+             padding-top: 20px;
+             padding-bottom: 20px;
+             padding-right: 20px;
+             /* padding-left: 85px; */ /* Eliminado - Se usará margin-left */
+             min-height: 100vh; /* Ajustado para ocupar toda la altura */
+             flex-grow: 1; /* Para que ocupe el espacio restante junto al sidebar */
+             margin-left: 250px; /* Espacio para el sidebar expandido (ajustar al ancho real de tu sidebar) */
+             transition: margin-left 0.3s ease-in-out; /* Transición suave como en filtro2.ejs */
+        }
+        /* --- Fin Flex --- */
+
+        /* --- Contenedor Negro para el Horario (Centrado) --- */
+        .schedule-content-wrapper {
+            background-color: #000;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #4e4f51;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            margin: 20px 0; /* Quitamos el 'auto' horizontal, dejamos margen vertical */
+            max-width: 95%; /* Limita el ancho máximo, usa porcentajes para que se vea igual en todas las pantallas */
+            /*max-width: 1350px;  Limita el ancho máximo */
+            /* width: 95%; */ /* <--- Eliminado/Comentado */
+             /* Asegurar que use el max-width */
+             box-sizing: border-box; 
+        }
+        /* --- Fin Contenedor Negro --- */
+
+        /* --- Estilos para Scroll Horizontal y Columna Fija --- */
+        .table-responsive {
+            overflow-x: auto; /* Asegurar scroll horizontal */
+            -webkit-overflow-scrolling: touch; /* Scroll suave en iOS */
+        }
+        
+        /* --- Estilos para Controlar Ancho de Tabla y Columnas --- */
+        .table {
+            /* table-layout: auto; <-- Revertido a fixed como base */
+            table-layout: fixed; /* Distribuir columnas uniformemente por defecto (escritorio) */
+            width: 100%;
+            border-collapse: separate; 
+            border-spacing: 2px; 
+            background-color: #1c1c1c; 
+        }
+        .table th,
+        .table td {
+            /* Las propiedades de overflow, etc., irán al contenedor interno */
+            /* vertical-align: top; <-- Restaurado a middle */
+            vertical-align: middle; /* Alinear contenido de celda verticalmente */
+            padding: 10px 8px; 
+            border: none; 
+            border-radius: 3px; 
+            /* min-height: 110px; <-- Eliminado */
+        }
+        .table th { /* Estilo cabecera tabla */
+             background-color: #333;
+             color: #e0e0e0;
+             text-align: center; /* Centrar texto cabeceras */
+        }
+        /* --- Ancho específico para la columna Hora --- */
+        .table th:first-child,
+        .table td:first-child { 
+            width: 60px; /* Ancho fijo y pequeño para la columna Hora */
+            min-width: 60px; 
+            max-width: 60px; /* Forzar el ancho */
+            padding-left: 5px; 
+            padding-right: 5px; 
+            text-align: center; /* Centrar hora */
+            /* Añadir para fijar la columna */
+            position: sticky; /* <-- Restaurado */
+            left: 0; /* <-- Restaurado */
+            z-index: 2; /* <-- Aumentado para asegurar visibilidad sobre otras celdas de la tabla */
+            /* El background-color ya definido en td:first-child ayuda a que se vea sobre el scroll */
+        }
+        .table td:first-child { /* Estilo específico celda Hora */
+            background-color: #333; /* Fondo necesario para sticky */
+            color: #f8f8f8c9; 
+            font-weight: bold;
+            /* padding-left: 5px; <-- Movido a la regla combinada */
+            /* padding-right: 5px; <-- Movido a la regla combinada */
+            /* text-align: center; <-- Movido a la regla combinada */
+        }
+        .table th:not(:first-child),
+        .table td:not(:first-child) { /* Celdas de Sala */
+            /* No se define width aquí, permite que se ajusten al espacio restante */
+             background-color: #2a2a2a;
+             min-width: 150px; /* Reducido para más flexibilidad con más columnas */
+        }
+        /* --- Fin Ancho Columna Hora --- */
+        /* --- Fin Scroll Horizontal --- */
+
+        /* --- Ajuste para forzar stack vertical y controlar overflow --- */
+        /* Contenedor principal dentro de la celda (si existe) */
+        /* Ahora aplica flexbox directamente a la celda TD */
+        /* Estilos base para la celda TD */
+        .table td.schedule-slot {
+            overflow: hidden; /* Ocultar desbordamiento */
+            /* display: flex; <-- Eliminado de la celda TD */
+            /* flex-direction: column; <-- Eliminado */
+            /* align-items: center; <-- Eliminado */
+            /* justify-content: center; <-- Eliminado */
+            text-align: center; /* Centrado texto general (para 'Disponible') */
+            /* height: 100%; <-- Eliminado */
+            padding: 5px;
+            box-sizing: border-box;
+            vertical-align: middle; /* Asegurar alineación vertical */
+        }
+
+        /* Nuevo contenedor interno para contenido complejo */
+        .table td.schedule-slot .slot-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* Centrado horizontal flex */
+            justify-content: center; /* Centrado vertical flex */
+            height: 100%; /* Ocupar altura del contenedor (celda) */
+            width: 100%; /* Ocupar ancho */
+        }
+
+        /* Nombre del alumno (dentro del contenedor flex) */
+        .table td.schedule-slot .slot-content strong {
+            display: block !important; 
+            font-size: 1.05rem; 
+            color: #fff;        
+            font-weight: bold;  
+            margin-bottom: 5px; 
+            /* overflow: hidden; <-- Eliminado para no cortar texto */
+            overflow-wrap: break-word; /* Permitir división de palabras largas */
+            white-space: normal; /* Asegurar salto de línea normal */
+            /* width y text-align heredados o controlados por flex */
+        }
+        /* Contenedor de detalles (dentro del contenedor flex) */
+        .table td.schedule-slot .slot-content .class-details {
+            display: block; 
+            overflow: hidden; 
+             /* width y text-align heredados o controlados por flex */
+        }
+        /* Detalles individuales (dentro del contenedor flex) */
+        .table td.schedule-slot .slot-content .class-details span {
+            display: block; 
+            margin-bottom: 2px; 
+            color: #ccc;          
+            line-height: 1.3;        
+            font-size: 0.9rem;       
+            /* overflow: hidden; <-- Eliminado para no cortar texto */
+             /* text-align heredado o controlado por flex */
+             overflow-wrap: break-word; /* Permitir división de palabras largas */
+             white-space: normal; /* Asegurar salto de línea normal */
+        }
+        /* --- Fin ajuste --- */
+
+        /* --- Estilos Tema Oscuro para Modal (ya existentes) --- */
+        .modal-content {
+            background-color: #1e1e1e;
+            color: #d1d1d1;
+            border: 1px solid #4e4f51;
+        }
+        .modal-header {
+            background-color: #333;
+            border-bottom: 1px solid #4e4f51;
+            color: #e0e0e0;
+        }
+        .modal-header .btn-close {
+            filter: invert(1) grayscale(100%) brightness(200%);
+        }
+        .modal-body {
+            background-color: #2a2a2a;
+        }
+        .modal-footer {
+            background-color: #333;
+            border-top: 1px solid #4e4f51;
+        }
+        #claseModal .form-label {
+            color: #b0b0b0;
+        }
+        #claseModal .form-control,
+        #claseModal .form-select {
+            background-color: #3c3c3c;
+            color: #d1d1d1;
+            border: 1px solid #4e4f51;
+        }
+        #claseModal .form-control::placeholder {
+            color: #888;
+        }
+        #claseModal .form-control:focus,
+        #claseModal .form-select:focus {
+            background-color: #4a4a4a;
+            border-color: #FEDB37;
+            box-shadow: 0 0 0 0.2rem rgba(254, 219, 55, 0.25);
+            color: #e0e0e0;
+        }
+        #selectedAlumnosList {
+            background-color: #3c3c3c;
+            border: 1px solid #4e4f51;
+            color: #d1d1d1;
+            min-height: 30px;
+            padding: 5px;
+            border-radius: 4px;
+        }
+        #selectedAlumnosList span {
+            background-color: #4e4f51;
+            padding: 2px 5px;
+            margin: 2px;
+            border-radius: 3px;
+            display: inline-block;
+        }
+        #selectedAlumnosList .remove-alumno-btn {
+            color: #ff8a8a;
+            background: none;
+            border: none;
+            margin-left: 5px;
+            cursor: pointer;
+            font-weight: bold;
+            line-height: 1;
+        }
+        #selectedAlumnosList .remove-alumno-btn:hover {
+            color: #ff4d4d;
+        }
+        #alumnoSearchResults {
+            position: absolute;
+            top: 100%; /* Justo debajo del input */
+            left: 0;
+            background-color: #3c3c3c;
+            border: 1px solid #4e4f51;
+            border-top: none;
+            max-height: 150px;
+            overflow-y: auto;
+            width: 100%;
+            z-index: 2000; /* Mayor z-index para asegurar que esté por encima de otros elementos */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            border-radius: 0 0 4px 4px;
+        }
+        #alumnoSearchResults div {
+            padding: 8px 12px;
+            color: #d1d1d1;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        #alumnoSearchResults div:hover {
+            background-color: #4e4f51;
+        }
+        
+        .mb-3.position-relative {
+            position: relative; /* Asegurar que el contenedor padre esté posicionado relativamente */
+        }
+        #alumnoSearchInput:focus {
+            border-color: #FEDB37;
+            box-shadow: 0 0 0 0.2rem rgba(254, 219, 55, 0.25);
+        }
+        /* --- Fin estilos mejorados para búsqueda --- */
+
+        /* --- Estilos Botones Personalizados Modal --- */
+        #claseModal .modal-footer .btn {
+            /* Reaplicar estilo base dorado */
+            display: inline-block; /* Cambiado de block a inline-block */
+            width: auto; /* Ancho automático */
+            margin: 0 5px; /* Margen ajustado */
+            padding: 10px 20px; /* Padding ajustado */
+            background: radial-gradient(ellipse farthest-corner at right bottom, #FEDB37 0%, #FDB931 8%, #9f7928 30%, #8A6E2F 40%, transparent 70%),
+                        radial-gradient(ellipse farthest-corner at left top, #FFFFFF 0%, #FFFFAC 8%, #D1B464 25%, #5d4a1f 62.5%, #5d4a1f 100%);
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            border-radius: 4px;
+            text-align: center;
+            border: none; /* Asegurar sin borde */
+            font-weight: bold; /* Hacer texto más visible */
+        }
+
+
+            
+
+
+
+        #claseModal .modal-footer .btn:hover {
+             /* Reaplicar estilo hover */
+            background: radial-gradient(ellipse farthest-corner at right bottom, #FEDB37 0%, #FDB931 8%, #9f7928 30%, #8A6E2F 40%, transparent 80%),
+                        radial-gradient(ellipse farthest-corner at left top, #FFFFFF 0%, #FFFFAC 12%, #D1B464 35%, #5d4a1f 40%, #5d4a1f 80%);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 
+                        0 6px 6px rgba(0, 0, 0, 0.23);
+            color: #e0e0e0; /* Texto ligeramente más claro en hover */
+        }
+
+        /* Opcional: Anular específicamente el color de fondo de Bootstrap si es necesario */
+        #claseModal .modal-footer .btn-danger {
+            background-image: none; /* Quitar posible imagen de fondo de BS */
+            /* Ya no se fuerza background-color: transparent aquí */
+             /* El fondo real vendrá de la regla #claseModal .modal-footer .btn o la específica de danger */
+        }
+         /* Estilo específico para el botón de eliminar */
+         #claseModal .modal-footer .btn-danger {
+            background: linear-gradient(to bottom, #dc3545, #a71d2a) !important; /* Gradiente rojo */
+             border: none;
+         }
+          #claseModal .modal-footer .btn-danger:hover {
+             background: linear-gradient(to bottom, #c82333, #8a1c27) !important;
+             box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 
+                         0 6px 6px rgba(0, 0, 0, 0.23);
+
+             color: white;
+         }
+
+        /* --- Fin Estilos Botones --- */
+
+        /* --- Estilos Responsivos para Tabla en Móviles --- */
+        @media (max-width: 1295px) { /* Punto de corte para móviles/tablets pequeñas */
+            
+            /* El fondo original del body y la estructura general se mantienen */
+
+            /* Forzar que el body no tenga scroll cuando el modal está abierto */
+            body.modal-open {
+                overflow: hidden !important;
+            }
+
+           
+            
+            #horarios-generales-container { /* Asegurar que el contenedor principal use el ancho completo */
+                width: 100%; /* <<< VOLVER A 100% */
+                /*margin: 0 5px; */
+                
+            }
+
+
+            
+
+            .table th:not(:first-child),
+            .table td:not(:first-child) { /* Celdas de Sala */
+                 background-color: #2a2a2a;
+                 min-width: 120px; /* Reducido aún más para móviles */
+                 /* overflow-wrap: break-word; ya debería estar en .slot-content span/strong */
+            }
+
+            .table td.schedule-slot .slot-content strong,
+            .table td.schedule-slot .slot-content .class-details span {
+                font-size: 0.85rem; /* Reducir un poco más la fuente en celdas */
+                overflow-wrap: break-word; /* Asegurar el ajuste de palabras */
+                white-space: normal; /* Asegurar salto de línea normal */
+                line-height: 1.2;
+            }
+            
+            .schedule-content-wrapper {
+                padding: 10px; /* Menos padding en el wrapper de la tabla */
+                width: 100%; /* Asegurar que el wrapper tome el ancho disponible */
+                /* overflow-x: auto; ESTE CONTENEDOR YA NO MANEJA EL SCROLL HORIZONTAL */
+                box-sizing: border-box;
+            }
+
+            .table-responsive {
+                max-height: 54.6vh; /* Restaurar altura para scroll vertical */
+                overflow-y: auto;  /* Scroll vertical automático */
+                overflow-x: scroll !important; /* VUELVE A MANEJAR EL SCROLL HORIZONTAL */
+                width: 100%; /* Ocupar el ancho de su contenedor padre */
+                display: block; /* Asegurar comportamiento de bloque */
+                
+            }
+
+            .modal-body {
+                max-height: 70vh; /* Limitar altura del cuerpo del modal */
+                overflow-y: auto; /* Scroll dentro del cuerpo del modal si excede */
+            }
+
+            .table {
+                table-layout: auto; /* Cambiar layout en pantallas pequeñas */
+                /* width: max-content !important; <<< PERMITIR QUE LA TABLA SE EXPANDA PARA SCROLL HORIZONTAL - REEMPLAZADO POR MIN-WIDTH */
+                /* min-width: 1000px !important; <<< FORZAR ANCHO PARA DEBUG SCROLL - REVERTIDO */
+                width: max-content !important; /* VOLVER A MAX-CONTENT */
+            }
+        
+           
+            .main-content { 
+                margin-left: 0 !important;
+                margin-right: 0 !important;
+                padding: 10px !important; /* Padding general y controlado */
+                width: 100% !important; 
+                align-items: stretch !important; /* <<< ASEGURAR QUE LOS HIJOS SE ESTIREN */
+                box-sizing: border-box; /* Incluir padding y borde en el width/height total */
+                overflow-x: hidden !important; /* <<< EVITAR QUE MAIN-CONTENT SE DESBORDE HORIZONTALMENTE */
+            }
+
+            /* Título de página fijo en móviles - TEMPORALMENTE DESACTIVADO PARA DEBUG SCROLL TABLA */
+            /*
+            .main-content > h2 {
+                position: -webkit-sticky; 
+                position: sticky;
+                top: 0;
+                background-color: #000; 
+                z-index: 1002; 
+                color: #FEDB37 !important; 
+                -webkit-background-clip: initial !important; 
+                background-clip: initial !important; 
+                background-image: none !important; 
+                padding-top: 10px;   
+                padding-bottom: 10px;
+                margin-bottom: 0;  
+            }
+            */
+
+            /* Pestañas de días fijas en móviles - TEMPORALMENTE DESACTIVADO PARA DEBUG SCROLL TABLA */
+            /*
+            .schedule-content-wrapper > .nav-tabs.dias-semana-tabs {
+                position: -webkit-sticky; 
+                position: sticky;
+                top: 97px; 
+                background-color: #000; 
+                z-index: 1001; 
+            }
+            */
+
+            /* Centrar el modal y asegurar que sea responsive */
+            .modal-dialog {
+                margin: 0.5rem auto; /* Centrado y pequeño margen */
+                max-width: 95%;    /* Usar casi todo el ancho */
+            }
+
+            /* Botones del footer del modal en stack */
+            #claseModal .modal-footer {
+                display: flex;
+                flex-direction: column;
+                gap: 10px; /* Espacio entre botones */
+            }
+            #claseModal .modal-footer .btn {
+                width: 100%; /* Ancho completo para cada botón */
+                margin: 0 !important; /* Resetear márgenes si los tenían */
+            }
+
+            /* Ajustar los tabs de los días de la semana */
+            .nav-tabs.dias-semana-tabs { /* Añadir clase específica para seleccionar */
+                display: flex;
+                flex-wrap: wrap;
+                justify-content: space-around; /* Distribuir espacio */
+            }
+            .nav-tabs.dias-semana-tabs .nav-item {
+                flex-basis: calc(50% - 10px); /* 2 por fila, con espacio */
+                margin-bottom: 10px;
+                text-align: center;
+            }
+            .nav-tabs.dias-semana-tabs .nav-link {
+                padding: 0.5rem 0.3rem; /* Padding más pequeño */
+                font-size: 0.9rem; /* Fuente más pequeña */
+                white-space: nowrap; /* Evitar que el texto se rompa si es posible */
+            }
+
+            /* Ocultar título principal "Horarios Generales" en móvil para dar más espacio a la tabla */
+            .main-content > h2 {
+                /* display: none; */ /* Descomentar si se quiere ocultar */
+                 font-size: 1.8rem; /* O reducir tamaño */
+                 margin-bottom: 15px;
+            }
+
+            .table th:not(:first-child) .sala-nombre-personalizado {
+                display: block; /* Hace que el nombre personalizado se ponga debajo del nombre base */
+                font-size: 0.7em; /* Más pequeño para que no ocupe tanto */
+                font-weight: normal; /* Menos énfasis */
+                opacity: 0.8;
+                margin-top: 2px;
+            }
+        }
+        /* --- Fin Estilos Responsivos --- */
+
+        /* Estilo para main-content cuando el sidebar está colapsado (similar a filtro2.ejs) */
+        .main-content.sidebar-collapsed {
+            margin-left: 75px; /* Espacio para el sidebar colapsado (ajustar si es necesario) */
+        }
+
+    </style>
+    <div id="horarios-generales-container">
+
+
+    
+    <h2>Horarios Generales</h2>
+    
+    
+
+    <!-- Wrapper con fondo negro -->
+    <div class="schedule-content-wrapper">
+        <ul class="nav nav-tabs mb-3 dias-semana-tabs"> <!-- Añadida clase dias-semana-tabs -->
+            <% const diasSemana = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado']; %>
+            <% diasSemana.forEach(dia => { %>
+            <li class="nav-item">
+                  <a class="nav-link <%= dia === diaSeleccionado ? 'active' : '' %>" 
+                     href="/horarios-generales?dia=<%= dia %>">
+                     <%= dia %>
+                  </a>
+            </li>
+            <% }); %>
+          </ul>
+        
+        <div class="table-responsive">
+            <table class="table table-bordered table-dark">
+                <thead>
+                    <tr>
+                        <th>Hora</th>
+                        <% salas.forEach(function(sala) { %>  
+                            <th>
+                                <%= sala.nombre %> 
+                                <% if (sala.nombre_personalizado && sala.nombre_personalizado.trim() !== '') { %>
+                                    <span class="sala-nombre-personalizado">"<%= sala.nombre_personalizado %>"</span>
+                                <% } %>
+                            </th>
+                        <% }); %>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% horas.forEach(function(hora) { %>
+                        <tr>
+                            <td><%= hora.substring(0, 5) %></td>
+                            <% salas.forEach(function(sala) { %>
+                                <%
+                                // HORARIO QUE CUBRE (CLASE EXTENDIDA)
+                                const horarioQueCubre = horarios.find(h =>
+                                    h.dia === diaSeleccionado &&
+                                    h.sala_nombre === sala.nombre &&
+                                    h.hora_inicio < hora &&
+                                    h.hora_fin > hora
+                                );
+
+                                // Lógica para la fecha actual y filtrado de recuperaciones pasadas
+                                const hoy = new Date();
+                                hoy.setHours(0,0,0,0); // Para comparar solo fechas
+                                const diasSemanaArray = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+
+                                // Variables para determinar qué mostrar en la celda
+                                let recuperacionValidaParaMostrar = null;
+                                let clasesNormalesDelSlot = [];
+                                let esCeldaDisponible = true;
+
+                                if (!horarioQueCubre) {
+                                    // Obtener todos los eventos para este slot específico (día, sala, hora)
+                                    const eventosDelSlotActual = horarios.filter(h =>
+                                        h.dia === diaSeleccionado &&
+                                        h.sala_nombre === sala.nombre &&
+                                        h.hora_inicio === hora
+                                    );
+
+                                    // 1. Buscar una RECUPERACIÓN válida para este slot
+                                    for (const evento of eventosDelSlotActual) {
+                                        if (evento.es_recuperacion) {
+                                            const fechaRec = evento.fecha_efectiva_recuperacion ? new Date(evento.fecha_efectiva_recuperacion + 'T00:00:00') : null;
+                                            if (fechaRec && fechaRec >= hoy && diasSemanaArray[fechaRec.getDay()] === diaSeleccionado) {
+                                                recuperacionValidaParaMostrar = evento;
+                                                break; // Tomar la primera recuperación válida encontrada
+                                            }
+                                        }
+                                    }
+
+                                    // 2. Si no se encontró una recuperación válida, buscar CLASES NORMALES
+                                    if (!recuperacionValidaParaMostrar) {
+                                        clasesNormalesDelSlot = eventosDelSlotActual.filter(h => !h.es_recuperacion);
+                                    }
+                                    
+                                    if (recuperacionValidaParaMostrar || clasesNormalesDelSlot.length > 0) {
+                                        esCeldaDisponible = false;
+                                    }
+                                } else {
+                                    esCeldaDisponible = false; // Celda cubierta por clase extendida
+                                }
+                                %>
+
+                                <% if (horarioQueCubre) { %>
+                                    <td class="ocupado-continuacion"
+                                        data-sala="<%= sala.nombre %>"
+                                        data-hora="<%= hora %>"
+                                        data-original-horario-id="<%= horarioQueCubre.horario_id %>"
+                                        <% if (horarioQueCubre.profesor_color) { %>
+                                        style="background-color: <%= horarioQueCubre.profesor_color %>; color: <%= getContrastYIQ(horarioQueCubre.profesor_color) %>;"
+                                        <% } %> >
+                                        <i>(Clase extendida...)</i>
+                                    </td>
+                                <% } else if (recuperacionValidaParaMostrar) { %>
+                                    <% 
+                                    const alumnoRecuperacion = recuperacionValidaParaMostrar.alumnos_detalles && recuperacionValidaParaMostrar.alumnos_detalles.length > 0 ? recuperacionValidaParaMostrar.alumnos_detalles[0] : null;
+                                    const estiloTextoRojo = "color: #e74c3c !important;"; // Un rojo más visible y con !important
+                                    const estiloTextoInfo = "color: #bdc3c7 !important; font-size: 0.8em; display: block;"; // Un gris claro para info adicional
+                                    %>
+                                    <td class="schedule-slot recuperacion-visual" <%# Clase solo para posible CSS de borde, no color de texto %>
+                                        data-sala="<%= recuperacionValidaParaMostrar.sala_nombre %>"
+                                        data-hora="<%= recuperacionValidaParaMostrar.hora_inicio %>"
+                                        data-horario-id="<%= recuperacionValidaParaMostrar.horario_id %>"
+                                        style="background-color: #000000;" <%# Fondo oscuro para recuperaciones %>
+                                    >
+                                        <div class="slot-content">
+                                            <% if (alumnoRecuperacion) { %>
+                                                <strong style="<%= estiloTextoRojo %>" title="Recupera: <%= alumnoRecuperacion.nombre %> <%= alumnoRecuperacion.apellido %> (<%= alumnoRecuperacion.modalidad_tipo %>)">
+                                                    <%= alumnoRecuperacion.nombre %> <%= alumnoRecuperacion.apellido %>
+                                                </strong>
+                                                <span style="<%= estiloTextoInfo %>">
+                                                    Prof: <%= recuperacionValidaParaMostrar.profesor_nombre %>
+                                                </span>
+                                                <span style="<%= estiloTextoInfo %>">
+                                                    Fecha: <%= new Date(recuperacionValidaParaMostrar.fecha_efectiva_recuperacion + 'T00:00:00').toLocaleDateString() %>
+                                                </span>
+                                            <% } else { %>
+                                                <strong style="<%= estiloTextoRojo %>">Recuperación</strong>
+                                                <span style="<%= estiloTextoInfo %>">(Datos incompletos)</span>
+                                            <% } %>
+                                        </div>
+                                    </td>
+                                <% } else if (clasesNormalesDelSlot.length > 0) { %>
+                                    <% 
+                                    // Tomamos la primera clase del slot como referencia para estilos y datos generales del slot.
+                                    // Todos los 'claseIndividual' en clasesNormalesDelSlot comparten el mismo horario_id, sala, profesor_color, etc.
+                                    const refClassNormal = clasesNormalesDelSlot[0];
+
+                                    // Determinar si este slot es de una BANDA
+                                    const esUnSlotDeBanda = refClassNormal.es_banda; // Asume que esta propiedad viene de queries.js
+
+                                    if (esUnSlotDeBanda) {
+                                        const colorTextoBanda = getContrastYIQ('#f05d02'); // Contraste para el fondo naranja de bandas
+                                    %>
+                                        <td class="schedule-slot banda"
+                                            data-sala="<%= refClassNormal.sala_nombre %>"
+                                            data-hora="<%= refClassNormal.hora_inicio %>"
+                                            data-horario-id="<%= refClassNormal.horario_id %>"
+                                            style="background-color: #000000; color: <%= colorTextoBanda %>;">
+                                            <div class="slot-content">
+                                                <strong style="color: #ffea00; font-size: 1.1rem;">
+                                                    <%= refClassNormal.banda_nombre || 'Banda sin nombre' %>
+                                                </strong>
+                                            </div>
+                                        </td>
+                                    <% 
+                                    } else { // Es un slot de alumnos normales (individual/grupal)
+                                        let primaryTextColor = '#ffffff';
+                                        if (refClassNormal.profesor_color) {
+                                            primaryTextColor = getContrastYIQ(refClassNormal.profesor_color);
+                                        } else {
+                                            primaryTextColor = getContrastYIQ('#2a2a2a'); // Color de fondo por defecto de celda normal
+                                        }
+                                        let tieneAlumnosListados = false;
+                                        
+                                        // Determinar clases adicionales para el TD
+                                        let tdClasses = "schedule-slot";
+                                        if (refClassNormal.es_recuperacion) {
+                                            tdClasses += " slot-recuperacion";
+                                        }
+                                    %>
+                                    <td class="<%= tdClasses %>"
+                                        data-sala="<%= refClassNormal.sala_nombre %>"
+                                        data-hora="<%= refClassNormal.hora_inicio %>"
+                                        data-horario-id="<%= refClassNormal.horario_id %>"
+                                        style="background-color: <%= refClassNormal.profesor_color && refClassNormal.profesor_color.startsWith('#') ? refClassNormal.profesor_color : '#2a2a2a' %>; color: <%= primaryTextColor %>;">
+                                        <div class="slot-content">
+                                            <%
+                                            // Determinar si el slot es grupal o individual
+                                            // Un slot es grupal si hay múltiples objetos 'claseIndividual' O
+                                            // si un solo objeto 'claseIndividual' tiene múltiples alumnos en 'alumnos_detalles'.
+                                            let esSlotGrupal = false;
+                                            if (clasesNormalesDelSlot.length > 1) {
+                                                esSlotGrupal = true;
+                                            } else if (clasesNormalesDelSlot.length === 1 && clasesNormalesDelSlot[0].alumnos_detalles && clasesNormalesDelSlot[0].alumnos_detalles.length > 1) {
+                                                esSlotGrupal = true;
+                                            }
+                                            
+                                            // El color del texto para los nombres de los alumnos debe contrastar con el fondo de la celda.
+                                            // primaryTextColor ya tiene el contraste correcto para el fondo de la celda.
+                                            const colorNombresAlumnos = primaryTextColor; 
+
+                                            let elementosAlumnoHTML = [];
+                                            clasesNormalesDelSlot.forEach(function(claseIndividual) {
+                                                if (claseIndividual.alumnos_detalles && claseIndividual.alumnos_detalles.length > 0) {
+                                                    tieneAlumnosListados = true; 
+                                                    claseIndividual.alumnos_detalles.forEach(function(alumno) {
+                                                        // Determinar color de texto según modalidad_tipo
+                                                        let colorTextoAlumno = '#ffffff'; // Blanco por defecto (para Grupal)
+                                                        if (alumno.modalidad_tipo === 'individual') {
+                                                            colorTextoAlumno = '#000000'; // Negro para Individual/Personalizada
+                                                        }
+                                                        
+                                                        // Añadir el span con el estilo de color condicional
+                                                        elementosAlumnoHTML.push(`<span style="color: ${colorTextoAlumno};">${alumno.nombre} ${alumno.apellido}</span>`);
+                                                    });
+                                                }
+                                            });
+                                            const htmlAlumnos = elementosAlumnoHTML.join('<br>');
+
+                                            // Estilos para profesor e indicador de ocupado (usan primaryTextColor, que contrasta con el fondo de la celda)
+                                            const styleDivProfesor = `font-size: 0.8em; display: block; color: ${primaryTextColor}; opacity: 0.8; margin-top: 5px;`;
+                                            const styleSpanOcupado = `color: ${primaryTextColor};`;
+
+                                            %>
+
+                                            <strong> <%# El color se heredará de los span internos ahora. %>
+                                                <%- htmlAlumnos %>
+                                            </strong>
+
+                                            <% if (refClassNormal.profesor_nombre) { %>
+                                                <%# El color se hereda del TD padre y CSS %>
+                                                <div class="info-profesor-horario" style="color: <%= primaryTextColor %>; font-size: 0.8em; display: block; opacity: 0.8; margin-top: 5px;">
+                                                    
+                                                    <% if (!tieneAlumnosListados) { %>
+                                                         (Clase programada)
+                                                    <% } %>
+                                                </div>
+                                            <% } %>
+
+                                            <% if (!tieneAlumnosListados && !refClassNormal.profesor_nombre && !esUnSlotDeBanda) { %>
+                                                <%# El color se hereda del TD padre y CSS %>
+                                                <span class="disponible-texto-ocupado" style="color: <%= primaryTextColor %>;">Ocupado</span> <%# Clase para CSS si se necesitan más ajustes %>
+                                            <% } %>
+                                        </div>
+                                    </td>
+                                    <% } // Fin del else para slot de alumnos normales %>
+                                <% } else { %>
+                                    <td class="schedule-slot disponible"
+                                        data-sala="<%= sala.nombre %>"
+                                        data-hora="<%= hora %>"
+                                        data-horario-id="">
+                                        <div class="slot-content">
+                                           <span class="disponible">Disponible</span>
+                                        </div>
+                                    </td>
+                                <% } %>
+                            <% }); %>
+                        </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+    </div> <!-- Fin schedule-content-wrapper -->
+
+    <!-- Modal para Añadir/Editar Clase (Sin cambios estructurales) -->
+    <div class="modal fade" id="claseModal" tabindex="-1" aria-labelledby="claseModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title" id="claseModalLabel">Programar Nueva Clase</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <form id="claseForm">
+              <input type="hidden" id="modalDia" name="dia">
+              <input type="hidden" id="modalHoraInicio" name="horaInicio">
+              <input type="hidden" id="modalSalaNombre" name="salaNombre">
+              <input type="hidden" id="modalProfesorId" name="profesorId" value="<%= profesorId %>">
+
+              <div class="row mb-3">
+                  <div class="col-md-4"><strong>Día:</strong> <span id="displayDia"></span></div>
+                  <div class="col-md-4"><strong>Hora Inicio:</strong> <span id="displayHoraInicio"></span></div>
+                  <div class="col-md-4"><strong>Sala:</strong> <span id="displaySalaNombre"></span></div>
+              </div>
+
+              <!-- Selector de Tipo de Evento: Alumno o Banda -->
+              <div class="mb-3" id="tipoEventoSelectorContainer">
+                <label class="form-label">Programar para:</label>
+                <div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="tipoEvento" id="tipoEventoAlumno" value="alumnos" checked>
+                        <label class="form-check-label" for="tipoEventoAlumno">Alumno(s)</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" name="tipoEvento" id="tipoEventoBanda" value="banda">
+                        <label class="form-check-label" for="tipoEventoBanda">Banda</label>
+                    </div>
+                </div>
+              </div>
+              <!-- Fin Selector de Tipo de Evento -->
+
+              <!-- Contenedor para Alumnos (se mostrará/ocultará) -->
+              <div id="alumnosFieldsContainer">
+                <!-- Botón para Marcar como Recuperación y Contenedor de Fecha -->
+                <button type="button" class="btn btn-outline-warning mb-2" id="marcarComoRecuperacionBtn" style="width: 100%;">Marcar como Recuperación</button>
+                <div class="mb-3" id="fechaRecuperacionContainer" style="display: none;">
+                    <label for="modalFechaRecuperacion" class="form-label">Fecha de la Recuperación:</label>
+                    <input type="date" class="form-control" id="modalFechaRecuperacion" name="fechaRecuperacion">
+                </div>
+                <input type="hidden" id="modalEsRecuperacion" name="esRecuperacion" value="false">
+                <!-- Fin Botón y Fecha Recuperación -->
+
+                <!-- Ocultar sección de instrumento -->
+                <div class="mb-3" style="display: none;">
+                    <label for="modalInstrumento" class="form-label">Instrumento:</label>
+                    <select class="form-select" id="modalInstrumento" name="instrumentoId">
+                        <option value="">Seleccione instrumento...</option>
+                         <% instrumentosProfesor.forEach(function(inst) { %>
+                             <option value="<%= inst.id %>"><%= inst.nombre %></option>
+                         <% }); %>
+                         <% if (instrumentosProfesor.length === 0) { %>
+                             <option disabled>No hay instrumentos asignados a este profesor</option>
+                         <% } %>
+                    </select>
+                </div>
+
+                <div class="mb-3 position-relative">
+                    <label for="alumnoSearchInput" class="form-label">Buscar Alumno(s):</label>
+                    <input type="text" class="form-control" id="alumnoSearchInput" placeholder="Escriba nombre o apellido...">
+                    <div id="alumnoSearchResults"></div>
+                </div>
+
+                <div class="mb-3">
+                     <label class="form-label">Alumnos Seleccionados:</label>
+                     <div id="selectedAlumnosList">
+                         <!-- Los alumnos seleccionados aparecerán aquí -->
+                     </div>
+                     <small id="alumnoHelp" class="form-text text-muted" style="display: block; margin-bottom: 15px;">Seleccione uno o más alumnos.</small>
+                 </div>
+              </div>
+              <!-- Fin Contenedor para Alumnos -->
+
+              <!-- Contenedor para Bandas (se mostrará/ocultará) -->
+              <div id="bandaFieldsContainer" style="display: none;">
+                <div class="mb-3 position-relative">
+                    <label for="bandaSearchInput" class="form-label">Buscar Banda:</label>
+                    <input type="text" class="form-control" id="bandaSearchInput" placeholder="Escriba nombre de la banda...">
+                    <div id="bandaSearchResults" style="position: absolute; top: 100%; left: 0; background-color: #3c3c3c; border: 1px solid #4e4f51; border-top: none; max-height: 150px; overflow-y: auto; width: 100%; z-index: 2000; box-shadow: 0 4px 8px rgba(0,0,0,0.2); border-radius: 0 0 4px 4px;"></div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Banda Seleccionada:</label>
+                    <div id="selectedBandaDisplay" style="background-color: #3c3c3c; border: 1px solid #4e4f51; color: #d1d1d1; min-height: 30px; padding: 10px; border-radius: 4px;">
+                        <!-- La banda seleccionada aparecerá aquí -->
+                        <span class="text-muted">Ninguna banda seleccionada.</span>
+                    </div>
+                </div>
+              </div>
+              <!-- Fin Contenedor para Bandas -->
+
+            </form>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-danger" id="eliminarClaseBtn" style="display: none; margin-left: 5px;">Eliminar Clase</button>
+            <button type="button" class="btn btn-primary" id="guardarClaseBtn" style="margin-left: 5px;">Guardar Clase</button>
+          </div>
+        </div>
+      </div>
+    </div>
+</div>
+
+<!-- Script de la página -->
+<script>
+    let selectedAlumnoIds = []; 
+    let selectedBandaInfo = null; // Para guardar { id, nombre } de la banda
+    let searchTimeout; 
+    let searchTimeoutBanda;
+    let claseModal = null; 
+    const profesorIdElement = document.getElementById('modalProfesorId');
+    const profesorId = profesorIdElement ? profesorIdElement.value : null; 
+    let esModoRecuperacionActual = false; // Flag para el estado del modal
+    let diaSemanaOriginalSlot = null; // Para guardar el día de la semana del slot original
+    let currentProgrammingMode = 'alumnos'; // 'alumnos' o 'banda'
+    let isEditingExistingSlot = false;
+    let existingSlotIsBanda = false;
+
+    function clearAlumnoSearch() {
+        const searchInput = document.getElementById('alumnoSearchInput');
+        const searchResults = document.getElementById('alumnoSearchResults');
+        if(searchInput) searchInput.value = '';
+        if(searchResults) searchResults.innerHTML = '';
+    }
+
+    function clearBandaSearch() {
+        const searchInput = document.getElementById('bandaSearchInput');
+        const searchResults = document.getElementById('bandaSearchResults');
+        if(searchInput) searchInput.value = '';
+        if(searchResults) searchResults.innerHTML = '';
+    }
+
+    function renderSelectedAlumnos() {
+        const listDiv = document.getElementById('selectedAlumnosList');
+        if (!listDiv) return; 
+        listDiv.innerHTML = ''; 
+        selectedAlumnoIds.forEach(alumno => {
+            const alumnoDiv = document.createElement('div');
+            alumnoDiv.classList.add('selected-alumno-item', 'mb-2'); // Quitado d-flex, etc.
+            alumnoDiv.setAttribute('data-alumno-id', alumno.id);
+            alumnoDiv.style.borderBottom = '1px solid #4e4f51'; // Línea separadora
+            alumnoDiv.style.paddingBottom = '10px';
+            alumnoDiv.style.marginBottom = '10px';
+            alumnoDiv.style.position = 'relative'; // Para el botón de eliminar absoluto
+
+            const mainInfoDiv = document.createElement('div');
+
+            const nombreSpan = document.createElement('span');
+            nombreSpan.textContent = `${alumno.nombre} ${alumno.apellido}`;
+            nombreSpan.style.display = 'block';
+            nombreSpan.style.marginBottom = '8px';
+            mainInfoDiv.appendChild(nombreSpan);
+
+            const controlsWrapperDiv = document.createElement('div');
+
+            const checkIndividualDiv = document.createElement('div');
+            checkIndividualDiv.classList.add('form-check', 'form-check-inline');
+            checkIndividualDiv.innerHTML = `
+                <input class="form-check-input modalidad-check" type="checkbox" id="individual-${alumno.id}" value="individual" data-alumno-id="${alumno.id}">
+                <label class="form-check-label" for="individual-${alumno.id}">Personalizada</label>
+            `;
+            controlsWrapperDiv.appendChild(checkIndividualDiv);
+
+            const checkGrupalDiv = document.createElement('div');
+            checkGrupalDiv.classList.add('form-check', 'form-check-inline');
+            checkGrupalDiv.innerHTML = `
+                <input class="form-check-input modalidad-check" type="checkbox" id="grupal-${alumno.id}" value="grupal" data-alumno-id="${alumno.id}">
+                <label class="form-check-label" for="grupal-${alumno.id}">Grupal</label>
+            `;
+            controlsWrapperDiv.appendChild(checkGrupalDiv);
+            mainInfoDiv.appendChild(controlsWrapperDiv);
+
+            alumnoDiv.appendChild(mainInfoDiv);
+
+            const removeButton = document.createElement('button');
+            removeButton.type = 'button';
+            removeButton.dataset.id = alumno.id;
+            removeButton.classList.add('remove-alumno-btn'); // Mantener esta clase para el listener
+            removeButton.innerHTML = '×';
+            // Estilos para el botón de eliminar
+            removeButton.style.position = 'absolute';
+            removeButton.style.top = '5px'; // Ajustar según sea necesario
+            removeButton.style.right = '5px'; // Ajustar según sea necesario
+            removeButton.style.border = 'none';
+            removeButton.style.background = 'transparent';
+            removeButton.style.color = '#ff8a8a'; // Color rojo suave
+            removeButton.style.fontSize = '1.2rem';
+            removeButton.style.lineHeight = '1';
+            removeButton.style.padding = '0.2rem 0.5rem';
+            removeButton.style.cursor = 'pointer';
+            
+            alumnoDiv.appendChild(removeButton);
+
+            listDiv.appendChild(alumnoDiv);
+
+            alumno.modalidad = alumno.modalidad || null; 
+
+            if (alumno.modalidad === 'individual') {
+                const cb = alumnoDiv.querySelector(`#individual-${alumno.id}`);
+                if (cb) cb.checked = true;
+            } else if (alumno.modalidad === 'grupal') {
+                const cb = alumnoDiv.querySelector(`#grupal-${alumno.id}`);
+                if (cb) cb.checked = true;
+            }
+        });
+
+        document.querySelectorAll('.remove-alumno-btn').forEach(button => {
+            button.addEventListener('click', function() {
+                const idToRemove = this.getAttribute('data-id');
+                // También limpiar la modalidad al remover
+                selectedAlumnoIds = selectedAlumnoIds.filter(a => a.id != idToRemove);
+                renderSelectedAlumnos(); 
+                // Lógica adicional para desmarcar checkboxes si es necesario podría ir aquí
+            });
+        });
+
+        // Lógica para asegurar selección única de modalidad por alumno
+        document.querySelectorAll('.modalidad-check').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const currentAlumnoId = this.dataset.alumnoId;
+                const isChecked = this.checked;
+                const currentValue = this.value; // 'individual' o 'grupal'
+
+                // Actualizar el objeto en selectedAlumnoIds
+                const alumnoIndex = selectedAlumnoIds.findIndex(a => a.id == currentAlumnoId);
+                if (alumnoIndex > -1) {
+                    selectedAlumnoIds[alumnoIndex].modalidad = isChecked ? currentValue : null;
+                }
+
+                // Desmarcar el otro checkbox del mismo alumno
+                if (isChecked) {
+                    const otherCheckboxValue = currentValue === 'individual' ? 'grupal' : 'individual';
+                    const otherCheckbox = document.getElementById(`${otherCheckboxValue}-${currentAlumnoId}`);
+                    if (otherCheckbox) {
+                        otherCheckbox.checked = false;
+                    }
+                    // Si estamos en modo recuperación, y este alumno se marca, deseleccionar otros.
+                    if (esModoRecuperacionActual && selectedAlumnoIds.length > 1) {
+                        // Mantener solo este alumno si se está marcando su modalidad en modo recuperación
+                        const alumnoActual = selectedAlumnoIds[alumnoIndex];
+                        selectedAlumnoIds = [alumnoActual];
+                        renderSelectedAlumnos(); // Re-render para quitar los otros
+                    }
+                }
+                 console.log("Updated selectedAlumnoIds:", selectedAlumnoIds); // Para debug
+            });
+        });
+    }
+
+    function renderSelectedBanda() {
+        const displayDiv = document.getElementById('selectedBandaDisplay');
+        if (!displayDiv) return;
+        if (selectedBandaInfo && selectedBandaInfo.id) {
+            displayDiv.innerHTML = `
+                <span style="background-color: #4e4f51; padding: 5px 10px; margin: 2px; border-radius: 3px; display: inline-block;">
+                    ${selectedBandaInfo.nombre}
+                    <button type="button" class="remove-banda-btn" data-id="${selectedBandaInfo.id}" 
+                            style="color: #ff8a8a; background: none; border: none; margin-left: 8px; cursor: pointer; font-weight: bold; line-height: 1;">
+                        &times;
+                    </button>
+                </span>
+            `;
+            // Listener para el botón de eliminar banda
+            displayDiv.querySelector('.remove-banda-btn').addEventListener('click', function() {
+                selectedBandaInfo = null;
+                renderSelectedBanda();
+                // Habilitar búsqueda de banda de nuevo si es necesario
+                const bandaSearchInput = document.getElementById('bandaSearchInput');
+                if(bandaSearchInput) bandaSearchInput.disabled = false;
+            });
+        } else {
+            displayDiv.innerHTML = '<span class="text-muted">Ninguna banda seleccionada.</span>';
+        }
+    }
+    
+    // Función para inicializar Tooltips (debe llamarse después de que el DOM esté listo)
+    function initializeTooltips() {
+         const tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+         tooltipTriggerList.map(function (tooltipTriggerEl) {
+             return new bootstrap.Tooltip(tooltipTriggerEl);
+         });
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log("Horarios Generales JS: DOMContentLoaded OK"); 
+        initializeTooltips();
+
+        // Inicializar Modal AQUÍ
+        const claseModalElement = document.getElementById('claseModal');
+        if (claseModalElement) {
+            claseModal = new bootstrap.Modal(claseModalElement);
+            console.log("Horarios Generales JS: Instancia Modal Bootstrap creada.");
+        } else {
+            console.error("Horarios Generales JS: Elemento #claseModal NO encontrado.");
+        }
+
+        const slots = document.querySelectorAll('.schedule-slot');
+        console.log(`Horarios Generales JS: Encontrados ${slots.length} slots`);
+        
+        slots.forEach((slot) => {
+            slot.addEventListener('click', function() {
+                // ----> ¡ALERTA DE PRUEBA! (ELIMINADA) <----
+                // alert('¡Clic detectado en celda!'); 
+                
+                console.log("Horarios Generales JS: ¡Clic en slot detectado!", this.dataset);
+                
+                // ----> PRUEBA SIMPLE DE APERTURA <----
+                if (claseModal) {
+                    console.log("Intentando claseModal.show() simple...");
+                    try {
+                        claseModal.show();
+                        console.log("Llamada a show() simple realizada.");
+                        // return; // Descomenta esto si quieres probar SOLO la apertura
+                    } catch (e) {
+                        console.error("ERROR en show() simple", e);
+                    }
+                } else {
+                    console.error("Modal no inicializado al intentar show() simple.");
+                }
+                // ----> FIN PRUEBA SIMPLE <----
+
+                // Verificar si el modal se inicializó correctamente
+                if (!claseModal) { 
+                    console.error("Error: Intento de abrir modal, pero la instancia no existe."); 
+                    return; 
+                }
+
+                const esDisponible = this.classList.contains('disponible'); 
+                const horarioIdExistente = this.getAttribute('data-horario-id'); 
+                const horaCompleta = this.getAttribute('data-hora'); 
+                const hora = horaCompleta ? horaCompleta.substring(0, 5) : null; 
+                const sala = this.getAttribute('data-sala');
+                const diaElement = document.querySelector('.nav-link.active');
+                const dia = diaElement ? diaElement.textContent.trim() : 'Lunes'; 
+
+                if (!hora) { console.error("No se pudo obtener hora."); return; }
+
+                const modalDiaInput = document.getElementById('modalDia');
+                const modalHoraInicioInput = document.getElementById('modalHoraInicio');
+                const modalSalaNombreInput = document.getElementById('modalSalaNombre');
+                const displayDia = document.getElementById('displayDia');
+                const displayHoraInicio = document.getElementById('displayHoraInicio');
+                const displaySalaNombre = document.getElementById('displaySalaNombre');
+                const claseForm = document.getElementById('claseForm');
+                const modalInstrumento = document.getElementById('modalInstrumento');
+                const claseModalLabel = document.getElementById('claseModalLabel');
+                const guardarClaseBtn = document.getElementById('guardarClaseBtn');
+                const alumnoSearchInput = document.getElementById('alumnoSearchInput');
+                const searchLabel = document.querySelector('label[for="alumnoSearchInput"]');
+                const selectedAlumnosList = document.getElementById('selectedAlumnosList');
+                const alumnoHelp = document.getElementById('alumnoHelp');
+                const eliminarClaseBtn = document.getElementById('eliminarClaseBtn');
+
+                // Nuevos elementos para bandas
+                const bandaSearchInput = document.getElementById('bandaSearchInput');
+                const selectedBandaDisplay = document.getElementById('selectedBandaDisplay');
+                const tipoEventoAlumnoRadio = document.getElementById('tipoEventoAlumno');
+                const tipoEventoBandaRadio = document.getElementById('tipoEventoBanda');
+                const alumnosFieldsContainer = document.getElementById('alumnosFieldsContainer');
+                const bandaFieldsContainer = document.getElementById('bandaFieldsContainer');
+
+                if (claseForm) claseForm.reset(); 
+                selectedAlumnoIds = []; 
+                selectedBandaInfo = null; // Resetear banda seleccionada
+                renderSelectedAlumnos(); 
+                renderSelectedBanda(); // Renderizar display de banda vacía
+                clearAlumnoSearch();
+                clearBandaSearch(); // Limpiar búsqueda de banda
+                
+                // Por defecto, programar para alumnos
+                if(tipoEventoAlumnoRadio) tipoEventoAlumnoRadio.checked = true;
+                currentProgrammingMode = 'alumnos';
+                if(alumnosFieldsContainer) alumnosFieldsContainer.style.display = 'block';
+                if(bandaFieldsContainer) bandaFieldsContainer.style.display = 'none';
+                if(marcarComoRecuperacionBtn) marcarComoRecuperacionBtn.style.display = 'block'; // Mostrar botón de recuperación
+                if(fechaRecuperacionContainer) fechaRecuperacionContainer.style.display = 'none';
+
+                // Resetear estado de recuperación visualmente y lógicamente
+                esModoRecuperacionActual = false;
+                if(fechaRecuperacionContainer) fechaRecuperacionContainer.style.display = 'none';
+                if(modalFechaRecuperacionInput) modalFechaRecuperacionInput.value = '';
+                if(modalEsRecuperacionInput) modalEsRecuperacionInput.value = 'false';
+                // Resetear el botón a su estado inicial para "Marcar como Recuperación"
+                if(marcarComoRecuperacionBtn) {
+                    marcarComoRecuperacionBtn.textContent = 'Marcar como Recuperación';
+                    marcarComoRecuperacionBtn.classList.remove('btn-info', 'btn-success'); // Quitar clases de otros estados
+                    marcarComoRecuperacionBtn.classList.add('btn-outline-warning');
+                    marcarComoRecuperacionBtn.disabled = false;
+                    marcarComoRecuperacionBtn.dataset.isCurrentlyRecovery = 'false'; // Atributo para rastrear
+                }
+                if(alumnoSearchInput) {
+                    alumnoSearchInput.disabled = false;
+                    alumnoSearchInput.placeholder = "Escriba nombre o apellido...";
+                }
+                if(alumnoHelp) alumnoHelp.textContent = 'Seleccione uno o más alumnos.';
+
+                if(modalInstrumento) modalInstrumento.disabled = false; 
+                if(alumnoSearchInput) alumnoSearchInput.style.display = 'block'; 
+                if(searchLabel) searchLabel.style.display = 'block';
+                if(selectedAlumnosList) selectedAlumnosList.style.display = 'block'; 
+                if(alumnoHelp) alumnoHelp.style.display = 'block'; 
+                if(guardarClaseBtn) guardarClaseBtn.style.display = 'inline-block'; 
+
+                if(modalDiaInput) modalDiaInput.value = dia; 
+                if(modalHoraInicioInput) modalHoraInicioInput.value = horaCompleta; 
+                if(modalSalaNombreInput) modalSalaNombreInput.value = sala; 
+                if(displayDia) displayDia.textContent = dia; 
+                if(displayHoraInicio) displayHoraInicio.textContent = hora; 
+                if(displaySalaNombre) displaySalaNombre.textContent = sala; 
+
+                if (esDisponible) {
+                    console.log("Abriendo modal en modo AÑADIR");
+                    if(guardarClaseBtn) guardarClaseBtn.dataset.horarioId = ''; 
+                    if(eliminarClaseBtn) eliminarClaseBtn.style.display = 'none'; 
+                    if(claseModalLabel) claseModalLabel.textContent = 'Programar Nuevo Evento'; // Título genérico
+                    if(guardarClaseBtn) guardarClaseBtn.textContent = 'Guardar Evento';
+                    
+                    // Resetear modo alumno/banda y recuperación
+                    if(tipoEventoAlumnoRadio) tipoEventoAlumnoRadio.checked = true;
+                    if(tipoEventoBandaRadio) tipoEventoBandaRadio.checked = false;
+                    switchProgrammingMode('alumnos'); // Asegurar que se muestren los campos de alumno
+
+                    esModoRecuperacionActual = false;
+                    if(modalEsRecuperacionInput) modalEsRecuperacionInput.value = 'false';
+                    if(fechaRecuperacionContainer) fechaRecuperacionContainer.style.display = 'none';
+                    if(modalFechaRecuperacionInput) modalFechaRecuperacionInput.value = '';
+                    if(marcarComoRecuperacionBtn) {
+                        marcarComoRecuperacionBtn.textContent = 'Marcar como Recuperación';
+                        marcarComoRecuperacionBtn.classList.remove('btn-info', 'btn-warning', 'btn-success');
+                        marcarComoRecuperacionBtn.classList.add('btn-outline-warning');
+                        marcarComoRecuperacionBtn.dataset.isCurrentlyRecovery = 'false';
+                    }
+                    if(alumnoSearchInput) {
+                        alumnoSearchInput.placeholder = "Escriba nombre o apellido...";
+                        alumnoSearchInput.disabled = false;
+                    }
+                    if(alumnoHelp) alumnoHelp.textContent = 'Seleccione uno o más alumnos.';
+
+                    claseModal.show();
+
+                } else if (horarioIdExistente && horarioIdExistente !== '') { 
+                    console.log("Abriendo modal en modo EDITAR/VER. ID de referencia para API /api/horario-detalles:", horarioIdExistente);
+                    if(guardarClaseBtn) guardarClaseBtn.dataset.horarioId = horarioIdExistente; // ID de referencia para la acción PUT
+                    if(eliminarClaseBtn) eliminarClaseBtn.style.display = 'inline-block';
+                    // Título y texto del botón se setearán después de cargar datos
+
+                    isEditingExistingSlot = true; // Marcamos que estamos editando
+
+                    fetch(`/api/horario-detalles/${horarioIdExistente}`)
+                        .then(response => {
+                            if (!response.ok) {
+                                return response.json().then(err => { 
+                                    throw new Error(err.message || `Error ${response.status} al cargar`); 
+                                }).catch(() => { 
+                                    throw new Error(`Error ${response.status} al cargar detalles del slot`); 
+                                });
+                            }
+                            return response.json();
+                        })
+                        .then(data => {
+                            console.log("[DEBUG] Datos recibidos de /api/horario-detalles (slot completo):", data);
+                            if (data.success && data.detalles) { // data.detalles ahora es el objeto con info del slot y array de alumnos
+                                const detallesSlot = data.detalles;
+                                existingSlotIsBanda = detallesSlot.es_banda_slot; // Guardamos si el slot original es banda
+
+                                // Configurar campos del modal con detalles comunes del slot
+                                if(displayDia && detallesSlot.dia) displayDia.textContent = detallesSlot.dia;
+                                if(displayHoraInicio && detallesSlot.horaInicio) displayHoraInicio.textContent = detallesSlot.horaInicio.substring(0,5);
+                                if(displaySalaNombre && detallesSlot.salaNombre) displaySalaNombre.textContent = detallesSlot.salaNombre;
+                                // Asegurarse que los hidden inputs también se actualizan si es necesario
+                                if(modalDiaInput && detallesSlot.dia) modalDiaInput.value = detallesSlot.dia;
+                                if(modalHoraInicioInput && detallesSlot.horaInicio) modalHoraInicioInput.value = detallesSlot.horaInicio;
+                                if(modalSalaNombreInput && detallesSlot.salaNombre) modalSalaNombreInput.value = detallesSlot.salaNombre;
+
+
+                                if(claseModalLabel) claseModalLabel.textContent = detallesSlot.es_recuperacion_slot ? 'Editar Recuperación' : (detallesSlot.es_banda_slot ? 'Editar Banda en Horario' : 'Editar Clase Existente');
+                                if(guardarClaseBtn) guardarClaseBtn.textContent = detallesSlot.es_recuperacion_slot ? 'Actualizar Recuperación' : (detallesSlot.es_banda_slot ? 'Actualizar Banda' : 'Actualizar Clase');
+
+                                // Determinar si el slot es para banda o alumnos y mostrar/ocultar campos
+                                if (detallesSlot.es_banda_slot) {
+                                    currentProgrammingMode = 'banda';
+                                    if(tipoEventoBandaRadio) tipoEventoBandaRadio.checked = true;
+                                    if(tipoEventoAlumnoRadio) tipoEventoAlumnoRadio.checked = false;
+                                    switchProgrammingMode('banda', true); // Pasamos true para indicar que es carga inicial
+                                    
+                                    selectedBandaInfo = { id: detallesSlot.banda_id_slot, nombre: detallesSlot.banda_nombre_slot };
+                                    renderSelectedBanda();
+                                    if(bandaSearchInput) bandaSearchInput.disabled = true; // Deshabilitar búsqueda si ya hay banda
+
+                                    // Ocultar completamente la sección de recuperación para bandas
+                                    if(marcarComoRecuperacionBtn) marcarComoRecuperacionBtn.style.display = 'none';
+                                    if(fechaRecuperacionContainer) fechaRecuperacionContainer.style.display = 'none';
+                                    esModoRecuperacionActual = false;
+                                    if(modalEsRecuperacionInput) modalEsRecuperacionInput.value = 'false';
+
+                                } else { // Es para alumnos (puede ser normal o recuperación)
+                                    currentProgrammingMode = 'alumnos';
+                                    if(tipoEventoAlumnoRadio) tipoEventoAlumnoRadio.checked = true;
+                                    if(tipoEventoBandaRadio) tipoEventoBandaRadio.checked = false;
+                                    switchProgrammingMode('alumnos', true); // Pasamos true para indicar que es carga inicial
+
+                                    if (detallesSlot.es_recuperacion_slot) {
+                                        esModoRecuperacionActual = true;
+                                        if(modalEsRecuperacionInput) modalEsRecuperacionInput.value = 'true';
+                                        if(fechaRecuperacionContainer) fechaRecuperacionContainer.style.display = 'block';
+                                        if(modalFechaRecuperacionInput) {
+                                            modalFechaRecuperacionInput.value = detallesSlot.fecha_efectiva_recuperacion_slot || '';
+                                        }
+                                        if(marcarComoRecuperacionBtn) {
+                                            marcarComoRecuperacionBtn.textContent = 'Revertir a Clase Normal';
+                                            marcarComoRecuperacionBtn.classList.remove('btn-outline-warning', 'btn-warning');
+                                            marcarComoRecuperacionBtn.classList.add('btn-info');
+                                            marcarComoRecuperacionBtn.dataset.isCurrentlyRecovery = 'true';
+                                        }
+                                        if(alumnoSearchInput) {
+                                            alumnoSearchInput.placeholder = "Alumno en recuperación (editar si es necesario)";
+                                            // No deshabilitar por si se quiere cambiar el alumno de la recuperación
+                                            // alumnoSearchInput.disabled = detallesSlot.alumnos && detallesSlot.alumnos.length > 0;
+                                        }
+                                        if(alumnoHelp) alumnoHelp.textContent = 'Editando alumno de la recuperación (debe ser individual).';
+                                    } else { 
+                                        esModoRecuperacionActual = false;
+                                        if(modalEsRecuperacionInput) modalEsRecuperacionInput.value = 'false';
+                                        if(fechaRecuperacionContainer) fechaRecuperacionContainer.style.display = 'none';
+                                        if(modalFechaRecuperacionInput) modalFechaRecuperacionInput.value = '';
+                                        if(marcarComoRecuperacionBtn) {
+                                           marcarComoRecuperacionBtn.textContent = 'Marcar como Recuperación';
+                                           marcarComoRecuperacionBtn.classList.remove('btn-info', 'btn-warning', 'btn-success');
+                                           marcarComoRecuperacionBtn.classList.add('btn-outline-warning');
+                                           marcarComoRecuperacionBtn.style.display = 'block';
+                                           marcarComoRecuperacionBtn.disabled = false;
+                                           marcarComoRecuperacionBtn.dataset.isCurrentlyRecovery = 'false';
+                                        }
+                                        if(alumnoSearchInput) {
+                                            alumnoSearchInput.placeholder = "Escriba nombre o apellido...";
+                                            alumnoSearchInput.disabled = false;
+                                        }
+                                        if(alumnoHelp) alumnoHelp.textContent = 'Seleccione uno o más alumnos.';
+                                    }
+
+                                    if (Array.isArray(detallesSlot.alumnos)) {
+                                        selectedAlumnoIds = detallesSlot.alumnos.map(a => ({ 
+                                            id: a.id, 
+                                            nombre: a.nombre, 
+                                            apellido: a.apellido,
+                                            modalidad: a.modalidad || null 
+                                        }));                                        
+                                    } else {
+                                        console.warn("[DEBUG] detallesSlot.alumnos no es un array o está ausente, inicializando selectedAlumnoIds vacío.", detallesSlot.alumnos);
+                                        selectedAlumnoIds = [];
+                                    }
+                                    renderSelectedAlumnos(); 
+                                    
+                                    selectedAlumnoIds.forEach(alumno => {
+                                        if(alumno.modalidad) {
+                                            const checkId = `${alumno.modalidad}-${alumno.id}`;
+                                            const checkbox = document.getElementById(checkId);
+                                            if(checkbox) checkbox.checked = true;
+                                        }
+                                    });
+
+                                    console.log("Horarios Generales JS: Intentando mostrar modal (después de cargar slot completo)...");
+                                    claseModal.show();
+
+                                }
+                            } else {
+                                console.error("[DEBUG] Error en respuesta del backend o estructura de data.detalles inválida:", data);
+                                alert('Error al cargar detalles de la clase: ' + (data.message || 'Formato de respuesta inesperado.'));
+                                selectedAlumnoIds = []; 
+                                renderSelectedAlumnos();
+                                isEditingExistingSlot = false; // Reseteamos si falla la carga
+                                existingSlotIsBanda = false;
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error en fetch o procesamiento para detalles de slot:', error);
+                            alert('Error al cargar detalles del slot: ' + error.message);
+                            isEditingExistingSlot = false; // Reseteamos si hay error
+                            existingSlotIsBanda = false;
+                        });
+                } else {
+                    console.warn("Clic en celda sin ID de horario y no disponible. Ignorando.");
+                    isEditingExistingSlot = false; // No estamos editando si no hay ID
+                    existingSlotIsBanda = false;
+                }
+            });
+        });
+
+        const searchInput = document.getElementById('alumnoSearchInput');
+        const resultsContainer = document.getElementById('alumnoSearchResults');
+        if (searchInput && resultsContainer) {
+            searchInput.addEventListener('input', function() {
+                const searchTerm = this.value.trim();
+                clearTimeout(searchTimeout);
+                
+                // Si el término es vacío, limpiar resultados
+                if (searchTerm.length === 0) {
+                    resultsContainer.innerHTML = '';
+                    return;
+                }
+                
+                // Si el término es muy corto, mostrar mensaje
+                if (searchTerm.length < 2) {
+                    const msgDiv = document.createElement('div');
+                    msgDiv.textContent = 'Ingresa al menos 2 caracteres...';
+                    msgDiv.style.padding = '10px';
+                    msgDiv.style.textAlign = 'center';
+                    msgDiv.style.fontStyle = 'italic';
+                    msgDiv.style.color = '#d1d1d1';
+                    
+                    resultsContainer.innerHTML = '';
+                    resultsContainer.appendChild(msgDiv);
+                    return;
+                }
+                
+                // Mostrar mensaje de carga
+                const loadingDiv = document.createElement('div');
+                loadingDiv.textContent = 'Buscando...';
+                loadingDiv.style.padding = '10px';
+                loadingDiv.style.textAlign = 'center';
+                loadingDiv.style.fontStyle = 'italic';
+                loadingDiv.style.color = '#d1d1d1';
+                
+                resultsContainer.innerHTML = '';
+                resultsContainer.appendChild(loadingDiv);
+                
+                searchTimeout = setTimeout(() => {
+                    fetch(`/api/buscar-alumno?nombre=${encodeURIComponent(searchTerm)}`)
+                        .then(response => {
+                            if (!response.ok) {
+                                throw new Error('Error en la respuesta del servidor');
+                            }
+                            return response.json();
+                        })
+                        .then(alumnos => {
+                            // Limpiar contenedor para nuevos resultados
+                            resultsContainer.innerHTML = ''; 
+                            
+                            // Si no hay alumnos en la respuesta
+                            if (!Array.isArray(alumnos) || alumnos.length === 0) {
+                                const noResultsDiv = document.createElement('div');
+                                noResultsDiv.textContent = 'No se encontraron alumnos con ese nombre';
+                                noResultsDiv.style.padding = '10px';
+                                noResultsDiv.style.textAlign = 'center';
+                                noResultsDiv.style.fontStyle = 'italic';
+                                noResultsDiv.style.color = '#d1d1d1';
+                                
+                                resultsContainer.innerHTML = '';
+                                resultsContainer.appendChild(noResultsDiv);
+                                return;
+                            }
+                            
+                            // Filtrar alumnos que ya están seleccionados
+                            const alumnosNoSeleccionados = alumnos.filter(alumno => 
+                                !selectedAlumnoIds.some(a => a.id == alumno.id)
+                            );
+                            
+                            // Si estamos en modo recuperación, solo permitir añadir uno si no hay ninguno.
+                            if (esModoRecuperacionActual && selectedAlumnoIds.length > 0) {
+                                // Ya hay un alumno para la recuperación, no añadir más desde la búsqueda.
+                                // Podrías mostrar un mensaje o simplemente no añadir.
+                                console.log("Modo recuperación: Ya hay un alumno seleccionado.");
+                                // Vaciar resultados para no permitir más adiciones.
+                                resultsContainer.innerHTML = '<div style="padding: 10px; text-align: center; font-style: italic; color: #d1d1d1;">Solo un alumno por recuperación.</div>';
+                                return;
+                            }
+
+                            // Mostrar resultados o mensaje de "no encontrados"
+                            if (alumnosNoSeleccionados.length > 0) {
+                                alumnosNoSeleccionados.forEach(alumno => {
+                                    const div = document.createElement('div');
+                                    // Usar estilos en línea en lugar de una clase
+                                    div.style.padding = '8px 12px';
+                                    div.style.borderBottom = '1px solid #4a4a4a';
+                                    div.style.cursor = 'pointer';
+                                    div.style.transition = 'background-color 0.2s';
+                                    // Evento hover con JavaScript
+                                    div.onmouseover = function() { this.style.backgroundColor = '#4e4f51'; };
+                                    div.onmouseout = function() { this.style.backgroundColor = ''; };
+                                    
+                                    div.textContent = `${alumno.nombre} ${alumno.apellido}`;
+                                    div.setAttribute('data-id', alumno.id);
+                                    div.setAttribute('data-nombre', alumno.nombre);
+                                    div.setAttribute('data-apellido', alumno.apellido);
+                                    div.addEventListener('click', function() {
+                                        selectedAlumnoIds.push({
+                                            id: this.getAttribute('data-id'),
+                                            nombre: this.getAttribute('data-nombre'),
+                                            apellido: this.getAttribute('data-apellido'),
+                                            modalidad: null // La modalidad se setea con los checkboxes
+                                        });
+                                        renderSelectedAlumnos();
+                                        clearAlumnoSearch();
+                                        // Si es modo recuperación, y se acaba de añadir el alumno, deshabilitar más búsquedas
+                                        if (esModoRecuperacionActual) {
+                                           // if(alumnoSearchInput) alumnoSearchInput.disabled = true;
+                                            resultsContainer.innerHTML = '';
+                                        }
+                                    });
+                                    resultsContainer.appendChild(div);
+                                });
+                            } else {
+                                const allSelectedDiv = document.createElement('div');
+                                allSelectedDiv.textContent = 'Todos los alumnos encontrados ya están seleccionados';
+                                allSelectedDiv.style.padding = '10px';
+                                allSelectedDiv.style.textAlign = 'center';
+                                allSelectedDiv.style.fontStyle = 'italic';
+                                allSelectedDiv.style.color = '#d1d1d1';
+                                
+                                resultsContainer.innerHTML = '';
+                                resultsContainer.appendChild(allSelectedDiv);
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error buscando alumnos:', error);
+                            
+                            const errorDiv = document.createElement('div');
+                            errorDiv.textContent = 'Error al buscar. Inténtalo de nuevo.';
+                            errorDiv.style.padding = '10px';
+                            errorDiv.style.textAlign = 'center';
+                            errorDiv.style.fontStyle = 'italic';
+                            errorDiv.style.color = '#ff7474';
+                            
+                            resultsContainer.innerHTML = '';
+                            resultsContainer.appendChild(errorDiv);
+                        });
+                }, 300); 
+            });
+        }
+        
+        // Esconder resultados si se hace clic fuera
+         document.addEventListener('click', function(event) {
+            if (resultsContainer && !resultsContainer.contains(event.target) && event.target !== searchInput) {
+                resultsContainer.innerHTML = '';
+            }
+            if (bandaSearchResults && !bandaSearchResults.contains(event.target) && event.target !== bandaSearchInput) {
+                bandaSearchResults.innerHTML = '';
+            }
+        });
+
+        const eliminarBtn = document.getElementById('eliminarClaseBtn');
+        if (eliminarBtn) {
+            eliminarBtn.addEventListener('click', function() {
+                const horarioIdParaEliminar = document.getElementById('guardarClaseBtn').dataset.horarioId;
+                if (!horarioIdParaEliminar) {
+                    alert('Error: No se pudo obtener el ID del horario a eliminar.');
+                    return;
+                }
+                if (confirm('¿Estás seguro de que deseas eliminar esta clase?')) {
+                    fetch(`/api/clase/${horarioIdParaEliminar}`, { method: 'DELETE' })
+                    .then(response => {
+                        if (!response.ok) {
+                            return response.json().then(err => {
+                                throw new Error(err.message || `Error ${response.status}`);
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success) {
+                            alert(data.message || 'Clase eliminada.');
+                            if(claseModal) claseModal.hide();
+                            window.location.reload();
+                        } else {
+                            throw new Error(data.message || 'Error al eliminar');
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error al eliminar:', error);
+                        alert(`Error al eliminar: ${error.message}`);
+                    });
+                }
+            });
+        }
+        
+        const guardarBtn = document.getElementById('guardarClaseBtn');
+        if(guardarBtn) {
+             guardarBtn.addEventListener('click', function() {
+                const form = document.getElementById('claseForm');
+                const modalInstrumento = document.getElementById('modalInstrumento');
+                const horarioIdParaActualizar = this.dataset.horarioId;
+                const esActualizacion = horarioIdParaActualizar && horarioIdParaActualizar !== '';
+
+                // Recopilar datos de alumnos con su modalidad
+                const alumnosData = selectedAlumnoIds.map(alumno => ({
+                    id: alumno.id,
+                    modalidad: alumno.modalidad // ya está almacenada en el objeto
+                }));
+
+                let payload = {
+                    dia: document.getElementById('modalDia').value,
+                    horaInicio: document.getElementById('modalHoraInicio').value,
+                    salaNombre: document.getElementById('modalSalaNombre').value,
+                    instrumentoId: null, // Forzar a null
+                    profesorId: profesorId, // Ya lo tenemos globalmente
+                    // Los siguientes campos dependen del modo (alumno/banda)
+                };
+
+                if (currentProgrammingMode === 'banda') {
+                    if (!selectedBandaInfo || !selectedBandaInfo.id) {
+                        alert('Por favor, seleccione una banda.');
+                        return;
+                    }
+                    payload.tipoEvento = 'banda';
+                    payload.bandaId = selectedBandaInfo.id;
+                    // No se envían alumnosData, esRecuperacion, fechaRecuperacion para bandas
+                } else { // currentProgrammingMode === 'alumnos'
+                    payload.tipoEvento = 'alumnos';
+                    payload.alumnosData = alumnosData;
+                    payload.esRecuperacion = modalEsRecuperacionInput.value === 'true';
+                    
+                    if (payload.esRecuperacion) {
+                        payload.fechaRecuperacion = modalFechaRecuperacionInput.value;
+                        if (!payload.fechaRecuperacion) {
+                            alert('Por favor, seleccione la fecha de la recuperación.');
+                            return;
+                        }
+                        if (payload.alumnosData.length !== 1) {
+                            alert('Las recuperaciones deben tener exactamente un alumno seleccionado.');
+                            return;
+                        }
+                        const alumnoRecuperacion = payload.alumnosData[0];
+                        if (alumnoRecuperacion.modalidad !== 'individual') {
+                            alert('El alumno para la recuperación debe tener seleccionada la modalidad "Personalizada".');
+                            return;
+                        }
+                    } else { // Clase normal de alumno(s)
+                        // ESTA ES LA LÍNEA MODIFICADA:
+                        if (payload.tipoEvento === 'alumnos' && !payload.esRecuperacion && payload.alumnosData.length === 0) {
+                            alert('Por favor, seleccione al menos un alumno para la clase normal.'); return;
+                        }
+                        const alumnoSinModalidad = alumnosData.find(a => !a.modalidad);
+                        if (alumnoSinModalidad) {
+                            alert('Por favor, seleccione una modalidad (Personalizada o Grupal) para todos los alumnos seleccionados.');
+                            return;
+                        }
+                    }
+                }
+
+
+                // Validaciones básicas
+                if (!payload.profesorId) { alert('Error: No se pudo identificar al profesor.'); return; } 
+
+                const method = esActualizacion ? 'PUT' : 'POST';
+                const url = esActualizacion ? `/api/clase/${horarioIdParaActualizar}` : '/guardar-horario';
+                
+                console.log(`[FRONTEND DEBUG] Enviando ${method} a ${url}. Payload:`, JSON.stringify(payload, null, 2)); // <-- DEBUG PAYLOAD
+
+                fetch(url, {
+                    method: method,
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => {
+                            throw new Error(err.message || `Error ${response.status}`);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                     if (data.success) {
+                        alert(data.message || (esActualizacion ? 'Clase actualizada.' : 'Clase guardada.'));
+                        if (claseModal) claseModal.hide();
+                        window.location.reload(); 
+                    } else {
+                         throw new Error(data.message || `Error al guardar la clase`);
+                    }
+                })
+                .catch(error => {
+                    console.error('Error al guardar/actualizar:', error);
+                    alert(`Error: ${error.message}`);
+                });
+            });
+        } 
+        
+         // Función auxiliar para calcular duración
+        function calcularDuracionHoras(inicio, fin) {
+            if (!inicio || !fin) return 1; // Default 1 hora si falta info
+            try {
+                const horaInicio = parseInt(inicio.split(':')[0]);
+                const horaFin = parseInt(fin.split(':')[0]);
+                // Asumir que no cruza medianoche y es en la misma hora o posterior
+                const duracion = horaFin - horaInicio;
+                return duracion >= 1 ? duracion : 1; // Mínimo 1 hora
+            } catch (e) {
+                console.error("Error calculando duración", e);
+                return 1; // Default
+            }
+        }
+
+        const marcarComoRecuperacionBtn = document.getElementById('marcarComoRecuperacionBtn');
+        const fechaRecuperacionContainer = document.getElementById('fechaRecuperacionContainer');
+        const modalFechaRecuperacionInput = document.getElementById('modalFechaRecuperacion');
+        const modalEsRecuperacionInput = document.getElementById('modalEsRecuperacion'); // CORREGIDO: Quitar 'Input' del final
+        const alumnoSearchInput = document.getElementById('alumnoSearchInput');
+        const alumnoHelp = document.getElementById('alumnoHelp');
+
+        if (marcarComoRecuperacionBtn) {
+            marcarComoRecuperacionBtn.addEventListener('click', function() {
+                // Capturar el día de la semana del slot actual al entrar en modo recuperación por primera vez
+                // Esto solo es relevante si estamos pasando de normal -> recuperación, y no es una recuperación existente
+                if (!esModoRecuperacionActual && this.dataset.isCurrentlyRecovery === 'false') {
+                    const diaActivoElement = document.querySelector('.nav-tabs .nav-link.active');
+                    diaSemanaOriginalSlot = diaActivoElement ? diaActivoElement.textContent.trim() : null;
+                    console.log("Día de la semana del slot original para nueva recuperación:", diaSemanaOriginalSlot);
+                }
+
+                // CASO 1: Estamos editando una recuperación existente y queremos revertirla a normal
+                if (this.dataset.isCurrentlyRecovery === 'true') {
+                    esModoRecuperacionActual = false;
+                    modalEsRecuperacionInput.value = 'false';
+                    fechaRecuperacionContainer.style.display = 'none';
+                    this.textContent = 'Marcar como Recuperación';
+                    this.classList.remove('btn-info');
+                    this.classList.add('btn-outline-warning');
+                    this.dataset.isCurrentlyRecovery = 'false'; // Ya no es una recuperación existente
+                    
+                    if(claseModalLabel) claseModalLabel.textContent = 'Editar Clase'; // Cambiar título del modal
+                    if(guardarClaseBtn) guardarClaseBtn.textContent = 'Actualizar Clase';
+                    if(alumnoHelp) alumnoHelp.textContent = 'Seleccione uno o más alumnos.';
+                    if(alumnoSearchInput) {
+                        alumnoSearchInput.placeholder = "Escriba nombre o apellido...";
+                    }
+                    console.log("Modal revertido a modo Clase Normal (desde una recuperación existente).");
+
+                } else { 
+                    // CASO 2: No estamos editando una recuperación existente.
+                    // El botón dirá "Marcar como Recuperación" o "Cancelar Modo Recuperación".
+                    // Usamos `esModoRecuperacionActual` para saber el estado lógico del modal.
+
+                    if (esModoRecuperacionActual) { 
+                        // Si el modo ya está activo (botón dice "Cancelar Modo Recuperación"), lo desactivamos.
+                        esModoRecuperacionActual = false;
+                        modalEsRecuperacionInput.value = 'false';
+                        fechaRecuperacionContainer.style.display = 'none';
+                        modalFechaRecuperacionInput.value = ''; // Limpiar fecha al cancelar
+                        this.textContent = 'Marcar como Recuperación';
+                        this.classList.remove('btn-warning');
+                        this.classList.add('btn-outline-warning');
+                        // this.dataset.isCurrentlyRecovery sigue 'false'
+
+                        if(claseModalLabel) claseModalLabel.textContent = document.getElementById('guardarClaseBtn').dataset.horarioId ? 'Editar Clase' : 'Programar Nueva Clase';
+                        if(guardarClaseBtn) guardarClaseBtn.textContent = document.getElementById('guardarClaseBtn').dataset.horarioId ? 'Actualizar Clase' : 'Guardar Clase';
+                        if(alumnoHelp) alumnoHelp.textContent = 'Seleccione uno o más alumnos.';
+                        if(alumnoSearchInput) alumnoSearchInput.placeholder = "Escriba nombre o apellido...";
+                        console.log("Modo Recuperación cancelado. Modal vuelve a Clase Normal.");
+
+                    } else { 
+                        // Si el modo NO está activo (botón dice "Marcar como Recuperación"), lo activamos.
+                        esModoRecuperacionActual = true;
+                        modalEsRecuperacionInput.value = 'true';
+                        fechaRecuperacionContainer.style.display = 'block';
+                        this.textContent = 'Cancelar Modo Recuperación';
+                        this.classList.remove('btn-outline-warning');
+                        this.classList.add('btn-warning');
+                        // this.dataset.isCurrentlyRecovery sigue 'false'
+                        
+                        if(claseModalLabel) claseModalLabel.textContent = document.getElementById('guardarClaseBtn').dataset.horarioId ? 'Editar como Recuperación' : 'Programar Nueva Recuperación';
+                        if(guardarClaseBtn) guardarClaseBtn.textContent = document.getElementById('guardarClaseBtn').dataset.horarioId ? 'Actualizar como Recuperación' : 'Guardar Recuperación';
+                        if(alumnoHelp) alumnoHelp.textContent = 'Seleccione UN alumno (modalidad individual) para la recuperación.';
+                        if (selectedAlumnoIds.length > 1) {
+                            alert("Para una recuperación, por favor, seleccione solo un alumno de la lista o añada uno nuevo.");
+                        }
+                        if(alumnoSearchInput) {
+                            alumnoSearchInput.placeholder = "Buscar alumno para recuperación...";
+                        }
+                        console.log("Modal cambiado a modo Configurar Recuperación.");
+                    }
+                }
+            });
+        }
+
+        if (modalFechaRecuperacionInput) {
+            modalFechaRecuperacionInput.addEventListener('change', function() {
+                if (!esModoRecuperacionActual || !diaSemanaOriginalSlot) return;
+
+                const fechaSeleccionada = this.value; // YYYY-MM-DD
+                if (!fechaSeleccionada) return;
+
+                // JavaScript considera Domingo = 0, Lunes = 1, ..., Sábado = 6
+                // Necesitamos normalizar la entrada de la fecha porque el input date da YYYY-MM-DD
+                // y el constructor de Date puede interpretar eso como UTC si no se tiene cuidado.
+                // Para asegurar que se interprete como fecha local:
+                const parts = fechaSeleccionada.split('-'); // [YYYY, MM, DD]
+                const dateObj = new Date(parts[0], parts[1] - 1, parts[2]); // Mes es 0-indexado
+
+                const diasSemanaJS = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+                const diaSeleccionadoEnCalendario = diasSemanaJS[dateObj.getDay()];
+
+                if (diaSeleccionadoEnCalendario !== diaSemanaOriginalSlot) {
+                    alert(`La fecha de recuperación debe ser un ${diaSemanaOriginalSlot}. Ha seleccionado un ${diaSeleccionadoEnCalendario}.`);
+                    this.value = ''; // Limpiar la fecha incorrecta
+                }
+            });
+        }
+
+        // Listener para búsqueda de Bandas
+        const bandaSearchInput = document.getElementById('bandaSearchInput');
+        const bandaResultsContainer = document.getElementById('bandaSearchResults');
+        if (bandaSearchInput && bandaResultsContainer) {
+            bandaSearchInput.addEventListener('input', function() {
+                const searchTerm = this.value.trim();
+                clearTimeout(searchTimeoutBanda);
+
+                if (searchTerm.length === 0) {
+                    bandaResultsContainer.innerHTML = '';
+                    return;
+                }
+                if (searchTerm.length < 1) { // Permitir búsqueda con 1 caracter
+                    bandaResultsContainer.innerHTML = '<div style="padding: 10px; text-align: center; font-style: italic; color: #d1d1d1;">Ingrese al menos 1 caracter...</div>';
+                    return;
+                }
+                bandaResultsContainer.innerHTML = '<div style="padding: 10px; text-align: center; font-style: italic; color: #d1d1d1;">Buscando bandas...</div>';
+
+                searchTimeoutBanda = setTimeout(() => {
+                    fetch(`/api/bandas/buscar?nombre=${encodeURIComponent(searchTerm)}`)
+                        .then(response => response.json())
+                        .then(bandas => {
+                            bandaResultsContainer.innerHTML = '';
+                            if (bandas.length > 0) {
+                                bandas.forEach(banda => {
+                                    const div = document.createElement('div');
+                                    div.style.padding = '8px 12px';
+                                    div.style.borderBottom = '1px solid #4a4a4a';
+                                    div.style.cursor = 'pointer';
+                                    div.onmouseover = function() { this.style.backgroundColor = '#4e4f51'; };
+                                    div.onmouseout = function() { this.style.backgroundColor = ''; };
+                                    div.textContent = banda.nombre;
+                                    div.setAttribute('data-id', banda.id);
+                                    div.setAttribute('data-nombre', banda.nombre);
+                                    div.addEventListener('click', function() {
+                                        selectedBandaInfo = {
+                                            id: this.getAttribute('data-id'),
+                                            nombre: this.getAttribute('data-nombre')
+                                        };
+                                        renderSelectedBanda();
+                                        clearBandaSearch();
+                                        bandaSearchInput.disabled = true; // Deshabilitar input después de seleccionar
+                                    });
+                                    bandaResultsContainer.appendChild(div);
+                                });
+                            } else {
+                                bandaResultsContainer.innerHTML = '<div style="padding: 10px; text-align: center; font-style: italic; color: #d1d1d1;">No se encontraron bandas.</div>';
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error buscando bandas:', error);
+                            bandaResultsContainer.innerHTML = '<div style="padding: 10px; text-align: center; font-style: italic; color: #ff7474;">Error al buscar bandas.</div>';
+                        });
+                }, 300);
+            });
+        }
+
+        // Listeners para cambiar entre modo Alumno/Banda
+        const tipoEventoAlumnoRadio = document.getElementById('tipoEventoAlumno');
+        const tipoEventoBandaRadio = document.getElementById('tipoEventoBanda');
+
+        function switchProgrammingMode(mode, isLoadingInitialData = false) {
+            const alumnosFields = document.getElementById('alumnosFieldsContainer');
+            const bandaFields = document.getElementById('bandaFieldsContainer');
+            const marcarRecuperacionBtnElem = document.getElementById('marcarComoRecuperacionBtn'); // Renombrado para evitar conflicto
+            const fechaRecuperacionCont = document.getElementById('fechaRecuperacionContainer');
+            const claseModalLabel = document.getElementById('claseModalLabel');
+            const guardarClaseBtn = document.getElementById('guardarClaseBtn');
+            const esActualizacionLocal = guardarClaseBtn.dataset.horarioId && guardarClaseBtn.dataset.horarioId !== ''; // Renombrado
+
+            currentProgrammingMode = mode;
+            if (mode === 'alumnos') {
+                if(alumnosFields) alumnosFields.style.display = 'block';
+                if(bandaFields) bandaFields.style.display = 'none';
+                if(marcarRecuperacionBtnElem) marcarRecuperacionBtnElem.style.display = 'block';
+                if(fechaRecuperacionCont) fechaRecuperacionCont.style.display = esModoRecuperacionActual ? 'block' : 'none';
+                
+                if(claseModalLabel) claseModalLabel.textContent = esActualizacionLocal ? (esModoRecuperacionActual ? 'Editar Recuperación' : 'Editar Clase') : (esModoRecuperacionActual ? 'Programar Recuperación' : 'Programar Clase');
+                if(guardarClaseBtn) guardarClaseBtn.textContent = esActualizacionLocal ? (esModoRecuperacionActual ? 'Actualizar Recuperación' : 'Actualizar Clase') : (esModoRecuperacionActual ? 'Guardar Recuperación' : 'Guardar Clase');
+
+            } else { // mode === 'banda'
+                if(alumnosFields) alumnosFields.style.display = 'none';
+                if(bandaFields) bandaFields.style.display = 'block';
+                if(marcarRecuperacionBtnElem) marcarRecuperacionBtnElem.style.display = 'none';
+                if(fechaRecuperacionCont) fechaRecuperacionCont.style.display = 'none';
+                
+                // Resetear lógicamente el estado de recuperación si se cambia a banda
+                esModoRecuperacionActual = false; 
+                const modalEsRecInput = document.getElementById('modalEsRecuperacion');
+                if(modalEsRecInput) modalEsRecInput.value = 'false';
+                // También resetear el botón de recuperación visualmente si es necesario
+                if(marcarRecuperacionBtnElem) {
+                    marcarRecuperacionBtnElem.textContent = 'Marcar como Recuperación';
+                    marcarRecuperacionBtnElem.classList.remove('btn-info', 'btn-warning', 'btn-success');
+                    marcarRecuperacionBtnElem.classList.add('btn-outline-warning');
+                    marcarRecuperacionBtnElem.dataset.isCurrentlyRecovery = 'false';
+                }
+
+                if(claseModalLabel) claseModalLabel.textContent = esActualizacionLocal ? 'Editar Banda en Horario' : 'Programar Banda en Horario';
+                if(guardarClaseBtn) guardarClaseBtn.textContent = esActualizacionLocal ? 'Actualizar Banda' : 'Guardar Banda';
+
+                const bandaSearchInputElem = document.getElementById('bandaSearchInput');
+                if(bandaSearchInputElem) {
+                    bandaSearchInputElem.disabled = !!(selectedBandaInfo && selectedBandaInfo.id);
+                }
+            }
+        }
+
+        if(tipoEventoAlumnoRadio) {
+            tipoEventoAlumnoRadio.addEventListener('change', function() {
+                if (this.checked) {
+                    if (isEditingExistingSlot && existingSlotIsBanda) {
+                        alert('Para añadir alumnos, primero debe eliminar el ensayo de banda existente usando el botón "Eliminar Clase".');
+                        tipoEventoBandaRadio.checked = true; // Revertir al estado anterior
+                        return;
+                    }
+                    if (currentProgrammingMode === 'banda' && selectedBandaInfo && selectedBandaInfo.id) {
+                        if (confirm('Si cambia a "Alumno(s)", la banda seleccionada se quitará. ¿Continuar?')) {
+                            selectedBandaInfo = null;
+                            renderSelectedBanda();
+                            const bandaSearchInputElem = document.getElementById('bandaSearchInput');
+                            if(bandaSearchInputElem) bandaSearchInputElem.disabled = false;
+                            clearBandaSearch();
+                            switchProgrammingMode('alumnos');
+                        } else {
+                            if(tipoEventoBandaRadio) tipoEventoBandaRadio.checked = true;
+                            return;
+                        }
+                    } else {
+                         switchProgrammingMode('alumnos');
+                    }
+                }
+            });
+        }
+        if(tipoEventoBandaRadio) {
+            tipoEventoBandaRadio.addEventListener('change', function() {
+                if (this.checked) {
+                    if (isEditingExistingSlot && !existingSlotIsBanda && selectedAlumnoIds.length > 0) {
+                         // Si es un slot de alumnos existente (no banda) Y tiene alumnos seleccionados
+                        alert('Para programar un ensayo de banda, primero debe eliminar la clase de alumno(s) existente usando el botón "Eliminar Clase".');
+                        tipoEventoAlumnoRadio.checked = true; // Revertir al estado anterior
+                        return;
+                    }
+                     if (currentProgrammingMode === 'alumnos' && selectedAlumnoIds.length > 0) {
+                        if (confirm('Si cambia a "Banda", los alumnos seleccionados se quitarán. ¿Continuar?')) {
+                            selectedAlumnoIds = [];
+                            renderSelectedAlumnos();
+                            clearAlumnoSearch();
+                            switchProgrammingMode('banda');
+                        } else {
+                            if(tipoEventoAlumnoRadio) tipoEventoAlumnoRadio.checked = true;
+                            return;
+                        }
+                    } else {
+                        switchProgrammingMode('banda');
+                    }
+                }
+            });
+        }
+
+        // Inicializar el modo de programación basado en el radio button chequeado por defecto (alumnos)
+        // Esto ya se hace al abrir el modal, pero una llamada explícita aquí podría ser útil
+        // si la lógica de `checked` por defecto cambia o para asegurar estado inicial.
+        // switchProgrammingMode(document.querySelector('input[name="tipoEvento"]:checked').value);
+
+        if (modalFechaRecuperacionInput) {
+            modalFechaRecuperacionInput.addEventListener('change', function() {
+                if (!esModoRecuperacionActual || !diaSemanaOriginalSlot) return;
+
+                const fechaSeleccionada = this.value; // YYYY-MM-DD
+                if (!fechaSeleccionada) return;
+
+                // JavaScript considera Domingo = 0, Lunes = 1, ..., Sábado = 6
+                // Necesitamos normalizar la entrada de la fecha porque el input date da YYYY-MM-DD
+                // y el constructor de Date puede interpretar eso como UTC si no se tiene cuidado.
+                // Para asegurar que se interprete como fecha local:
+                const parts = fechaSeleccionada.split('-'); // [YYYY, MM, DD]
+                const dateObj = new Date(parts[0], parts[1] - 1, parts[2]); // Mes es 0-indexado
+
+                const diasSemanaJS = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
+                const diaSeleccionadoEnCalendario = diasSemanaJS[dateObj.getDay()];
+
+                if (diaSeleccionadoEnCalendario !== diaSemanaOriginalSlot) {
+                    alert(`La fecha de recuperación debe ser un ${diaSemanaOriginalSlot}. Ha seleccionado un ${diaSeleccionadoEnCalendario}.`);
+                    this.value = ''; // Limpiar la fecha incorrecta
+                }
+            });
+        }
+
+    });
+</script>
+
+<!-- Script para manejar el colapso/expansión del sidebar con HOVER e iniciar colapsado -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const mainContent = document.querySelector('.main-content');
+    const sidebar = document.querySelector('.sidebar'); // Asegúrate que tu elemento sidebar tenga esta clase
+
+    if (mainContent && sidebar) {
+        // Función para colapsar el sidebar
+        function collapseSidebar() {
+            if (!sidebar.classList.contains('collapsed')) {
+                sidebar.classList.add('collapsed');
+            }
+            if (!mainContent.classList.contains('sidebar-collapsed')) {
+                mainContent.classList.add('sidebar-collapsed');
+            }
+        }
+
+        // Función para expandir el sidebar
+        function expandSidebar() {
+            if (sidebar.classList.contains('collapsed')) {
+                sidebar.classList.remove('collapsed');
+            }
+            if (mainContent.classList.contains('sidebar-collapsed')) {
+                mainContent.classList.remove('sidebar-collapsed');
+            }
+        }
+
+        // Iniciar el sidebar colapsado
+        collapseSidebar();
+
+        // Eventos hover
+        sidebar.addEventListener('mouseenter', () => {
+            expandSidebar();
+        });
+
+        sidebar.addEventListener('mouseleave', () => {
+            // Solo colapsar si el mouse realmente salió del sidebar y no está sobre un dropdown abierto
+            // Esta es una heurística simple. Una solución más robusta para dropdowns podría necesitar más lógica.
+            setTimeout(() => {
+                if (!sidebar.matches(':hover')) { // Verificar si el mouse ya no está sobre el sidebar
+                    collapseSidebar();
+                }
+            }, 100); // Pequeño retraso para permitir que el mouse se mueva a un dropdown
+        });
+
+        // Si tienes dropdowns dentro del sidebar, necesitas asegurarte de que el mouseout del sidebar
+        // no se active prematuramente si el mouse se mueve a un dropdown que está visualmente fuera
+        // de los límites originales del sidebar colapsado pero es parte de él.
+        // La verificación con sidebar.matches(':hover') dentro de un setTimeout ayuda un poco.
+
+    } else {
+        console.warn('Sidebar o Main Content no encontrados. La funcionalidad de hover del sidebar no se activará.');
+    }
+});
+</script>
+
+<!-- Incluir el Footer -->
+<%- include('partials/footer') %>

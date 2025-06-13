@@ -9,3 +9,12 @@ Aplicación/node_modules/puppeteer-core/.local-chromium/
 
 #base de datos de prueba
 feeling_music_test(2).sql
+
+#ignorar historial de bases de datos
+BD_historial/
+
+.vscode
+
+# Ignorar caché y sesiones de WhatsApp Web JS
+.wwebjs_auth/
+.wwebjs_cache/

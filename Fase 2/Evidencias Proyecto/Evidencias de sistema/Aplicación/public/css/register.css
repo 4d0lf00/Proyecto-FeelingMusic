@@ -1,25 +1,42 @@
 /* Estilos para el body y fondo */
 body {
+    margin-left: 35vw !important;
     margin: 0;
     padding: 0;
     min-height: 100vh;
     display: flex;
     justify-content: center;
     align-items: center;
-    background: linear-gradient(45deg, #2a2b38, #1f2029);
+    --s: 200px;
+            --c1: #1d1d1d;
+            --c2: #4e4f51;
+            --c3: #3c3c3c;
+            background: repeating-conic-gradient(
+                from 30deg,
+                #0000 0 120deg,
+                var(--c3) 0 180deg
+              )
+              calc(0.5 * var(--s)) calc(0.5 * var(--s) * 0.577),
+              repeating-conic-gradient(
+                from 30deg,
+                var(--c1) 0 60deg,
+                var(--c2) 0 120deg,
+                var(--c3) 0 180deg
+              );
+            background-size: var(--s) calc(var(--s) * 0.577);
 }
 
 /* From Uiverse.io by alexruix */ 
-.card {
-    width: 90%; /* Cambiado para ser responsivo */
-    max-width: 320px; /* Máximo ancho en pantallas grandes */
-    padding: 2rem 1.5rem;
-    text-align: center;
-    background: #2a2b38;
-    border-radius: 10px;
-    box-shadow: 0 0 40px rgba(0,0,0,0.3);
-    position: relative;
-    margin: 1rem; /* Agregar margen para pantallas pequeñas */
+body .card {
+    width: 90% !important; /* Cambiado para ser responsivo */
+    max-width: 320px !important; /* Máximo ancho en pantallas grandes */
+    padding: 2rem 1.5rem !important;
+    text-align: center !important;
+    background: #2a2b38 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 0 40px rgba(0,0,0,0.3) !important;
+    position: relative !important;
+    margin: 1rem !important; /* Agregar margen para pantallas pequeñas */
 }
 
 /* Mensaje de error responsivo */
@@ -91,11 +108,11 @@ body {
 }
 
 /*Text responsivo*/
-.title {
-    margin-bottom: 2rem;
-    font-size: clamp(1.5em, 5vw, 2em); /* Tamaño de fuente responsivo */
-    font-weight: 500;
-    color: #f5f5f5;
+body .title {
+    margin-bottom: 2rem !important;
+    font-size: clamp(1.5em, 5vw, 2em) !important; /* Tamaño de fuente responsivo */
+    font-weight: 500 !important;
+    color: #f5f5f5 !important;
 }
 
 /*Buttons responsivos*/
@@ -127,6 +144,9 @@ body {
 
 /* Media queries para diferentes tamaños de pantalla */
 @media screen and (max-width: 480px) {
+    body {
+        margin-left: 4vw !important;
+    }
     .card {
         padding: 1.5rem 1rem;
     }

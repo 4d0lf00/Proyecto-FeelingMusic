@@ -213,11 +213,8 @@
             });
         });
 
-        document.getElementById('buscarForm').addEventListener('submit', function(e) {
-            e.preventDefault();
-            const busqueda = document.getElementById('busqueda').value;
-
-            fetch('http://localhost:3000/buscar_registro_pagos', { 
+        function cargarPagos(busqueda = '') {
+            fetch('/buscar_registro_pagos', { 
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
@@ -226,8 +223,21 @@
             })
             .then(response => response.json())
             .then(data => {
+                if (data.error) {
+                    console.error('Error:', data.error);
+                    return;
+                }
+
                 const tbody = document.querySelector('#tablaPagos tbody');
                 tbody.innerHTML = '';
+                
+                if (data.length === 0) {
+                    const row = document.createElement('tr');
+                    row.innerHTML = '<td colspan="7" style="text-align: center;">No se encontraron registros</td>';
+                    tbody.appendChild(row);
+                    return;
+                }
+
                 data.forEach(pago => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
@@ -242,7 +252,23 @@
                     tbody.appendChild(row);
                 });
             })
-            .catch(error => console.error('Error:', error));
+            .catch(error => {
+                console.error('Error:', error);
+                const tbody = document.querySelector('#tablaPagos tbody');
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: red;">Error al cargar los datos</td></tr>';
+            });
+        }
+
+        // Cargar los pagos al iniciar la página
+        document.addEventListener('DOMContentLoaded', () => {
+            cargarPagos();
+        });
+
+        // Modificar el evento submit del formulario
+        document.getElementById('buscarForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const busqueda = document.getElementById('busqueda').value;
+            cargarPagos(busqueda);
         });
     </script>
 </body>

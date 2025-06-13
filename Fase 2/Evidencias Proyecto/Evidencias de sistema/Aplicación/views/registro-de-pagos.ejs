@@ -1,3 +1,5 @@
+<%- include('partials/header', { title: title, userTipo: userTipo, currentPath: '/registro-de-pagos' }) %>
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -65,5 +67,7 @@
         <div id="mensaje" style="color: red;"></div> <!-- Mensaje de error -->
     </div>
     <script src="/js/validacion-registro-de-pagos.js"></script>
+
+<%- include('partials/footer') %>
 </body>
 </html>

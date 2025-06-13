@@ -1,3 +1,7 @@
+<!-- Horario Alumnos -->
+<!-- Horario Alumnos -->
+<!-- Horario Alumnos -->
+<%- include('partials/header', { title: title, userTipo: userTipo, currentPath: '/horario' }) %>
 <!DOCTYPE html>
 <html lang="es">
   <head>
@@ -10,8 +14,9 @@
   <body>
     <div class="container py-4 fade-in">
       <header class="text-center mb-4">
-        <h1 class="display-4">Bienvenido, <%= alumno.nombre %> <%= alumno.apellido %></h1>
-        <p class="lead" id="current-date"></p>
+        <h1 class="display-4" style="color: #fff !important;">Bienvenido(a), <%= alumno.nombre %> <%= alumno.apellido %></h1>
+        <p class="lead" id="current-date" style="color: #fff !important;"></p>
+        
       </header>
 
       <div class="row">
@@ -19,6 +24,7 @@
           <div class="card shadow-sm mb-4">
             <div class="card-header bg-primary text-white">
               <h2 class="h4 mb-0">Mis Clases</h2>
+              
             </div>
             <div class="card-body">
               <% if (clases && clases.length > 0) { %>
@@ -31,7 +37,7 @@
                       </span>
                     </div>
                     <div class="class-info">
-                      <p><strong>Fecha:</strong> <%= clase.dia %>/<%= clase.mes %>/<%= clase.annio %></p>
+                      <p><strong>Días:</strong> <%= clase.dia %></p>
                       <p><strong>Instrumento:</strong> <%= clase.instrumento %></p>
                       <p><strong>Profesor:</strong> <%= clase.profesor_nombre %> <%= clase.profesor_apellido %></p>
                       <p><strong>Sala:</strong> <%= clase.sala_nombre || 'Por asignar' %></p>

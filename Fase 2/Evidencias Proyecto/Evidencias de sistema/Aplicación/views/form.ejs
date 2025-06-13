@@ -1,3 +1,4 @@
+<%- include('partials/header', { title: title, userTipo: userTipo, currentPath: '/form' }) %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -34,23 +35,10 @@
                 <label>Número de Teléfono</label>
                 <input type="tel" name="numero_telefono" placeholder="+569XXXXXXXX" 
                        pattern="^\+569[0-9]{8}$" 
-                       title="El número debe ser en el formato +569XXXXXXXX" required />
+                       title="El número debe ser en el formato +569XXXXXXXX" />
                        <span class="check-icon">✔</span>
             </div>
-            <div class="input-box">
-                <label>RUT</label>
-                <input type="text" name="rut" 
-                       placeholder="Ingrese el RUT (ej. 12345678-K)" 
-                       pattern="^[0-9]{7,8}-[0-9Kk]$" 
-                       title="El RUT debe estar en el formato XXXXXXXX-X o XXXXXXXX-K" 
-                       required />
-                       <span class="check-icon">✔</span>
-            </div>
-            <div class="input-box address">
-                <label>Comentarios</label>
-                <input type="text" name="comentarios" placeholder="Ingrese comentarios" required />
-                <span class="check-icon">✔</span>
-            </div>
+            
             <button type="submit">Aceptar</button>
         </form>
         <div id="mensaje" style="color: red;"></div> <!-- Mensaje de error -->
@@ -65,6 +53,10 @@
                 formDataObject[key] = value;
             });
 
+            const mensajeDiv = document.getElementById('mensaje'); // Obtener el div de mensajes
+            mensajeDiv.textContent = ''; // Limpiar mensajes anteriores
+            mensajeDiv.style.display = 'none';
+
             try {
                 const response = await fetch('/alumnos', {
                     method: 'POST',
@@ -73,21 +65,25 @@
                     },
                     body: JSON.stringify(formDataObject)
                 });
-
+                
                 const data = await response.json();
                 if (response.ok) {
-                    console.log('Alumno registrado:', data); // Para debugging
+                    console.log('Alumno registrado:', data); 
                     if (data.alumnoId) {
-                        window.location.href = `/formulario-class?alumnoId=${data.alumnoId}`;
+                        alert('Datos personales del alumno registrados exitosamente. Procediendo a datos de la clase.');
+                        window.location.href = `/formulario-class?alumnoId=${data.alumnoId}`; // Redirigir a formulario-class
                     } else {
-                        alert('Error: No se recibió el ID del alumno');
+                        mensajeDiv.textContent = 'Error: No se recibió el ID del alumno del servidor.';
+                        mensajeDiv.style.display = 'block';
                     }
                 } else {
-                    alert('Error al registrar al alumno: ' + data.error);
+                    mensajeDiv.textContent = data.error || `Error ${response.status}: Ocurrió un problema al registrar.`;
+                    mensajeDiv.style.display = 'block';
                 }
             } catch (error) {
-                console.error('Error:', error);
-                alert('Error al procesar la solicitud');
+                console.error('Error de red o al procesar la solicitud:', error);
+                mensajeDiv.textContent = 'Error de conexión o al procesar la solicitud. Intente nuevamente.';
+                mensajeDiv.style.display = 'block';
             }
         });
     </script>

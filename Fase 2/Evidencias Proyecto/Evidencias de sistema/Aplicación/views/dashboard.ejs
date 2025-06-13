@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -7,12 +7,26 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     <link rel="stylesheet" href="/css/dashboard.css">
+    <style>
+        /* Color por defecto del texto "Menu" (igual al fondo) */
+        .logo-text {
+            color: #2c3e50; /* Mismo color que el fondo del sidebar */
+        }
+        
+        /* Cuando un submenú está activo, restaurar el color blanco del texto "Menu" */
+        .submenu-profesor.active ~ .logo .logo-text,
+        .dropdown-trigger-profesor:hover ~ .logo .logo-text,
+        .sidebar:hover .logo-text {
+            color: white;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
         <nav class="sidebar">
             <div class="logo">
-                <h2><i class="fas fa-chart-line"></i> Menu</h2>
+                <div class="logo-icon-container"></div>
+                <h2 class="logo-text">Menu</h2>
             </div>
             <ul>
                 <li class="active">
@@ -22,22 +36,68 @@
                     </a>
                 </li>
                 <li>
-                    <a href="./register2" title="Profesores">
-                        <i class="fas fa-chalkboard-teacher"></i> 
-                        <span class="menu-text">Registrar Profesores</span>
-                    </a>
-                </li>
-                <li>
-                    <a href="./filtro2" title="Alumnos">
+                    <a href="#" class="dropdown-trigger-profesor" title="Profesores">
                         <i class="fas fa-user-graduate"></i> 
-                        <span class="menu-text">Visualizar Alumnos</span>
+                        <span class="menu-text-profesor">Profesores</span>
+                        <i class="fas fa-chevron-down arrow-profesor"></i>
                     </a>
-                </li>
+                    <ul class="submenu-profesor">
+                        <li>
+                            <a href="/register2">
+                                <i class="fas fa-user-plus"></i>
+                                <span>Inscribir Profesor Nuevo</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/ver-profes">
+                                <i class="fas fa-users"></i>
+                                <span>Ver Profesores</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>  
                 <li>
-                    <a href="./horarios" title="Horario">
-                        <i class="fas fa-calendar-alt"></i> 
-                        <span class="menu-text">Registrar Horarios</span>
+                    <a href="#" class="dropdown-trigger-profesor" title="Mis Alumnos">
+                        <i class="fas fa-user-graduate"></i> 
+                        <span class="menu-text-profesor">Alumnos</span>
+                        <i class="fas fa-chevron-down arrow-profesor"></i>
                     </a>
+                    <ul class="submenu-profesor">
+                        <li>
+                            <a href="/form">
+                                <i class="fas fa-user-plus"></i>
+                                <span>Inscribir Alumnos</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/filtro2">
+                                <i class="fas fa-users"></i>
+                                <span>Ver Alumnos</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>          
+                
+                <li>
+                    <a href="#" class="dropdown-trigger-profesor" title="Horarios">
+                        <i class="fas fa-calendar-alt"></i> 
+                        <span class="menu-text">Horarios</span>
+                        <i class="fas fa-chevron-down arrow-profesor"></i>
+                    </a>
+                    <ul class="submenu-profesor">
+                        <li>
+                            <a href="/horarios">
+                                <i class="fas fa-calendar"></i>
+                                <span class="menu-text">Mis Horarios</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/horarios-generales">
+                                <i class="fas fa-users"></i>
+                                <span class="menu-text">Horarios Generales</span>
+                            </a>
+                        </li>
+                    </ul>
                 </li>
                 <li>
                     <a href="#" onclick="cerrarSesion(event)" title="Cerrar Sesión">
@@ -45,7 +105,7 @@
                         <span class="menu-text">Cerrar Sesión</span>
                     </a>
                 </li>
-            </ul>
+            </ul>         
         </nav>
 
         <main class="content">
@@ -85,20 +145,85 @@
                     <h3>Distribución de Alumnos por Instrumento</h3>
                     <canvas id="categoryChart"></canvas>
                 </div>
-                <!--<div class="chart-card">
-                    <h3>Traffic Sources</h3>
-                    <canvas id="trafficChart"></canvas>
-                </div>-->
             </div>
         </main>
     </div>
 
     <script>
         // Pasar los datos del servidor al cliente
-        window.dashboardData = <%- JSON.stringify(data) %>;
+        window.dashboardData = JSON.parse('<%- JSON.stringify(data) %>');
         console.log('Datos recibidos en el cliente:', window.dashboardData);
     </script>
     <script src="/js/graficos.js"></script>
+    <script>
+        // Script para el menú desplegable
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropdownTriggers = document.querySelectorAll('.dropdown-trigger-profesor');
+            
+            dropdownTriggers.forEach(trigger => {
+                trigger.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Cerrar otros submenús abiertos
+                    const allSubmenus = document.querySelectorAll('.submenu-profesor');
+                    const allArrows = document.querySelectorAll('.arrow-profesor');
+                    
+                    allSubmenus.forEach(submenu => {
+                        if (submenu !== this.nextElementSibling) {
+                            submenu.classList.remove('active');
+                            submenu.style.maxHeight = '0';
+                            submenu.style.opacity = '0';
+                            submenu.style.transform = 'scaleY(0)';
+                        }
+                    });
+                    
+                    allArrows.forEach(arrow => {
+                        if (arrow !== this.querySelector('.arrow-profesor')) {
+                            arrow.classList.remove('active');
+                        }
+                    });
+                    
+                    // Toggle del submenu actual
+                    const submenu = this.nextElementSibling;
+                    const arrow = this.querySelector('.arrow-profesor');
+                    
+                    if (submenu.classList.contains('active')) {
+                        submenu.classList.remove('active');
+                        submenu.style.maxHeight = '0';
+                        submenu.style.opacity = '0';
+                        submenu.style.transform = 'scaleY(0)';
+                        arrow.classList.remove('active');
+                    } else {
+                        submenu.classList.add('active');
+                        submenu.style.maxHeight = '500px';
+                        submenu.style.opacity = '1';
+                        submenu.style.transform = 'scaleY(1)';
+                        arrow.classList.add('active');
+                    }
+                });
+            });
+
+            // Cerrar submenús al hacer clic fuera
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.dropdown-trigger-profesor')) {
+                    const allSubmenus = document.querySelectorAll('.submenu-profesor');
+                    const allArrows = document.querySelectorAll('.arrow-profesor');
+                    
+                    allSubmenus.forEach(submenu => {
+                        submenu.classList.remove('active');
+                        submenu.style.maxHeight = '0';
+                        submenu.style.opacity = '0';
+                        submenu.style.transform = 'scaleY(0)';
+                    });
+                    
+                    allArrows.forEach(arrow => {
+                        arrow.classList.remove('active');
+                    });
+                }
+            });
+        });
+    </script>
     <script>
         async function actualizarContadores() {
             try {
@@ -135,12 +260,49 @@
         setInterval(actualizarContadores, 30000);
     </script>
     <script>
-    function cerrarSesion(event) {
-        event.preventDefault();
-        if (confirm('¿Estás seguro que deseas cerrar sesión?')) {
-            window.location.href = '/logout';
+        function cerrarSesion(event) {
+            event.preventDefault();
+            if (confirm('¿Estás seguro que deseas cerrar sesión?')) {
+                window.location.href = '/logout';
+            }
         }
-    }
+    </script>
+    <script>
+        // Script para las transiciones de página
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebarLinks = document.querySelectorAll('.sidebar a');
+            
+            // Manejar el botón de retroceso
+            window.addEventListener('pageshow', function(event) {
+                // Remover cualquier clase de transición
+                document.body.classList.remove('page-transition');
+                document.body.classList.remove('page-enter');
+                
+                // Si venimos del caché (botón atrás)
+                if (event.persisted) {
+                    document.body.style.opacity = '1';
+                    document.body.style.transform = 'none';
+                }
+            });
+            
+            sidebarLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    // No aplicar a enlaces con onclick o href="#"
+                    if (!this.getAttribute('onclick') && this.getAttribute('href') !== '#') {
+                        e.preventDefault();
+                        const href = this.getAttribute('href');
+                        
+                        // Añadir clase para la animación de salida
+                        document.body.classList.add('page-transition');
+                        
+                        // Navegar después de la animación
+                        setTimeout(() => {
+                            window.location.href = href;
+                        }, 200);
+                    }
+                });
+            });
+        });
     </script>
 </body>
 </html>

@@ -55,7 +55,13 @@
                     window.location.href = data.redirectUrl;
                 } else {
                     const errorMessage = document.getElementById('error-message');
-                    errorMessage.innerText = data.error || 'Error en el inicio de sesión.';
+                    let errorMsg = 'Error desconocido en el inicio de sesión.';
+                    if (data.errors && Array.isArray(data.errors) && data.errors.length > 0) {
+                        errorMsg = data.errors.map(err => err.msg).join('\n');
+                    } else if (data.error) {
+                        errorMsg = data.error;
+                    }
+                    errorMessage.innerText = errorMsg;
                     errorMessage.style.display = 'block';
                 }
             } catch (error) {

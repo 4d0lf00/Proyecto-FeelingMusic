@@ -5,7 +5,6 @@ const cors = require('cors');
 const bodyParser = require('body-parser');
 const routes = require('./routes');
 const cookieParser = require('cookie-parser');
-const pageViewCounter = require('./controllers/pageViewCounter');
 const session = require('express-session');
 const app = express();
 
@@ -27,8 +26,8 @@ app.use((req, res, next) => {
         "default-src 'self'; " +
         "img-src 'self' data: https:; " +
         "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net https://cdnjs.cloudflare.com https://stackpath.bootstrapcdn.com; " +
-        "style-src 'self' 'unsafe-inline' https://stackpath.bootstrapcdn.com https://cdn.jsdelivr.net https://fonts.googleapis.com; " +
-        "font-src 'self' https://fonts.gstatic.com;"
+        "style-src 'self' 'unsafe-inline' https://stackpath.bootstrapcdn.com https://cdn.jsdelivr.net https://fonts.googleapis.com https://cdnjs.cloudflare.com; " +
+        "font-src 'self' https://fonts.gstatic.com https://cdnjs.cloudflare.com;"
     );
     next();
 });
@@ -62,10 +61,36 @@ app.use(session({
 
 // Rutas
 app.use('/', routes);
-app.use('/', pageViewCounter);
 
 // Puerto
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-    console.log(`Servidor corriendo en el puerto http://localhost:${PORT}`);
-});
+
+// --- Prueba de conexión a la BD antes de iniciar --- 
+(async () => {
+    let connection;
+    try {
+        const db = require('./db'); // Importar pool
+        connection = await db.getConnection();
+        console.log("Prueba de conexión a la BD exitosa. Liberando conexión.");
+        await connection.ping(); // Realizar una operación simple
+        console.log("Ping a la BD exitoso.");
+    } catch (err) {
+        console.error("ERROR CRÍTICO AL CONECTAR/PROBAR LA BASE DE DATOS:", err);
+        // Opcional: Salir si la BD es esencial para iniciar
+        // process.exit(1); 
+    } finally {
+        if (connection) {
+            try {
+                 await connection.release(); 
+                 console.log("Conexión de prueba liberada.");
+            } catch (releaseErr) {
+                 console.error("Error al liberar la conexión de prueba:", releaseErr);
+            }
+        }
+        // Iniciar el servidor SOLO después de intentar la conexión
+        app.listen(PORT, () => {
+            console.log(`Servidor corriendo en el puerto http://localhost:${PORT}`);
+        });
+    }
+})();
+// --- Fin Prueba de conexión ---

@@ -1,19 +1,12 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Registro</title>
-    <link rel="stylesheet" href="/css/register.css">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-</head>
-<body>
-    <!-- Mensaje de error -->
-    <div id="error-message" class="alert alert-danger" style="display: none;"></div>
-    <div id="alert-message" class="alert alert-success" style="display: none;"></div>
 
-    <div class="card">
-        <h4 class="title">Registro</h4>
+<%- include('partials/header', { title: title,  currentPath: '/register2' }) %>
+
+<link rel="stylesheet" href="/css/register.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<body>
+    
+    <div class="card" style="display: flex !important; justify-content: center !important; align-items: center !important; ">
+        <h4 class="title">Registrar profesor</h4>
         <form id="registerForm">
             <div class="field">
                 <input autocomplete="off" id="firstname" placeholder="Nombre" class="input-field" name="nombre" type="text" required>
@@ -67,9 +60,13 @@
                 </div>
             </div>
             <button class="btn" type="submit">Registrar</button>
-            <a href="#" class="btn-link">Ya tienes una cuenta?</a>
+            <!-- Mensaje de error -->
+    <div id="error-message" class="alert alert-danger" style="display: none;"></div>
+    <div id="alert-message" class="alert alert-success" style="display: none;"></div>
         </form>
     </div>
+    
+
 
     <script>
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
@@ -112,32 +109,9 @@
                 if (response.ok) {
                     const alertMessage = document.getElementById('alert-message');
                     alertMessage.innerText = 'Profesor registrado exitosamente.';
-                    alertMessage.style.display = 'block'; // Mostrar el mensaje de alerta
-                    alertMessage.classList.add('animate__animated', 'animate__fadeIn');
-
-                    // Desaparecer el mensaje después de 2 segundos
-                    setTimeout(() => {
-                        alertMessage.classList.add('animate__fadeOut');
-                        setTimeout(() => {
-                            alertMessage.style.display = 'none';
-                            alertMessage.classList.remove('animate__fadeOut');
-                        }, 1000);
-
-                        // Preguntar si desea registrar otro profesor
-                        Swal.fire({
-                            title: '¿Registrar otro profesor?',
-                            icon: 'question',
-                            showCancelButton: true,
-                            confirmButtonText: 'Sí',
-                            cancelButtonText: 'No'
-                        }).then((result) => {
-                            if (result.isConfirmed) {
-                                document.getElementById('registerForm').reset(); // Reiniciar el formulario
-                            } else {
-                                window.location.href = '/dashboard'; // Redirigir al dashboard
-                            }
-                        });
-                    }, 2000);
+                    alert('Profesor registrado exitosamente.');
+                    location.href = location.href;
+                    
                 } else {
                     const errorMessage = document.getElementById('error-message');
                     console.log('Datos de error recibidos del servidor:', data);
