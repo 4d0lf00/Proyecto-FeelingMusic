@@ -1,0 +1,345 @@
+<%- include('partials/header', { title: title, userTipo: userTipo, currentPath: '/ver-salas' }) %>
+
+
+<main class="main-content">
+    <style>
+        body{
+            --s: 200px;
+            --c1: #1d1d1d;
+            --c2: #4e4f51;
+            --c3: #3c3c3c;
+            background: repeating-conic-gradient(
+                from 30deg,
+                #0000 0 120deg,
+                var(--c3) 0 180deg
+              )
+              calc(0.5 * var(--s)) calc(0.5 * var(--s) * 0.577),
+              repeating-conic-gradient(
+                from 30deg,
+                var(--c1) 0 60deg,
+                var(--c2) 0 120deg,
+                var(--c3) 0 180deg
+              );
+            background-size: var(--s) calc(var(--s) * 0.577);
+        }
+        /* Estilos para ver-salas.ejs (inspirados en bandas-listado.ejs) */
+        .table-container-bandas { /* Nombre de clase consistente */
+            background-color: #1e1e1e; /* Fondo oscuro principal para el contenedor de la tabla */
+            padding: 25px;
+            border-radius: 8px;
+            border: 1px solid #4e4f51;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.6);
+            margin: 30px auto;
+            max-width: 90%;
+        }
+        .table-title-bandas { /* Nombre de clase consistente */
+            font-size: 2.2rem;
+            font-weight: bold;
+            background: linear-gradient(to bottom, #FEDB37, #c4a34e);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-align: center;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .table-title-bandas i {
+            font-size: 2rem; /* Icono ligeramente más pequeño que en form */
+            margin-right: 12px;
+            color: #FEDB37; /* Icono también dorado */
+        }
+
+        .btn-add-banda { /* Nombre de clase consistente */
+            background: radial-gradient(ellipse farthest-corner at right bottom, #FEDB37 0%, #FDB931 8%, #9f7928 30%, #8A6E2F 40%, transparent 70%),
+                        radial-gradient(ellipse farthest-corner at left top, #FFFFFF 0%, #FFFFAC 8%, #D1B464 25%, #5d4a1f 62.5%, #5d4a1f 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-weight: bold;
+            transition: all 0.2s ease-in-out;
+            border-radius: 6px;
+            text-decoration: none; /* Asegurar que no haya subrayado de <a> */
+            display: inline-block; /* Para correcto espaciado y centrado si es necesario */
+            margin-bottom: 25px; /* Espacio antes de la tabla */
+        }
+        .btn-add-banda:hover {
+            background: radial-gradient(ellipse farthest-corner at right bottom, #FEDB37 0%, #FDB931 8%, #9f7928 30%, #8A6E2F 40%, transparent 80%),
+                        radial-gradient(ellipse farthest-corner at left top, #FFFFFF 0%, #FFFFAC 12%, #D1B464 35%, #5d4a1f 40%, #5d4a1f 80%);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+            color: #f0f0f0;
+        }
+        .btn-add-banda i {
+            margin-right: 8px;
+        }
+
+        .table-bandas {
+            width: 100%;
+            border-collapse: separate; 
+            border-spacing: 0px; /* Sin espacio entre celdas para un look más compacto */
+            background-color: #2a2a2a; /* Fondo general de la tabla un poco más claro */
+            border-radius: 6px; /* Bordes redondeados para la tabla */
+            overflow: hidden; /* Para que el border-radius afecte a las celdas */
+            border: 1px solid #404040; /* Borde sutil para la tabla */
+        }
+        .table-bandas th, .table-bandas td {
+            vertical-align: middle;
+            padding: 12px 15px;
+            border-bottom: 1px solid #404040; /* Líneas horizontales entre filas */
+            color: #e0e0e0;
+            text-align: left;
+        }
+        .table-bandas thead th {
+            background-color: #333;
+            color: #FEDB37;
+            text-align: center;
+            font-weight: 600;
+            border-bottom: 2px solid #FEDB37; /* Línea más gruesa dorada bajo la cabecera */
+        }
+        .table-bandas tbody tr:last-child td {
+            border-bottom: none; /* No borde en la última fila */
+        }
+        .table-bandas tbody tr:hover td {
+            background-color: #383838;
+        }
+
+        /* Estilos para edición inline (td.editable y input.editable-input) */
+        .table-bandas td.editable {
+            cursor: pointer;
+            position: relative; /* Para posicionar el input si es necesario */
+        }
+        .table-bandas td.editable:hover .editable-text {
+            /* Podrías añadir un sutil underline o cambio de color al texto al hacer hover */
+            /* text-decoration: underline dotted #FEDB37; */
+        }
+        .table-bandas .editable-text {
+            display: inline-block;
+            min-height: 22px; /* Para evitar que la celda colapse si está vacía */
+        }
+        .table-bandas .editable-input {
+            padding: 8px 10px;
+            border: 1px solid #FEDB37;
+            background-color: #1e1e1e;
+            color: #fff;
+            border-radius: 4px;
+            width: 95%; /* Ajustar para que no desborde la celda */
+            box-sizing: border-box;
+            font-size: 0.95rem;
+        }
+
+        .btn-delete-banda {
+            background-color: #c82333; /* Rojo más intenso */
+            border: none;
+            color: white;
+            padding: 8px 15px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border-radius: 5px;
+            transition: background-color 0.2s ease;
+        }
+        .btn-delete-banda:hover {
+            background-color: #a71d2a; /* Rojo más oscuro */
+        }
+        /* Alertas (usando las clases de los formularios) */
+        .alert-fixed-bandas {
+            color: #fff;
+            padding: 12px 15px;
+            border-radius: 5px;
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .alert-fixed-bandas.alert-success {
+            background-color: #28a745;
+            border: 1px solid #1e7e34;
+        }
+        .alert-fixed-bandas.alert-danger {
+            background-color: #dc3545;
+            border: 1px solid #b02a37;
+        }
+
+        /* Regla específica para centrar el contenido de la celda de acciones */
+        .table-bandas td.text-center {
+            text-align: center;
+        }
+
+        /* Estilos para el wrapper de la tabla responsiva */
+        .table-responsive-wrapper {
+            overflow-x: auto; /* Permite el scroll horizontal */
+            width: 100%;
+        }
+
+        /* Evitar que el texto en las celdas se rompa y forzar scroll si es necesario */
+        .table-bandas th,
+        .table-bandas td {
+            white-space: nowrap;
+        }
+    </style>
+
+    <div class="table-container-bandas">
+        <h2 class="table-title-bandas"><i class="fa-solid fa-chalkboard"></i> <%= title %></h2>
+
+        <% if (typeof message !== 'undefined' && message && message.trim() !== '') { %>
+            <div class="alert alert-success alert-fixed-bandas"><%= message %></div>
+        <% } %>
+        <% if (typeof error !== 'undefined' && error && error.trim() !== '') { %>
+            <div class="alert alert-danger alert-fixed-bandas"><%= error %></div>
+        <% } %>
+
+        <a href="/salas/nueva" class="btn-add-banda"> <i class="fas fa-plus-circle"></i> Añadir Nueva Sala</a>
+
+        <% if (salas && salas.length > 0) { %>
+            <div class="table-responsive-wrapper">
+            <table class="table-bandas">
+                <thead>
+                    <tr>
+                        <th>Acciones</th>
+                        <th>Nombre Personalizado</th>
+                        <th>Nombre Base</th>
+                        
+                        
+                    </tr>
+                </thead>
+                <tbody>
+                    <% salas.forEach(function(sala) { %>
+                    <tr>
+                        <td class="text-center">
+                            <form action="/salas/eliminar/<%= sala.id %>" method="POST" style="display: inline;" onsubmit="return confirmDeleteSala(this);">
+                                <button type="submit" class="btn btn-danger btn-sm">Eliminar</button>
+                            </form>
+                            <!-- El botón Guardar se añadirá aquí dinámicamente por JS -->
+                        </td>
+                        <td class="editable-cell" data-id="<%= sala.id %>" data-field="nombre_personalizado">
+                            <span class="editable-value"><%= sala.nombre_personalizado || '-' %></span>
+                            <input type="text" class="form-control editable-input" value="<%= sala.nombre_personalizado || '' %>" style="display: none;">
+                        </td>
+                        <td><span class="editable-nombre-base" data-id="<%= sala.id %>"><%= sala.nombre %></span></td>
+                        
+                        
+                    </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+            </div>
+        <% } else { %>
+            <p class="text-center" style="color: white; margin-top:20px;">No hay salas registradas.</p>
+        <% } %>
+    </div>
+</main>
+
+<script>
+function confirmDeleteSala(form) {
+    const firstConfirm = confirm("Si elimina la sala, se eliminarán todos los registros de clases y ensayos relacionados. ¿Continuar?");
+    if (firstConfirm) {
+        const secondConfirm = confirm("¿Está absolutamente seguro? Esta acción es irreversible.");
+        return secondConfirm;
+    }
+    return false;
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    const editables = document.querySelectorAll('.editable-cell');
+
+    editables.forEach(td => {
+        const textSpan = td.querySelector('.editable-value');
+        const inputField = td.querySelector('.editable-input');
+        const salaId = td.dataset.id;
+        const actionsCell = td.closest('tr').querySelector('.text-center');
+
+        td.addEventListener('click', function() {
+            if (inputField.style.display === 'none') {
+                textSpan.style.display = 'none';
+                inputField.style.display = 'block';
+                inputField.focus();
+                inputField.select();
+
+                if (!actionsCell.querySelector('.btn-save-sala')) {
+                    const saveButton = document.createElement('button');
+                    saveButton.textContent = 'Guardar';
+                    saveButton.className = 'btn btn-success btn-sm ms-1 btn-save-sala';
+                    saveButton.type = 'button';
+                    saveButton.dataset.id = salaId;
+                    saveButton.addEventListener('click', function() {
+                        updateSalaData(td, textSpan, inputField, saveButton);
+                    });
+                    actionsCell.appendChild(saveButton);
+                }
+            }
+        });
+
+        inputField.addEventListener('blur', function(event) {
+            if (event.relatedTarget && event.relatedTarget.classList.contains('btn-save-sala')) {
+                return;
+            }
+        });
+
+        inputField.addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                updateSalaData(td, textSpan, inputField, actionsCell.querySelector('.btn-save-sala'));
+            }
+        });
+    });
+
+    function updateSalaData(td, textSpan, inputField, saveButton) {
+        const id = td.dataset.id;
+        const field = td.dataset.field;
+        const newValue = inputField.value.trim();
+        const oldValue = textSpan.dataset.originalValue || textSpan.textContent.trim();
+
+        inputField.style.display = 'none';
+        textSpan.style.display = 'inline';
+
+        if (newValue === oldValue) {
+            if (saveButton) saveButton.remove();
+            textSpan.textContent = newValue || '-';
+            return;
+        }
+
+        if (!textSpan.dataset.originalValue) {
+            textSpan.dataset.originalValue = textSpan.textContent.trim();
+        }
+
+        fetch(`/salas/editar/${id}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ [field]: newValue })
+        })
+        .then(response => {
+            const contentType = response.headers.get("content-type");
+            if (contentType && contentType.indexOf("application/json") !== -1) {
+                return response.json();
+            } else {
+                if (response.ok && response.redirected) {
+                    return { success: true, redirected: true, url: response.url };
+                }
+                return response.text().then(text => { throw new Error("Respuesta no JSON: " + text); });
+            }
+        })
+        .then(data => {
+            if (data && (data.success || data.redirected)) {
+                textSpan.textContent = newValue || '-';
+                textSpan.dataset.originalValue = newValue || '-';
+                if (data.redirected){
+                }
+            } else {
+                textSpan.textContent = oldValue;
+                alert(data.message || 'Error al actualizar la sala. Nombre no guardado.');
+            }
+        })
+        .catch(err => {
+            console.error('Error en fetch al actualizar sala:', err);
+            textSpan.textContent = oldValue;
+            alert('Error de conexión al actualizar la sala. Por favor, inténtelo de nuevo.');
+        })
+        .finally(() => {
+            if (saveButton) saveButton.remove();
+        });
+    }
+});
+</script>
+
+<%- include('partials/footer') %>

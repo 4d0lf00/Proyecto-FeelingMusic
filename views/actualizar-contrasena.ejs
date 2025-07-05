@@ -1,0 +1,48 @@
+<%- include('partials/header', { title: title, userTipo: userTipo, currentPath: '/actualizar-contrasena' }) %>
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Actualizar Contraseña</title>
+    <link rel="stylesheet" href="/css/actualizar-contrasena-profe.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+</head>
+<body>
+    <div class="container">
+        <header>
+            <i class="fas fa-chalkboard-teacher" style="color: rgb(0, 0, 0); font-size: 1.5em; margin-right: 10px;"></i>
+            Actualizar Contraseña
+        </header>
+        <form action="/actualizar-contrasena" method="POST" class="form">
+            <div class="input-box">
+                <label>Correo Electrónico</label>
+                <input type="email" name="email_personal" value="<%= usuario.email_personal %>" required />
+                <span class="check-icon">✔</span>
+            </div>
+            <div class="input-box">
+                <label>Contraseña Anterior</label>
+                <input type="password" name="contrasenaAnterior" placeholder="Ingrese la contraseña anterior" required />
+                <span class="check-icon">✔</span>
+            </div>
+            <div class="input-box">
+                <label>Nueva Contraseña</label>
+                <input type="password" name="nuevaContrasena" placeholder="Ingrese la nueva contraseña" required />
+                <span class="check-icon">✔</span>
+            </div>
+            <div class="input-box">
+                <label>Confirmar Nueva Contraseña</label>
+                <input type="password" name="confirmarContrasena" placeholder="Confirme la nueva contraseña" required />
+                <span class="check-icon">✔</span>
+            </div>
+            <button type="submit">Actualizar</button>
+        </form>
+        <div id="mensaje" style="color: red;"></div> <!-- Mensaje de error -->
+    </div>
+    <script src="/js/validacion-actualizar-contrasena.js"></script>
+</body>
+</html>
+
+<%- include('partials/footer') %>

@@ -1,0 +1,331 @@
+/* Estilos para el body y fondo */
+body {
+    margin-left: 35vw !important;
+    margin: 0;
+    padding: 0;
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    --s: 200px;
+            --c1: #1d1d1d;
+            --c2: #4e4f51;
+            --c3: #3c3c3c;
+            background: repeating-conic-gradient(
+                from 30deg,
+                #0000 0 120deg,
+                var(--c3) 0 180deg
+              )
+              calc(0.5 * var(--s)) calc(0.5 * var(--s) * 0.577),
+              repeating-conic-gradient(
+                from 30deg,
+                var(--c1) 0 60deg,
+                var(--c2) 0 120deg,
+                var(--c3) 0 180deg
+              );
+            background-size: var(--s) calc(var(--s) * 0.577);
+}
+
+/* From Uiverse.io by alexruix */ 
+body .card {
+    width: 90% !important; /* Cambiado para ser responsivo */
+    max-width: 320px !important; /* Máximo ancho en pantallas grandes */
+    padding: 2rem 1.5rem !important;
+    text-align: center !important;
+    background: #2a2b38 !important;
+    border-radius: 10px !important;
+    box-shadow: 0 0 40px rgba(0,0,0,0.3) !important;
+    position: relative !important;
+    margin: 1rem !important; /* Agregar margen para pantallas pequeñas */
+}
+
+/* Mensaje de error responsivo */
+#error-message {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #ff4444;
+    color: white;
+    padding: 1rem;
+    border-radius: 4px;
+    z-index: 1000;
+    width: 90%; /* Cambiado para ser responsivo */
+    max-width: 300px;
+    text-align: center;
+}
+
+/* Mensaje de alerta exitoso */
+#alert-message {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: #28a745; /* Color verde para éxito */
+    color: white;
+    padding: 1rem;
+    border-radius: 4px;
+    z-index: 1000;
+    width: 90%; /* Cambiado para ser responsivo */
+    max-width: 300px;
+    text-align: center;
+    display: none; /* Inicialmente oculto */
+}
+
+/*Inputs responsivos*/
+.field {
+    margin-top: .5rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: .5em;
+    background-color: #1f2029;
+    border-radius: 4px;
+    padding: .5em 1em;
+    width: 100%; /* Asegurar que ocupe todo el ancho disponible */
+    box-sizing: border-box; /* Incluir padding en el ancho total */
+}
+
+.input-icon {
+    height: 1em;
+    width: 1em;
+    min-width: 1em; /* Evitar que el ícono se encoja */
+    fill: #ffeba7;
+}
+
+.input-field {
+    background: none;
+    border: none;
+    outline: none;
+    width: 100%;
+    color: #d3d3d3;
+    padding: 0.5em;
+    font-size: 16px; /* Mejor tamaño para móviles */
+}
+
+.input-field::placeholder {
+    color: #8f8f8f;
+}
+
+/*Text responsivo*/
+body .title {
+    margin-bottom: 2rem !important;
+    font-size: clamp(1.5em, 5vw, 2em) !important; /* Tamaño de fuente responsivo */
+    font-weight: 500 !important;
+    color: #f5f5f5 !important;
+}
+
+/*Buttons responsivos*/
+.btn {
+    margin: 1.5rem auto;
+    display: block;
+    width: 80%;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    font-size: clamp(0.8em, 4vw, 0.9em); /* Tamaño de fuente responsivo */
+    text-transform: uppercase;
+    padding: 0.8em 1.2em;
+    background-color: #ffeba7;
+    color: #5e6681;
+    box-shadow: 0 8px 24px 0 rgb(255 235 167 / 20%);
+    transition: all .3s ease-in-out;
+    cursor: pointer;
+}
+
+.btn-link {
+    color: #f5f5f5;
+    display: block;
+    font-size: clamp(0.7em, 3vw, 0.75em); /* Tamaño de fuente responsivo */
+    transition: color .3s ease-out;
+    text-decoration: none;
+    margin-top: 1rem;
+}
+
+/* Media queries para diferentes tamaños de pantalla */
+@media screen and (max-width: 480px) {
+    body {
+        margin-left: 4vw !important;
+    }
+    .card {
+        padding: 1.5rem 1rem;
+    }
+    
+    .field {
+        padding: .4em 0.8em;
+    }
+    
+    .btn {
+        width: 90%; /* Botón más ancho en móviles */
+    }
+}
+
+@media screen and (max-height: 600px) {
+    .card {
+        margin: 0.5rem;
+        padding: 1rem;
+    }
+    
+    .title {
+        margin-bottom: 1rem;
+    }
+    
+    .btn {
+        margin: 1rem auto;
+    }
+}
+
+/*Hover & focus*/
+.field input:focus::placeholder {
+    opacity: 0;
+    transition: opacity .3s;
+}
+
+.btn:hover {
+    background-color: #5e6681;
+    color: #ffeba7;
+    box-shadow: 0 8px 24px 0 rgb(16 39 112 / 20%);
+}
+
+.btn-link:hover {
+    color: #ffeba7;
+}
+
+/* Prevenir zoom en inputs en iOS */
+@media screen and (-webkit-min-device-pixel-ratio: 0) { 
+    select,
+    textarea,
+    input {
+        font-size: 16px;
+    }
+}
+
+/* Estilos para el select */
+select.input-field {
+    appearance: none;
+    -webkit-appearance: none;
+    -moz-appearance: none;
+    background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffeba7' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+    background-repeat: no-repeat;
+    background-position: right 1rem center;
+    background-size: 1em;
+    padding-right: 2.5em;
+    cursor: pointer;
+}
+
+select.input-field option {
+    background-color: #2a2b38;
+    color: #d3d3d3;
+    padding: 0.5em;
+}
+
+select.input-field:focus {
+    border-color: #ffeba7;
+    outline: none;
+}
+
+/* Estilo para la opción por defecto */
+select.input-field option[value=""] {
+    color: #8f8f8f;
+}
+
+/* Ajuste para el hover de las opciones */
+select.input-field option:hover {
+    background-color: #ffeba7;
+    color: #2a2b38;
+}
+
+/* Estilo cuando el select está abierto */
+select.input-field:focus {
+    box-shadow: 0 0 0 2px rgba(255, 235, 167, 0.2);
+}
+
+select.input-field[multiple] {
+    height: auto;
+    min-height: 100px;
+    padding: 8px;
+}
+
+select.input-field[multiple] option {
+    padding: 8px;
+    margin: 2px 0;
+    border-radius: 4px;
+}
+
+select.input-field[multiple] option:checked {
+    background: linear-gradient(#ffeba7, #ffeba7);
+    color: #2a2b38;
+}
+
+/* Instrucciones para selección múltiple */
+.select-instructions {
+    color: #8f8f8f;
+    font-size: 0.8em;
+    margin-top: 4px;
+    text-align: left;
+}
+
+.especialidades-container {
+    width: 100%;
+    text-align: left;
+}
+
+.especialidad-label {
+    color: #ffeba7;
+    font-size: 0.9em;
+    margin-bottom: 10px;
+    display: block;
+}
+
+.checkbox-group {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+    margin-top: 8px;
+}
+
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.checkbox-item input[type="checkbox"] {
+    appearance: none;
+    -webkit-appearance: none;
+    width: 18px;
+    height: 18px;
+    border: 2px solid #ffeba7;
+    border-radius: 4px;
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s ease;
+}
+
+.checkbox-item input[type="checkbox"]:checked {
+    background-color: #ffeba7;
+}
+
+.checkbox-item input[type="checkbox"]:checked::before {
+    content: '✓';
+    position: absolute;
+    color: #2a2b38;
+    font-size: 14px;
+    font-weight: bold;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+}
+
+.checkbox-item label {
+    color: #d3d3d3;
+    font-size: 0.9em;
+    cursor: pointer;
+}
+
+/* Responsive */
+@media screen and (max-width: 480px) {
+    .checkbox-group {
+        grid-template-columns: repeat(1, 1fr);
+    }
+}

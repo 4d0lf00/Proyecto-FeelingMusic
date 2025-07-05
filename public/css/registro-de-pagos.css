@@ -1,0 +1,441 @@
+/* Import Google font - Poppins */
+@import url("https://fonts.googleapis.com/css2?family=Poppins:wght@200;300;400;500;600;700&display=swap");
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: "Poppins", sans-serif;
+}
+
+body {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  background: repeating-conic-gradient(
+        from 30deg,
+        #0000 0 120deg,
+        var(--c3) 0 180deg
+      )
+      calc(0.5 * var(--s)) calc(0.5 * var(--s) * 0.577),
+    repeating-conic-gradient(
+      from 30deg,
+      var(--c1) 0 60deg,
+      var(--c2) 0 120deg,
+      var(--c3) 0 180deg
+    );
+  background-size: var(--s) calc(var(--s) * 0.577);
+  --s: 200px; /* control del tamaño */
+  --c1: #1d1d1d;
+  --c2: #4e4f51;
+  --c3: #3c3c3c;
+}
+
+.modal {
+  display: none; /* Oculto por defecto */
+  position: fixed; 
+  z-index: 1; 
+  left: 0;
+  top: 0;
+  width: 100%; 
+  height: 100%; 
+  overflow: auto; 
+  background-color: rgb(0,0,0); 
+  background-color: rgba(0,0,0,0.4); 
+}
+
+.modal-content {
+  position: relative; /* Asegúrate de que el contenido del modal tenga esta propiedad */
+  background-color: #fefefe;
+  margin: 15% auto; 
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%; 
+}
+
+
+.modal {
+  display: none; /* Oculto por defecto */
+  position: fixed; 
+  z-index: 1; 
+  left: 0;
+  top: 0;
+  width: 100%; 
+  height: 100%; 
+  overflow: auto; 
+  background-color: rgba(0, 0, 0, 0.5); 
+}
+
+.modal-content {
+  background-color: #fefefe;
+  margin: 10% auto; 
+  padding: 20px;
+  border: 1px solid #888;
+  width: 80%; 
+  max-width: 600px; /* Limitar el ancho máximo */
+  border-radius: 8px; /* Bordes redondeados */
+}
+
+#listaAlumnos {
+  display: flex;
+  flex-wrap: wrap; /* Permitir que los botones se envuelvan */
+  gap: 10px; /* Espacio entre botones */
+}
+
+.button-alumno {
+  /* background-color: #6c757d; */ /* Color gris oscuro */
+  color: white; /* Color del texto */
+  border: none; /* Sin borde */
+  padding: 10px 15px; /* Espaciado interno */
+  border-radius: 5px; /* Bordes redondeados */
+  /*cursor: pointer; Cambiar cursor al pasar el mouse */
+  /*transition: background-color 0.3s, color 0.3s; Transición suave */
+  font-size: 1rem; /* Ajusta el tamaño de la fuente */
+}
+
+/*
+.button-alumno:hover {
+  background-color: #343a40;  Un color más oscuro 
+  color: #ffffff;  Mantener el texto blanco 
+}
+*/
+
+
+/* Estilo personalizado del contenedor */
+.container {
+  width: 100%;
+  max-width: 700px;
+  background: rgba(255, 255, 255, 0.9); /* Fondo semitransparente */
+  padding: 25px;
+  border-radius: 8px;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
+  margin-top: 20px;
+  position: relative; /* Cambiado para mantener el espacio */
+}
+
+header {
+  font-size: 1.5rem;
+  color: #333;
+  font-weight: 500;
+  text-align: center;
+  display: flex; /* Permite alinear el ícono y el texto */
+  align-items: center; /* Alinea verticalmente */
+  justify-content: center; /* Centra el contenido horizontalmente */
+}
+
+.container header {
+  font-size: 1.5rem;
+  color: #333;
+  font-weight: 500;
+  text-align: center;
+}
+
+.container .form {
+  margin-top: 30px;
+}
+
+.form .input-box {
+  width: 100%;
+  margin-top: 20px;
+}
+
+.input-box label {
+  color: #333;
+}
+
+.form :where(.input-box input, .select-box) {
+  position: relative;
+  height: 50px;
+  width: 100%;
+  outline: none;
+  font-size: 1rem;
+  color: #707070;
+  margin-top: 8px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 0 15px;
+}
+
+.input-box input:focus {
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1);
+}
+
+.form .column {
+  display: flex;
+  column-gap: 15px;
+}
+
+.form .gender-box {
+  margin-top: 20px;
+}
+
+.gender-box h3 {
+  color: #333;
+  font-size: 1rem;
+  font-weight: 400;
+  margin-bottom: 8px;
+}
+
+.gender-option {
+  display: flex;
+  align-items: center;
+  column-gap: 20px;
+  flex-wrap: wrap;
+}
+
+.radio-button {
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+}
+
+.radio-button:hover {
+  transform: translateY(-2px);
+}
+
+.radio-button input[type="radio"] {
+  display: none; /* Oculta el botón de radio original */
+}
+
+.radio-checkmark {
+  display: inline-block;
+  position: relative;
+  width: 16px;
+  height: 16px;
+  margin-right: 10px;
+  border: 2px solid #333;
+  border-radius: 50%;
+}
+
+.radio-checkmark:before {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%) scale(0);
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: #333;
+  transition: all 0.2s ease-in-out;
+}
+
+.radio-button input[type="radio"]:checked ~ .radio-checkmark:before {
+  transform: translate(-50%, -50%) scale(1); /* Muestra el estado seleccionado */
+}
+
+.address :where(input, .select-box) {
+  margin-top: 15px;
+}
+
+.select-box select {
+  height: 100%;
+  width: 100%;
+  outline: none;
+  border: none;
+  color: #707070;
+  font-size: 1rem;
+}
+
+
+button {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 10px;
+  background-color: #a38560;
+  background-image: linear-gradient(315deg, #a38560 0%, #e0d4ae 74%); /* Gradiente dorado */
+  font-family: "Montserrat", sans-serif;
+  box-shadow: 0px 6px 24px 0px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  cursor: pointer;
+  border: none;
+  padding: 10px 20px; /* Aumenta el padding para hacerlo más grande */
+  font-size: 9px;
+  font-weight: 700;
+  color: #fff;
+  margin: 20px auto;
+  width: auto;
+}
+
+button:after {
+  content: " ";
+  width: 0%;
+  height: 100%;
+  background-color: rgba(211, 211, 211, 0.2); /* Aumenta la opacidad */
+  background-image: linear-gradient(315deg, rgba(211, 211, 211, 0.5) 0%, rgba(87, 96, 111, 0.5) 74%);
+  position: absolute;
+  transition: all 0.4s ease-in-out;
+  right: 0;
+  z-index: 1; /* Asegúrate de que el pseudo-elemento tenga un z-index menor */
+}
+
+button:hover::after {
+  right: auto;
+  left: 0;
+  width: 100%;
+}
+
+button span {
+  text-align: center;
+  text-decoration: none;
+  width: 100%;
+  padding: 18px 25px;
+  color: #fff;
+  font-size: 1.125em;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  z-index: 2; /* Asegúrate de que el texto tenga un z-index mayor */
+  position: relative; /* Necesario para que el z-index funcione */
+  transition: all 0.3s ease-in-out;
+}
+
+button:hover span {
+  color: #fff;
+  animation: scaleUp 0.3s ease-in-out;
+}
+
+
+
+
+
+
+@keyframes scaleUp {
+  0% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(0.95);
+  }
+
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Responsive */
+@media screen and (max-width: 500px) {
+  .form .column {
+    flex-wrap: wrap;
+  }
+  .form .gender-option {
+    row-gap: 15px;
+  }
+}
+
+/* Estilos para el icono de check */
+.input-box {
+  position: relative;
+}
+
+.check-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  display: none;
+  color: #4CAF50;
+  font-size: 1.2em;
+}
+
+.check-icon.show {
+  display: block;
+  animation: fadeIn 0.5s;
+}
+
+@keyframes fadeIn {
+  from {
+      opacity: 0;
+      transform: translateY(-50%) scale(0.5);
+  }
+  to {
+      opacity: 1;
+      transform: translateY(-50%) scale(1);
+  }
+}
+
+/* Ajuste para el input cuando es válido */
+.input-box input:valid {
+  padding-right: 30px; /* Espacio para el icono */
+}
+
+.input-box input:valid + .check-icon {
+  display: block;
+}
+
+/* Estilos para button-modal */
+.button-modal {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 10px;
+  background-color: #a38560;
+  background-image: linear-gradient(315deg, #a38560 0%, #e0d4ae 74%); /* Gradiente dorado */
+  font-family: "Montserrat", sans-serif;
+  box-shadow: 0px 6px 24px 0px rgba(0, 0, 0, 0.2);
+  overflow: hidden;
+  cursor: pointer;
+  border: none;
+  padding: 5px 10px;
+  font-size: 9px;
+  font-weight: 700;
+  color: #fff;
+  margin: 20px auto;
+  width: auto;
+}
+
+.button-modal:after {
+  content: none; /* Elimina el efecto del hover */
+}
+
+.button-modal span {
+  text-align: center;
+  text-decoration: none;
+  width: 100%;
+  padding: 18px 25px;
+  color: #fff;
+  font-size: 1.125em;
+  font-weight: 700;
+  letter-spacing: 0.3em;
+  z-index: 20;
+  transition: none; /* Elimina la transición */
+}
+
+.button-modal:hover span {
+  color: #fff; /* Mantiene el color del texto en blanco */
+}
+
+/* Estilo para el botón "Buscar Alumno" */
+#buscarAlumnoBtn {
+    width: 100%; /* Asegura que el botón ocupe todo el ancho disponible */
+    padding: 10px; /* Ajusta el padding para que se vea bien */
+    font-size: 1rem; /* Ajusta el tamaño de la fuente */
+    background-color: #a38560; /* Color de fondo */
+    color: white; /* Color del texto */
+    border: none; /* Sin borde */
+    border-radius: 5px; /* Bordes redondeados */
+    cursor: pointer; /* Cambia el cursor al pasar sobre el botón */
+    transition: background-color 0.3s; /* Transición suave */
+}
+
+/*
+#buscarAlumnoBtn:hover {
+    background-color: #8a6b4e; /* Color al pasar el mouse 
+} */
+
+.close {
+    font-size: 24px; /* Aumenta el tamaño de la fuente */
+    color: #000; /* Asegúrate de que sea un color visible */
+    cursor: pointer; /* Cambia el cursor al pasar sobre la X */
+    padding: 10px; /* Agrega un poco de espacio alrededor */
+    position: absolute; /* Asegúrate de que esté posicionado correctamente */
+    top: 10px; /* Ajusta la posición vertical */
+    right: 10px; /* Ajusta la posición horizontal */
+    z-index: 10; /* Asegúrate de que esté por encima de otros elementos */
+}

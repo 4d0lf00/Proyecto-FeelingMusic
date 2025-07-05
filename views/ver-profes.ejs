@@ -1,0 +1,842 @@
+<%- include('partials/header', { title: title, userTipo: userTipo, currentPath: '/ver-profes' }) %>
+
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ver Profesores</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            /* height: 100vh; */ /* Comentado para permitir scroll si el contenido es largo */
+            /* display: flex; */ /* Comentado, el main-content manejará el flex si es necesario con el sidebar */
+            /* justify-content: center; */
+            /* align-items: center; */
+            --s: 200px;
+            --c1: #1d1d1d;
+            --c2: #4e4f51;
+            --c3: #3c3c3c;
+            background: repeating-conic-gradient(
+                from 30deg,
+                #0000 0 120deg,
+                var(--c3) 0 180deg
+              )
+              calc(0.5 * var(--s)) calc(0.5 * var(--s) * 0.577),
+              repeating-conic-gradient(
+                from 30deg,
+                var(--c1) 0 60deg,
+                var(--c2) 0 120deg,
+                var(--c3) 0 180deg
+              );
+            background-size: var(--s) calc(var(--s) * 0.577);
+            display: flex; /* Necesario para el layout con sidebar */
+        }
+
+        .container-profesores { /* Renombrado de .container para especificidad */
+            width: 100%; /* Ocupará el espacio restante al lado del sidebar */
+            padding: 20px;
+            color: #d1d1d1;
+            /* max-height: 90vh; */ /* Eliminado, el scroll de tabla lo maneja .table-responsive-custom */
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
+        
+        .container-profesores h1 {
+            text-align: center;
+            color: #FEDB37; /* Color dorado para el título */
+            background: linear-gradient(to bottom, #FEDB37, #c4a34e);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 25px;
+        }
+
+        #buscarForm {
+            margin-bottom: 20px;
+            background-color: rgba(0,0,0,0.8); /* Fondo ligeramente transparente para el form */
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #4e4f51;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+            /* position: sticky; /* Considerar si el form debe ser sticky */
+            /* top: 0; */
+            /* z-index: 10; */
+        }
+
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #b0b0b0; /* Color más suave para labels */
+            font-weight: bold;
+        }
+
+        .form-group input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            border-radius: 4px;
+            border: 1px solid #4e4f51;
+            background-color: #2c2c2c; /* Fondo oscuro para input */
+            color: #d1d1d1;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .form-group input[type="text"]:focus {
+            border-color: #FEDB37;
+            box-shadow: 0 0 0 0.2rem rgba(254, 219, 55, 0.25);
+            outline: none;
+        }
+
+
+        /* ESTILOS PARA LA TABLA RESPONSIVA DE ALUMNOS */
+        .table-wrapper-profesores { /* Contenedor general para la tabla, similar a schedule-content-wrapper */
+            background-color: #000;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid #4e4f51;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            margin-top: 20px;
+            width: 100%; /* Ocupar todo el ancho del .container-profesores */
+            box-sizing: border-box;
+        }
+
+        .table-responsive-custom { /* Div que envuelve la tabla para el scroll */
+            overflow-x: auto;
+            -webkit-overflow-scrolling: touch;
+             width: 100%;
+        }
+        
+        .table-profesores-responsive {
+            table-layout: fixed; /* Columnas de ancho fijo en escritorio */
+            width: 100%;
+            min-width: 1200px; /* Un min-width grande para forzar scroll horizontal si es necesario */
+            border-collapse: separate; 
+            border-spacing: 2px; 
+            background-color: #1c1c1c; 
+        }
+
+        .table-profesores-responsive th,
+        .table-profesores-responsive td {
+            vertical-align: middle;
+            padding: 12px 10px; 
+            border: none; 
+            border-radius: 3px; 
+            color: #e0e0e0;
+            overflow: hidden; /* Para controlar desbordamiento de texto */
+            text-overflow: ellipsis; /* Añadir '...' si el texto es muy largo */
+            white-space: nowrap; /* Evitar que el texto se parta en múltiples líneas por defecto */
+        }
+        
+        .table-profesores-responsive th {
+             background-color: #333;
+             color: #FEDB37; /* Dorado para cabeceras */
+             text-align: center;
+             white-space: nowrap; /* Evitar que el texto de cabecera se parta */
+        }
+        .table-profesores-responsive tbody tr td {
+            background-color: #2a2a2a;
+        }
+        .table-profesores-responsive tbody tr:hover td {
+            background-color: #313131; /* Un poco más claro en hover */
+        }
+
+        /* Columna de Acciones Fija */
+        .table-profesores-responsive th:first-child,
+        .table-profesores-responsive td:first-child { 
+            width: 100px; 
+            min-width: 100px; 
+            max-width: 100px;
+            text-align: center;
+            position: sticky;
+            left: 0;
+            z-index: 2;
+            background-color: #333; /* Fondo para la cabecera de acciones */
+        }
+        .table-profesores-responsive tbody td:first-child {
+            background-color: #2a2a2a; /* Fondo para las celdas de acciones en el body */
+             /* Para asegurar que los botones no se corten si el contenido es poco */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        /* Anchos sugeridos para otras columnas (ajustar según necesidad) */
+        .table-profesores-responsive th.col-nombre, .table-profesores-responsive td.col-nombre { width: 150px; min-width: 150px; }
+        .table-profesores-responsive th.col-apellido, .table-profesores-responsive td.col-apellido { width: 150px; min-width: 150px; }
+        .table-profesores-responsive th.col-instrumento, .table-profesores-responsive td.col-instrumento { width: 120px; min-width: 120px; }
+        .table-profesores-responsive th.col-modalidad, .table-profesores-responsive td.col-modalidad { width: 100px; min-width: 100px; }
+        .table-profesores-responsive th.col-monto, .table-profesores-responsive td.col-monto { width: 90px; min-width: 90px; text-align: right; padding-right: 15px;}
+        .table-profesores-responsive th.col-dia-pago, .table-profesores-responsive td.col-dia-pago { width: 80px; min-width: 80px; text-align: center;}
+        .table-profesores-responsive th.col-comentarios, .table-profesores-responsive td.col-comentarios { 
+            width: 200px; min-width: 200px; 
+            white-space: normal; /* Permitir wrap para comentarios */
+            overflow-wrap: break-word;
+        }
+        .table-profesores-responsive th.col-celular, .table-profesores-responsive td.col-celular { width: 130px; min-width: 130px; }
+        .table-profesores-responsive th.col-rut, .table-profesores-responsive td.col-rut { width: 120px; min-width: 120px; }
+        .table-profesores-responsive th.col-fecha-registro, .table-profesores-responsive td.col-fecha-registro { width: 120px; min-width: 120px; text-align: center;}
+        .table-profesores-responsive th.col-email, .table-profesores-responsive td.col-email { width: 180px; min-width: 180px; }
+
+
+        /* Permitir wrap en celdas editables cuando el input está activo */
+        .table-profesores-responsive td .editing-field {
+            white-space: normal;
+        }
+
+
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: radial-gradient(ellipse farthest-corner at right bottom, #FEDB37 0%, #FDB931 8%, #9f7928 30%, #8A6E2F 40%, transparent 80%),
+            radial-gradient(ellipse farthest-corner at left top, #FFFFFF 0%, #FFFFAC 8%, #D1B464 25%, #5d4a1f 62.5%, #5d4a1f 100%);
+            color: white;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            border-radius: 4px;
+            text-align: center;
+            border: none;
+            font-weight: bold;
+        }
+
+        .btn:hover {
+            background: radial-gradient(ellipse farthest-corner at right bottom, #FEDB37 0%, #FDB931 8%, #9f7928 30%, #8A6E2F 40%, transparent 80%),
+            radial-gradient(ellipse farthest-corner at left top, #FFFFFF 0%, #FFFFAC 12%, #D1B464 35%, #5d4a1f 40%, #5d4a1f 80%);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 
+                0 6px 6px rgba(0, 0, 0, 0.23);
+            color: #e0e0e0; /* Texto más claro en hover */
+        }
+        .btn i { /* Espacio para iconos en botones */
+            margin-right: 5px;
+        }
+
+        .sort-icon {
+            width: 12px;
+            height: auto;
+            margin-left: 5px;
+            cursor: pointer;
+            filter: brightness(0) invert(1); /* Icono blanco */
+            opacity: 0.7;
+        }
+        .sort-icon:hover {
+            opacity: 1;
+        }
+
+        th .asc .sort-icon::after { /* No usar ::after en img, se usa clase en TH */
+            content: " ▲";
+            color: #FEDB37;
+        }
+
+        th .desc .sort-icon::after {
+            content: " ▼";
+            color: #FEDB37;
+        }
+         th.asc .sort-icon, th.desc .sort-icon {
+            opacity: 1;
+        }
+
+
+        /* Estilos para edición en línea */
+        .editable-field {
+            cursor: pointer;
+            /* padding: 5px; */ /* Ya definido en td */
+            border-radius: 3px;
+            transition: background-color 0.2s ease;
+            min-height: 20px; 
+            position: relative; /* Para el icono de editar */
+        }
+        .editable-field:hover::after { /* Icono de lápiz al hacer hover */
+            content: '\f044'; /* Código de FontAwesome para pencil-alt */
+            font-family: 'Font Awesome 5 Free'; /* O 6 Free si es la que usas */
+            font-weight: 900; /* Para iconos sólidos */
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #FEDB37;
+            opacity: 0.7;
+            font-size: 0.9em;
+        }
+        .editable-field:hover {
+            background-color: #414141; /* Más oscuro que el hover de la fila */
+            /* outline: 1px dashed #FEDB37; */ /* Se reemplaza por el icono */
+        }
+        .editing-field { /* Input/Textarea cuando se está editando */
+            padding: 8px 10px;
+            border: 1px solid #FEDB37;
+            background-color: #1e1e1e;
+            color: #fff;
+            border-radius: 4px;
+            width: calc(100% - 20px); /* Ajustar para el padding */
+            box-sizing: border-box;
+            font-size: inherit; /* Heredar tamaño de fuente de la celda */
+            font-family: inherit;
+        }
+        textarea.editing-field {
+            min-height: 60px; /* Altura mínima para textareas */
+            resize: vertical;
+        }
+
+
+        .btn-action {
+            margin: 0 2px; /* Reducido margen */
+            padding: 6px 10px; 
+            font-size: 0.85rem;
+            line-height: 1; /* Para alinear bien el icono */
+            background: none; /* Quitar fondo por defecto */
+            border: 1px solid #555;
+            color: #ccc;
+        }
+        .btn-action:hover {
+             border-color: #FEDB37;
+             color: #FEDB37;
+             background-color: rgba(254, 219, 55, 0.1);
+             box-shadow: none;
+        }
+
+        .btn-save-profesor { /* Estilo específico para guardar */
+            /* border-color: #28a745; */
+            /* color: #28a745; */
+        }
+         .btn-save-profesor:hover {
+            /* border-color: #218838; */
+            /* color: #fff; */
+            /* background-color: #218838; */
+        }
+        .btn-delete-profesor {
+            /* border-color: #dc3545; */
+            /* color: #dc3545; */
+        }
+        .btn-delete-profesor:hover {
+            /* border-color: #c82333; */
+            /* color: #fff; */
+            /* background-color: #c82333; */
+        }
+
+        /* Feedback messages */
+        .alert-custom {
+            margin: 15px 0;
+            color: #fff;
+            padding: 12px 18px;
+            border-radius: 5px;
+            text-align: center;
+            font-size: 0.95rem;
+        }
+        .alert-success-custom {
+            background-color: rgba(40, 167, 69, 0.85); /* Verde con transparencia */
+            border: 1px solid #1e7e34;
+        }
+        .alert-danger-custom {
+            background-color: rgba(220, 53, 69, 0.85); /* Rojo con transparencia */
+            border: 1px solid #b02a37;
+        }
+        .feedback-area {
+            margin-bottom: 15px;
+            position: sticky; /* Para que el feedback sea visible al hacer scroll en la tabla */
+            top: 60px; /* Ajustar si el form de búsqueda es sticky y más alto */
+            z-index: 5; /* Por encima de la tabla pero debajo de modales, etc. */
+        }
+        
+        /* Mejoras para el main-content cuando hay sidebar */
+        .main-content {
+            flex-grow: 1;
+            padding: 20px; /* Espacio interno */
+            margin-left: 250px; /* Espacio para el sidebar expandido por defecto */
+            transition: margin-left 0.3s ease-in-out;
+            box-sizing: border-box;
+            display: flex; /* Para que el .container-alumnos se expanda */
+            flex-direction: column; /* Los hijos se apilan verticalmente */
+        }
+        .main-content.sidebar-collapsed {
+            margin-left: 75px; /* Espacio para el sidebar colapsado */
+        }
+
+        /* Estilos responsivos para la tabla en móviles */
+        @media (max-width: 768px) { /* Ajustar breakpoint si es necesario */
+            .main-content {
+                margin-left: 0 !important; /* Sin margen para el sidebar en móviles (se ocultará o será overlay) */
+                padding: 10px;
+            }
+            .container-profesores {
+                padding: 10px;
+            }
+            .container-profesores h1 {
+                font-size: 1.8rem;
+                margin-bottom: 15px;
+            }
+            #buscarForm {
+                padding: 15px;
+            }
+
+            .table-responsive-custom {
+                max-height: 65vh; /* Altura máxima para el scroll vertical */
+                overflow-y: auto;
+            }
+            .table-profesores-responsive {
+                table-layout: auto; /* Permitir que las columnas se ajusten */
+                width: max-content !important; /* La tabla toma el ancho de su contenido */
+                min-width: 0; /* Resetear el min-width de escritorio */
+            }
+            .table-profesores-responsive th, .table-profesores-responsive td {
+                white-space: nowrap; /* Forzar no-wrap en móvil para que el scroll X funcione bien con table-layout:auto */
+                 font-size: 0.85rem; /* Fuente más pequeña en móviles */
+                 padding: 8px 6px;
+            }
+             /* Ajustar la columna de acciones fija para móviles */
+            .table-profesores-responsive th:first-child,
+            .table-profesores-responsive td:first-child {
+                width: 80px; min-width: 80px; max-width: 80px;
+                font-size: 0.8rem; /* Más pequeño para botones de acción */
+            }
+            .btn-action {
+                padding: 4px 6px;
+                font-size: 0.75rem;
+            }
+            .btn-action i { margin-right: 3px; }
+
+
+            /* Ejemplo de ocultar algunas columnas menos importantes en móvil */
+            /* .table-profesores-responsive .col-comentarios,
+            .table-profesores-responsive .col-fecha-registro {
+                display: none;
+            } */
+        }
+
+    </style>
+</head>
+<body>
+    <main class="main-content">
+        <div class="container-profesores">
+            <h1><i class="fas fa-users"></i> Lista de profesores</h1>
+
+            <div id="feedbackArea" class="feedback-area"></div>
+
+            <!-- Formulario de filtro -->
+            <form id="buscarForm">
+                <div class="form-group">
+                    <label for="busqueda">Buscar Profesor:</label>
+                    <input type="text" id="busqueda" name="busqueda" placeholder="Nombre, Apellido, RUT, Email...">
+                </div>
+                <button type="submit" class="btn"><i class="fas fa-search"></i> Buscar</button>
+            </form>
+
+            <!-- Contenedor de resultados con scroll -->
+             <div class="table-wrapper-profesores">
+            <div class="table-responsive-custom">
+                <table id="tablaProfesores" class="table-profesores-responsive">
+                    <thead>
+                        <tr>                    
+                            <th>Acciones</th> 
+                            <th class="col-nombre">Nombre <img src="/images/sort-icon.png" class="sort-icon" alt="ordenar"></th>
+                            <th class="col-apellido">Apellido <img src="/images/sort-icon.png" class="sort-icon" alt="ordenar"></th>                    
+                            <th class="col-email">Email <img src="/images/sort-icon.png" class="sort-icon" alt="ordenar"></th>
+                            <th class="col-disciplina">Disciplina <img src="/images/sort-icon.png" class="sort-icon" alt="ordenar"></th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <!-- Aquí se mostrarán los resultados -->
+                    </tbody>
+                </table>
+            </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        // Le da formato al RUT
+        function formatearRUT(rut) {
+            if (!rut) return 'no registrado';
+            rut = String(rut).replace(/[.-]/g, '');
+            if (rut.length < 2) return rut;
+            // Solo aplicar formato si tiene más de 1 caracter para evitar ".-undefined"
+            const cuerpo = rut.slice(0, -1);
+            const dv = rut.slice(-1);
+            if (!cuerpo) return dv; // Si solo hay dígito verificador
+            return cuerpo.replace(/\B(?=(\d{3})+(?!\d))/g, ".") + '-' + dv;
+        }
+
+        function showFeedback(message, type = 'info') {
+            const feedbackArea = document.getElementById('feedbackArea');
+            if (!feedbackArea) return;
+            feedbackArea.innerHTML = ''; 
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert-custom alert-${type === 'success' ? 'success' : (type === 'error' ? 'danger' : 'info')}-custom`;
+            alertDiv.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : (type === 'error' ? 'exclamation-triangle' : 'info-circle')}"></i> ${message}`;
+            feedbackArea.appendChild(alertDiv);
+
+            setTimeout(() => {
+                alertDiv.style.transition = 'opacity 0.5s ease';
+                alertDiv.style.opacity = '0';
+                setTimeout(() => alertDiv.remove(), 500);
+            }, 4000);
+        }
+
+        function renderizarTablaProfesores(profesores) {
+            const tbody = document.querySelector('#tablaProfesores tbody');
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            if (profesores.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="12" style="text-align:center; padding: 20px; background-color: #2a2a2a;">No se encontraron profesores.</td></tr>';
+                return;
+            }
+            profesores.forEach(profesor => {
+                const row = document.createElement('tr');
+                row.dataset.profesorId = profesor.id;   
+
+                const accionesCell = row.insertCell();
+                accionesCell.innerHTML = `
+                    <button class="btn btn-sm btn-action btn-save-profesor" style="display:none;" title="Guardar Cambios"><i class="fas fa-save"></i></button>
+                    <button class="btn btn-sm btn-action btn-delete-profesor" title="Eliminar Profesor"><i class="fas fa-trash-alt"></i></button>
+                `;
+
+               //añadir clases de columna a las celdas de datos
+               row.insertCell().outerHTML = `<td class="editable-field col-nombre" data-field="nombre">${profesor.nombre || ''}</td>`;
+               row.insertCell().outerHTML = `<td class="editable-field col-apellido" data-field="apellido">${profesor.apellido || ''}</td>`;
+               row.insertCell().outerHTML = `<td class="editable-field col-email" data-field="email">${profesor.email || ''}</td>`;
+               row.insertCell().outerHTML = `<td class="editable-field col-disciplina" data-field="especialidad">${profesor.especialidad || ''}</td>`;
+
+               tbody.appendChild(row);
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            //cargar todos los profesores al inicio
+            fetch('/api/buscar-profesores?nombre=')
+                .then(response => response.json())
+                .then(data => renderizarTablaProfesores(data))
+                .catch(error => {
+                    console.error('Error cargando profesores inicialmente:', error);
+                    showFeedback('Error al cargar la lista inicial de profesores.', 'error');
+                });
+
+            //listener para el sidebar
+            const sidebarToggle = document.querySelector('.sidebar-toggle-btn');
+            const mainContent = document.querySelector('.main-content');
+            const sidebar = document.querySelector('.sidebar');
+            
+            if (sidebarToggle && mainContent && sidebar) {
+                sidebarToggle.addEventListener('click', () => {
+                    sidebar.classList.toggle('collapsed');
+                    mainContent.classList.toggle('sidebar-collapsed');
+                });
+            }
+        });
+
+
+
+        // Evento para buscar profesores
+        document.getElementById('buscarForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const busqueda = document.getElementById('busqueda').value;
+
+            fetch(`/api/buscar-profesores?nombre=${encodeURIComponent(busqueda)}`)
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => { 
+                        throw new Error(`Error del servidor: ${response.status}. Detalles: ${text}`); 
+                    });
+                }
+                return response.json();
+            })  
+            .then(data => {
+                renderizarTablaProfesores(data);
+            })
+            .catch(error => {
+                console.error('Error en búsqueda:', error);
+                showFeedback('Error al buscar profesores: ' + error.message, 'error');
+                const tbody = document.querySelector('#tablaProfesores tbody');
+                if(tbody) tbody.innerHTML = `<tr><td colspan="12" style="text-align:center; padding: 20px; background-color: #2a2a2a;">Error al cargar datos. Intente nuevamente.</td></tr>`;
+            });
+        });
+
+        const tablaResultados = document.getElementById('tablaProfesores');
+
+        if (tablaResultados) {
+            tablaResultados.addEventListener('click', function(event) {
+                const targetCell = event.target.closest('td.editable-field');
+                if (event.target.closest('button')) return;
+
+                if (!targetCell || targetCell.querySelector('input, textarea')) return;
+
+                const originalValue = targetCell.textContent.trim();
+                const fieldName = targetCell.dataset.field;
+                targetCell.dataset.originalValue = originalValue; // GUARDAR VALOR ORIGINAL
+
+                let inputElement;
+                if (fieldName === 'comentarios') {
+                    inputElement = document.createElement('textarea');
+                    inputElement.rows = 3; // Un poco más de espacio para comentarios
+                } else {
+                    inputElement = document.createElement('input');
+                    inputElement.type = (fieldName === 'numero_telefono' || fieldName === 'email') ? fieldName : 'text';
+                    if (fieldName === 'email') inputElement.type = 'email';
+                }
+                inputElement.className = 'editing-field';
+                inputElement.name = fieldName;
+                inputElement.value = originalValue;
+                
+                targetCell.innerHTML = '';
+                targetCell.appendChild(inputElement);
+                inputElement.focus();
+                if (typeof inputElement.select === 'function') inputElement.select();
+
+                const row = targetCell.closest('tr');
+                const saveButton = row.querySelector('.btn-save-profesor');
+                if (saveButton) saveButton.style.display = 'inline-flex'; // Para alinear icono y texto si lo tuviera
+
+                function revertToTextView(useOriginal = false) {
+                    // Si useOriginal es true (Escape presionado), usar el valor original almacenado.
+                    // Si no, usar el valor actual del input (clic fuera).
+                    const valueToSet = useOriginal 
+                        ? (targetCell.dataset.originalValue !== undefined ? targetCell.dataset.originalValue : originalValue) 
+                        : inputElement.value;
+                    targetCell.textContent = valueToSet; 
+                    if (saveButton) saveButton.style.display = 'none';
+                    document.removeEventListener('click', handleOutsideClickOrEsc, true);
+                    inputElement.removeEventListener('keydown', handleInputKeyDown); // Quitar el listener específico del input
+                }
+                
+                function handleInputKeyDown(e){
+                    if (e.key === 'Escape') {
+                        revertToTextView(true);
+                    } else if (e.key === 'Enter') {
+                        e.preventDefault();
+                        const saveButton = targetCell.closest('tr').querySelector('.btn-save-profesor');
+                        if (saveButton) saveButton.click();
+                    }
+                }
+                
+                function handleOutsideClickOrEsc(e){
+                    // No revertir si el clic fue en el botón de guardar
+                    if (e.target.closest('.btn-save-profesor')) return; 
+
+                    // Usar la misma lógica que en filtro2.ejs para evitar problemas con el saveButton
+                    const row = targetCell.closest('tr');
+                    const saveButton = row.querySelector('.btn-save-profesor');
+                    if (!targetCell.contains(e.target) && e.target !== saveButton) {
+                        revertToTextView();
+                    }
+                }
+
+                document.addEventListener('click', handleOutsideClickOrEsc, true);
+                inputElement.addEventListener('keydown', handleInputKeyDown);
+            });
+
+            tablaResultados.addEventListener('click', async function(event) {
+                const saveButton = event.target.closest('.btn-save-profesor');
+                const deleteButton = event.target.closest('.btn-delete-profesor');
+
+                if (saveButton) {
+                    const row = saveButton.closest('tr');
+                    const profesorId = row.dataset.profesorId;
+                    const editableInputs = row.querySelectorAll('input.editing-field, textarea.editing-field');
+                    const updatedData = {};
+                    let isValid = true;
+                    let changesMade = false;
+
+                    // Primero, volver a poner el texto en las celdas que no se cambiaron
+                    // y recopilar datos de los inputs activos.
+                    row.querySelectorAll('td.editable-field').forEach(cell => {
+                        const input = cell.querySelector('input.editing-field, textarea.editing-field');
+                        const fieldName = cell.dataset.field;
+                        if (input) { // Si esta celda tiene un input activo
+                            const newValue = input.value.trim();
+                            const originalStoredValue = cell.dataset.originalValue !== undefined ? cell.dataset.originalValue : ''; // Obtener el original almacenado
+
+                            console.log(`[Guardar Profesor] Campo: ${fieldName}, Nuevo Valor: '${newValue}', Valor Original Almacenado: '${originalStoredValue}'`); // LOG FRONTEND
+
+                            if (newValue !== originalStoredValue) {
+                                updatedData[fieldName] = newValue; // Solo añadir a updatedData si cambió
+                                changesMade = true;
+                            }
+
+                            // Validaciones específicas por campo si son necesarias (ej. email)
+                            if (fieldName === 'email' && newValue && !/^\S+@\S+\.\S+$/.test(newValue)) {
+                                showFeedback(`Email inválido para el campo ${fieldName}.`, 'error');
+                                isValid = false;
+                                input.style.borderColor = 'red'; // Marcar error
+                            } else {
+                                input.style.borderColor = ''; // Limpiar marca de error
+                            }
+
+                        }
+                    });
+
+                    if (!isValid) return;
+
+                    if (!changesMade) { 
+                        showFeedback('No se detectaron cambios para guardar.', 'info');
+                        console.log('ChangesMade: ', changesMade);
+                        saveButton.style.display = 'none';
+                        row.querySelectorAll('td.editable-field').forEach(cell => {
+                            const input = cell.querySelector('input.editing-field, textarea.editing-field');
+                            if (input) {
+                                // Revertir al valor original almacenado en el dataset
+                                cell.textContent = cell.dataset.originalValue !== undefined ? cell.dataset.originalValue : input.value; 
+                            }
+                        });
+                        return;
+                    }
+                    
+                    saveButton.disabled = true;
+                    saveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+
+                    try {
+                        const response = await fetch(`/api/profesores/${profesorId}`, {
+                            method: 'PUT',
+                            headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
+                            body: JSON.stringify(updatedData)
+                        });
+                        const result = await response.json();
+
+                        if (response.ok && result.success) {
+                            showFeedback(result.message || 'Profesor actualizado.', 'success');
+                            // Actualizar celdas y quitar inputs
+                            row.querySelectorAll('td.editable-field').forEach(cell => {
+                                const input = cell.querySelector('input.editing-field, textarea.editing-field');
+                                const fieldName = cell.dataset.field;
+                                if (input && updatedData.hasOwnProperty(fieldName)) {
+                                    // Revertir al valor actualizado
+                                    cell.textContent = updatedData[fieldName];
+                                } else if (input) { // Esto maneja campos editables que no se incluyeron en updatedData (no cambiaron)
+                                     cell.textContent = cell.dataset.originalValue !== undefined ? cell.dataset.originalValue : input.value; 
+                                }
+                                // Limpiar el originalValue después de guardar exitosamente o revertir (en cualquier caso)
+                                delete cell.dataset.originalValue;
+                            });
+                        } else {
+                            showFeedback(result.message || 'Error al actualizar profesor.', 'error');
+                             // Si hubo error, los inputs se quedan para que el usuario corrija
+                             // El originalValue permanece para futuros intentos o escape.
+                        }
+                    } catch (err) {
+                        console.error('Error al actualizar profesor:', err);
+                        showFeedback('Error de conexión al actualizar.', 'error');
+                        // Si hubo un error de conexión, los inputs se quedan.
+                        // El originalValue permanece.
+                    } finally {
+                        saveButton.disabled = false;
+                        saveButton.innerHTML = '<i class="fas fa-save"></i>';
+                        // Ocultar después del intento. Si hubo error, los inputs *no* se quitan aquí.
+                        saveButton.style.display = 'none';
+
+                        // Lógica para limpiar inputs y originalValue DESPUÉS del intento.
+                        // Si el guardado fue exitoso, ya se manejó en el bloque success.
+                        // Si hubo un error, el usuario puede querer corregir, así que NO eliminamos los inputs/originalValue aquí si hubo error.
+                        // Solo eliminamos si no hubo cambios (ya manejado) o si fue exitoso (manejado arriba).
+                        // Si llegó aquí después de un error, los inputs y originalValue deben persistir.
+                        
+                        // Vamos a refinar esto: si el guardado falló, NO remover inputs/originalValue.
+                        // Solo remover si hubo éxito (ya hecho arriba) o si no hubo cambios (ya hecho arriba).
+                        // Este `finally` ya no necesita una lógica compleja de remoción condicional.
+                        // Los inputs y originalValue solo se quitan en los casos de éxito o 'no changes'.
+                    }
+                }
+
+                if (deleteButton) {
+                    const row = deleteButton.closest('tr');
+                    const profesorId = row.dataset.profesorId;
+                    const profesorNombreCell = row.querySelector('td[data-field="nombre"]');
+                    const profesorApellidoCell = row.querySelector('td[data-field="apellido"]');
+                    let profesorNombre = 'este profesor';
+                    if (profesorNombreCell && profesorApellidoCell) {
+                        profesorNombre = (profesorNombreCell.textContent + ' ' + profesorApellidoCell.textContent).trim();
+                    }
+
+                    // Mensaje de confirmación actualizado para eliminación PERMANENTE
+                    if (confirm(`¿Estás seguro de que deseas ELIMINAR PERMANENTEMENTE a "${profesorNombre}"? Esta acción no se puede deshacer.`)) {
+                        deleteButton.disabled = true;
+                        deleteButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
+                        try {
+                            const response = await fetch(`/api/profesores/${profesorId}`, {
+                                method: 'DELETE',
+                                headers: { 'Accept': 'application/json' }
+                            });
+                            const result = await response.json();
+                            if (response.ok && result.success) {
+                                showFeedback(result.message || 'Profesor eliminado permanentemente.', 'success'); // Mensaje actualizado
+                                row.remove(); // Eliminar la fila de la tabla
+                                if (document.querySelector('#tablaProfesores tbody').rows.length === 0) {
+                                    document.querySelector('#tablaProfesores tbody').innerHTML = '<tr><td colspan="12" style="text-align:center; padding: 20px; background-color: #2a2a2a;">No hay profesores para mostrar.</td></tr>';
+                                }
+                            } else {
+                                showFeedback(result.message || 'Error al eliminar profesor.', 'error');
+                            }
+                        } catch (err) {
+                            console.error('Error al eliminar profesor:', err);
+                            showFeedback('Error de conexión al eliminar profesor.', 'error');
+                        } finally {
+                            deleteButton.disabled = false;
+                            deleteButton.innerHTML = '<i class="fas fa-trash-alt"></i>';
+                        }
+                    }
+                }
+            });
+        }
+
+        
+        // Funcionalidad de ordenamiento al hacer clic en el icono
+        document.querySelectorAll('#tablaProfesores th .sort-icon').forEach(function(icon) {
+            icon.addEventListener('click', function() {
+                const th = this.parentElement;
+                const columnClass = Array.from(th.classList).find(cls => cls.startsWith('col-') || cls === 'acciones-header'); // O una clase específica si la tiene la cabecera
+                const columnIndex = th.cellIndex;
+
+                const table = th.closest('table');
+                const tbody = table.querySelector('tbody');
+                const rows = Array.from(tbody.rows);
+
+                table.querySelectorAll('th').forEach(header => {
+                    if (header !== th) {
+                        header.classList.remove('asc', 'desc');
+                    }
+                });
+
+                const isCurrentlyAsc = th.classList.contains('asc');
+                let newOrderIsAsc = !isCurrentlyAsc;
+                if (!th.classList.contains('asc') && !th.classList.contains('desc')) {
+                    newOrderIsAsc = true; // Default a ascendente si no está ordenada
+                }
+                
+                th.classList.remove('asc', 'desc');
+                th.classList.add(newOrderIsAsc ? 'asc' : 'desc');
+
+                rows.sort(function(rowA, rowB) {
+                    let cellA_text = rowA.cells[columnIndex].textContent.trim();
+                    let cellB_text = rowB.cells[columnIndex].textContent.trim();
+                    
+                    // Para la columna de monto, asegurar que se compare como número
+                    if (th.classList.contains('col-monto') || th.classList.contains('col-dia-pago')) {
+                         valA = parseFloat(cellA_text.replace(/[^\d.-]/g, '')) || 0; // Limpiar y convertir, default 0
+                         valB = parseFloat(cellB_text.replace(/[^\d.-]/g, '')) || 0;
+                    } else {
+                         valA = cellA_text.toLowerCase();
+                         valB = cellB_text.toLowerCase();
+                    }
+                    
+                    if (valA < valB) return newOrderIsAsc ? -1 : 1;
+                    if (valA > valB) return newOrderIsAsc ? 1 : -1;
+                    return 0;
+                });
+
+                tbody.innerHTML = ''; 
+                rows.forEach(row => tbody.appendChild(row));
+            });
+        });
+
+        
+    </script>
+</body>
+</html>
+
+<%- include('partials/footer') %>

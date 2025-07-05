@@ -1,0 +1,158 @@
+<%- include('partials/header', { title: title, userTipo: userTipo, currentPath: '/bandas-form' }) %>
+
+
+<main class="main-content">
+    <style>
+        /* Estilos inspirados en form.css pero adaptados para el tema oscuro del main-content si es necesario */
+        /* y para la simplicidad del formulario de bandas */
+        body {
+            --s: 200px;
+            --c1: #1d1d1d;
+            --c2: #4e4f51;
+            --c3: #3c3c3c;
+            background: repeating-conic-gradient(
+                from 30deg,
+                #0000 0 120deg,
+                var(--c3) 0 180deg
+              )
+              calc(0.5 * var(--s)) calc(0.5 * var(--s) * 0.577),
+              repeating-conic-gradient(
+                from 30deg,
+                var(--c1) 0 60deg,
+                var(--c2) 0 120deg,
+                var(--c3) 0 180deg
+              );
+            background-size: var(--s) calc(var(--s) * 0.577);
+            /* El fondo general de la página ya está definido en horarios-generales.ejs y otras vistas */
+            /* Asegurémonos de que este contenedor no lo sobreescriba innecesariamente */
+        }
+        .custom-container {
+            width: 100%;
+            max-width: 600px; /* Un poco más pequeño que form.ejs original */
+            background: rgba(255, 255, 255, 0.95); /* Fondo claro como en form.ejs */
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
+            margin: 40px auto; /* Centrado y con margen superior/inferior */
+            position: relative; 
+        }
+        .custom-container header {
+            font-size: 1.8rem; /* Un poco más grande */
+            color: #333; /* Texto oscuro para el header */
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .custom-container header i {
+            font-size: 1.7rem;
+            margin-right: 10px;
+            color: #555; /* Color del ícono */
+        }
+
+        .custom-container .form .input-box {
+            width: 100%;
+            margin-top: 20px;
+        }
+        .custom-container .input-box label {
+            color: #333; /* Texto oscuro para labels */
+            font-weight: 500;
+        }
+        .custom-container .form :where(.input-box input) {
+            position: relative;
+            height: 50px;
+            width: 100%;
+            outline: none;
+            font-size: 1rem;
+            color: #707070;
+            margin-top: 8px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            padding: 0 15px;
+        }
+        .custom-container .input-box input:focus {
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1), 0 0 8px rgba(254, 219, 55, 0.5); /* Sombra con acento dorado */
+            border-color: #FEDB37;
+        }
+        /* Botón primario (dorado) */
+        .custom-container .btn-custom-primary {
+            height: 55px;
+            width: 100%;
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: 500;
+            margin-top: 30px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 6px;
+            letter-spacing: 0.5px;
+            background-color: #a38560; /* Color base del botón de form.css */
+            background-image: linear-gradient(315deg, #a38560 0%, #e0d4ae 74%);
+        }
+        .custom-container .btn-custom-primary:hover {
+            background-image: linear-gradient(315deg, #b39570 0%, #f0e4be 74%); /* Un poco más claro al hacer hover */
+        }
+
+        /* Alertas */
+        .alert-custom {
+            margin-top: 15px;
+            color: #fff; /* Texto blanco para contraste con fondo de alerta */
+            padding: 12px 15px;
+            border-radius: 5px;
+            font-size: 0.95rem;
+        }
+        .alert-success-custom {
+            background-color: #28a745; /* Verde para éxito */
+            border: 1px solid #1e7e34;
+        }
+        .alert-danger-custom {
+            background-color: #dc3545; /* Rojo para error */
+            border: 1px solid #b02a37;
+        }
+        .link-volver {
+            color: #555;
+            text-decoration: none;
+        }
+        .link-volver:hover {
+            color: #FEDB37;
+            text-decoration: underline;
+        }
+
+    </style>
+
+    <div class="custom-container">
+        <header>
+            <i class="fas fa-users-cog"></i> <!-- Ícono ejemplo, puedes cambiarlo -->
+            <%= title %>
+        </header>
+
+        <% if (error) { %>
+            <div class="alert-custom alert-danger-custom" role="alert">
+                <%= error %>
+            </div>
+        <% } %>
+        <% if (success) { %>
+            <div class="alert-custom alert-success-custom" role="alert">
+                <%= success %>
+            </div>
+        <% } %>
+
+        <form action="/api/bandas" method="POST" class="form">
+            <div class="input-box">
+                <label for="nombre">Nombre de la Banda</label>
+                <input type="text" id="nombre" name="nombre" placeholder="Ingrese el nombre de la banda" required value="<%= banda && banda.nombre ? banda.nombre : '' %>">
+            </div>
+            
+            <button type="submit" class="btn-custom-primary">Guardar Banda</button>
+        </form>
+
+        <div class="mt-4 text-center">
+            <a href="/bandas" class="link-volver"><i class="fas fa-arrow-left"></i> Volver al Listado de Bandas</a>
+        </div>
+    </div>
+</main>
+
+<%- include('partials/footer') %> 

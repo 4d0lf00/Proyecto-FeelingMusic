@@ -1,0 +1,208 @@
+<%- include('partials/header', { title: title, userTipo: userTipo, currentPath: '/nueva-sala' }) %>
+
+<main class="main-content">
+    <style>
+
+        body{
+            --s: 200px;
+            --c1: #1d1d1d;
+            --c2: #4e4f51;
+            --c3: #3c3c3c;
+            background: repeating-conic-gradient(
+                from 30deg,
+                #0000 0 120deg,
+                var(--c3) 0 180deg
+              )
+              calc(0.5 * var(--s)) calc(0.5 * var(--s) * 0.577),
+              repeating-conic-gradient(
+                from 30deg,
+                var(--c1) 0 60deg,
+                var(--c2) 0 120deg,
+                var(--c3) 0 180deg
+              );
+            background-size: var(--s) calc(var(--s) * 0.577);
+        }
+
+        /* Estilos para nueva-sala.ejs y editar-sala.ejs (inspirados en bandas-form.ejs) */
+        .form-container-bandas {
+            width: 100%;
+            max-width: 700px; /* Ajustado para un poco más de espacio si es necesario */
+            background: #2c2c2c; /* Fondo oscuro para el contenedor del formulario */
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            margin: 40px auto;
+            position: relative; 
+            border: 1px solid #4e4f51; /* Borde sutil */
+        }
+        .form-title-bandas {
+            font-size: 1.8rem;
+            color: #FEDB37; /* Texto dorado para el título */
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .form-title-bandas i {
+            font-size: 1.7rem;
+            margin-right: 10px;
+            color: #FEDB37; /* Icono también dorado */
+        }
+        .form-content-bandas .mb-3 label {
+            color: #c0c0c0; /* Labels más claros */
+            font-weight: 500;
+            margin-bottom: .5rem;
+        }
+        .form-content-bandas .form-control {
+            position: relative;
+            height: 50px;
+            width: 100%;
+            outline: none;
+            font-size: 1rem;
+            color: #e0e0e0; /* Texto del input claro */
+            margin-top: 8px;
+            border: 1px solid #4e4f51; /* Borde del input */
+            border-radius: 6px;
+            padding: 0 15px;
+            background-color: #3c3c3c; /* Fondo del input oscuro */
+        }
+        .form-content-bandas .form-control:focus {
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1), 0 0 8px rgba(254, 219, 55, 0.5);
+            border-color: #FEDB37;
+            background-color: #4a4a4a; /* Fondo del input en focus */
+        }
+        .form-content-bandas .form-text {
+            color: #a0a0a0 !important; /* Color para texto de ayuda */
+        }
+
+        .btn-submit-bandas {
+            display: block;
+            height: 55px;
+            width: 100%;
+            color: #1c1c1c; /* Texto oscuro para contraste con dorado */
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-top: 30px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 6px;
+            letter-spacing: 0.5px;
+            background: #FEDB37; /* Dorado principal */
+            box-shadow: 0 4px 15px rgba(254, 219, 55, 0.2);
+        }
+        .btn-submit-bandas:hover {
+            background: #e0b420; /* Dorado más oscuro al hover */
+            box-shadow: 0 6px 20px rgba(224, 180, 32, 0.3);
+        }
+        /* Alertas (manteniendo consistencia) */
+        .alert-fixed-bandas {
+            color: #fff;
+            padding: 12px 15px;
+            border-radius: 5px;
+            font-size: 0.95rem;
+            margin-bottom: 20px; /* Espacio antes del formulario */
+            text-align: center;
+        }
+        .alert-fixed-bandas.alert-success {
+            background-color: #28a745;
+            border: 1px solid #1e7e34;
+        }
+        .alert-fixed-bandas.alert-danger {
+            background-color: #dc3545;
+            border: 1px solid #b02a37;
+        }
+        .btn-cancel-bandas {
+            display: inline-block;
+            padding: 10px 20px;
+            color: #e0e0e0;
+            background-color: #555;
+            border: 1px solid #4e4f51;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin-top: 15px; /* Si es necesario junto a otro botón */
+        }
+        .btn-cancel-bandas:hover {
+            background-color: #666;
+            color: #fff;
+        }
+
+        .form-container-bandas .form-control::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
+            color: #999; /* Un gris más claro */
+            opacity: 1; /* Firefox */
+        }
+        .form-container-bandas .form-control:-ms-input-placeholder { /* Internet Explorer 10-11 */
+            color: #999;
+        }
+        .form-container-bandas .form-control::-ms-input-placeholder { /* Microsoft Edge */
+            color: #999;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+    </style>
+    <div class="form-container-bandas">
+        <h2 class="form-title-bandas"><i class="fas fa-plus-circle"></i> <%= title %></h2>
+
+        <% if (typeof error !== 'undefined' && error && error.trim() !== '') { %>
+            <div class="alert alert-danger alert-fixed-bandas"><%= error %></div>
+        <% } %>
+        <% if (typeof success !== 'undefined' && success && success.trim() !== '') { %>
+            <div class="alert alert-success alert-fixed-bandas"><%= success %></div>
+        <% } %>
+
+        <form action="/salas" method="POST" class="form-content-bandas">
+            <div class="mb-3">
+                <label for="nombre_base" class="form-label">Nombre Base de la Sala:</label>
+                <input type="text" class="form-control" id="nombre_base" name="nombre_base" 
+                       placeholder="Ej: Sala 1" 
+                       pattern="^Sala [0-9]+$" 
+                       title="El formato debe ser 'Sala ' seguido de un número (ej: Sala 1, Sala 10)." 
+                       required>
+                <small class="form-text text-muted">Formato: "Sala X" (ej: Sala 1, Sala 2). Este nombre se usa para el orden.</small>
+            </div>
+            <div class="mb-3">
+                <label for="nombre_personalizado" class="form-label">Nombre Personalizado (Opcional):</label>
+                <input type="text" class="form-control" id="nombre_personalizado" name="nombre_personalizado" placeholder="Ej: Piano central">
+                <small class="form-text text-muted">Este nombre aparecerá junto al nombre base en los horarios.</small>
+            </div>
+            
+            <button type="submit" class="btn-submit-bandas">Añadir Sala</button>
+        </form>
+    </div>
+</main>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('.form-content-bandas');
+    if (form) {
+        form.addEventListener('submit', function(event) {
+            const nombreBaseInput = document.getElementById('nombre_base');
+            if (nombreBaseInput && nombreBaseInput.value) {
+                let valor = nombreBaseInput.value.trim();
+                // Separar "Sala" del número
+                let partes = valor.match(/^(sala|Sala|SALA)\s*(\d+)$/i);
+                if (partes && partes.length === 3) {
+                    // Formatear "Sala" a "Sala" (Mayúscula inicial) y mantener el número
+                    nombreBaseInput.value = 'Sala ' + partes[2];
+                } else {
+                    // Si no coincide con el patrón "Sala N", intentar capitalizar la primera letra
+                    // Esto es un fallback, el pattern del input debería asegurar el formato
+                    // pero por si acaso o si se quita el pattern.
+                    if (valor.length > 0) {
+                         nombreBaseInput.value = valor.charAt(0).toUpperCase() + valor.slice(1).toLowerCase();
+                    }
+                }
+            }
+        });
+    }
+});
+</script>
+
+<%- include('partials/footer') %> 

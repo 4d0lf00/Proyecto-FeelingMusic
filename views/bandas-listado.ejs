@@ -1,0 +1,350 @@
+<%- include('partials/header', { title: title, userTipo: userTipo, currentPath: '/bandas-listado' }) %>
+
+
+<main class="main-content">
+    <style>
+        
+        
+        /* Estilos inspirados en filtro2.ejs y horarios-generales.ejs para la tabla oscura */
+        .table-wrapper-custom {
+            background-color: transparent; /* MODIFICADO: Hacer transparente para ver el fondo del body */
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #4e4f51;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.5);
+            margin: 20px auto; /* Centrado y con margen */
+            max-width: 90%; /* Ancho similar al de horarios */
+        }
+        .table-wrapper-custom h2 {
+            font-size: 2.2rem; /* Tamaño similar al de horarios */
+            font-weight: bold;
+            background: linear-gradient(to bottom, #FEDB37, #c4a34e);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-align: center;
+            margin-bottom: 25px;
+        }
+        .table {
+            width: 100%;
+            border-collapse: separate; 
+            border-spacing: 1px; /* Pequeño espacio como en horarios */
+            background-color: #1c1c1c; 
+        }
+        .table th, .table td {
+            vertical-align: middle;
+            padding: 10px 12px; /* Padding consistente */
+            border: none; 
+            border-radius: 3px; 
+            color: #e0e0e0; /* Texto claro */
+            text-align: left; /* Alineación estándar para datos */
+        }
+        .table thead th {
+            background-color: #333; /* Cabecera oscura */
+            color: #FEDB37; /* Texto dorado para cabecera */
+            text-align: center; /* Cabeceras centradas */
+        }
+        .table tbody tr td {
+            background-color: #2a2a2a; /* Fondo de celda oscuro */
+        }
+        .table tbody tr:hover td {
+            background-color: #3c3c3c; /* Hover más claro */
+        }
+
+        .editable-field {
+            cursor: pointer;
+            padding: 5px;
+            border-radius: 3px;
+            transition: background-color 0.2s ease;
+        }
+        .editable-field:hover {
+            background-color: #4e4f51;
+            outline: 1px dashed #FEDB37;
+        }
+        .editing-field {
+            padding: 6px 8px;
+            border: 1px solid #FEDB37;
+            background-color: #1e1e1e; /* Fondo muy oscuro para input */
+            color: #fff;
+            border-radius: 4px;
+            width: 98%;
+            box-sizing: border-box;
+        }
+
+        .btn-action {
+            margin-right: 5px;
+            padding: 5px 10px;
+            font-size: 0.85rem;
+        }
+        .btn-save-banda {
+            background-color: #28a745; /* Verde para guardar */
+            border-color: #1e7e34;
+            color: white;
+        }
+        .btn-save-banda:hover {
+            background-color: #218838;
+            border-color: #19692c;
+        }
+        .btn-delete-banda {
+            background-color: #dc3545; /* Rojo para eliminar */
+            border-color: #b02a37;
+            color: white;
+        }
+        .btn-delete-banda:hover {
+            background-color: #c82333;
+            border-color: #991b26;
+        }
+
+        /* Alertas (pueden ser las mismas que en bandas-form o globales) */
+        .alert-custom {
+            margin-top: 0;
+            margin-bottom: 15px;
+            color: #fff;
+            padding: 10px;
+            border-radius: 5px;
+        }
+        .alert-success-custom {
+            background-color: #28a745;
+            border: 1px solid #1e7e34;
+        }
+        .alert-danger-custom {
+            background-color: #dc3545;
+            border: 1px solid #b02a37;
+        }
+         .btn-gold {
+            background: radial-gradient(ellipse farthest-corner at right bottom, #FEDB37 0%, #FDB931 8%, #9f7928 30%, #8A6E2F 40%, transparent 70%),
+                        radial-gradient(ellipse farthest-corner at left top, #FFFFFF 0%, #FFFFAC 8%, #D1B464 25%, #5d4a1f 62.5%, #5d4a1f 100%);
+            color: white;
+            border: none;
+            padding: 0.45rem 0.9rem; /* Ajuste de padding */
+            font-weight: bold;
+            transition: all 0.2s ease-in-out;
+            border-radius: 4px;
+        }
+        .btn-gold:hover {
+            background: radial-gradient(ellipse farthest-corner at right bottom, #FEDB37 0%, #FDB931 8%, #9f7928 30%, #8A6E2F 40%, transparent 80%),
+                        radial-gradient(ellipse farthest-corner at left top, #FFFFFF 0%, #FFFFAC 12%, #D1B464 35%, #5d4a1f 40%, #5d4a1f 80%);
+            box-shadow: 0 4px 8px rgba(0,0,0,0.25);
+            color: #e0e0e0;
+        }
+    </style>
+
+    <div class="table-wrapper-custom">
+        <h2><i class="fas fa-drum"></i> <%= title %></h2> <!-- Icono de ejemplo -->
+        <div class="mb-3 text-end">
+            <a href="/bandas/nueva" class="btn btn-gold"><i class="fas fa-plus-circle"></i> Añadir Nueva Banda</a>
+        </div>
+
+        <% if (error) { %>
+            <div class="alert-custom alert-danger-custom" role="alert">
+                <i class="fas fa-exclamation-triangle"></i> <%= error %>
+            </div>
+        <% } %>
+        <% if (success) { %>
+            <div class="alert-custom alert-success-custom" role="alert">
+                <i class="fas fa-check-circle"></i> <%= success %>
+            </div>
+        <% } %>
+
+        <% if (bandas && bandas.length > 0) { %>
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>Nombre</th>
+                            <th>Fecha de Registro</th>
+                            <th style="width: 180px;">Acciones</th> <!-- Ancho fijo para botones -->
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% bandas.forEach(banda => { %>
+                            <tr data-banda-id="<%= banda.id %>">
+                                <td class="editable-field" data-field="nombre"><%= banda.nombre %></td>
+                                <td data-field="fecha_registro"><%= new Date(banda.fecha_registro).toLocaleDateString('es-ES', { year: 'numeric', month: '2-digit', day: '2-digit' }) %></td>
+                                <td>
+                                    <button class="btn btn-sm btn-success btn-action btn-save-banda" style="display:none;"><i class="fas fa-save"></i> Guardar</button>
+                                    <button class="btn btn-sm btn-danger btn-action btn-delete-banda"><i class="fas fa-trash-alt"></i> Eliminar</button>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    </tbody>
+                </table>
+            </div>
+        <% } else { %>
+            <p class="text-center" style="color: #aaa;">No hay bandas registradas todavía. <a href="/bandas/nueva" style="color: #FEDB37;">¡Añade la primera!</a></p>
+        <% } %>
+    </div>
+</main>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const tableContainer = document.querySelector('.table-wrapper-custom');
+
+        tableContainer.addEventListener('dblclick', function(event) {
+            const targetCell = event.target.closest('td.editable-field');
+            if (!targetCell) return;
+            if (targetCell.querySelector('input')) return; // Ya está en modo edición
+
+            const originalValue = targetCell.textContent.trim();
+            const fieldName = targetCell.dataset.field;
+            targetCell.innerHTML = `<input type="text" class="editing-field" name="${fieldName}" value="${originalValue}" />`;
+            const input = targetCell.querySelector('input');
+            input.focus();
+            input.select();
+
+            const row = targetCell.closest('tr');
+            const saveButton = row.querySelector('.btn-save-banda');
+            if (saveButton) saveButton.style.display = 'inline-block';
+            
+            function handleOutsideClickOrEsc(e) {
+                if (e.key === 'Escape' || !targetCell.contains(e.target)) {
+                    const currentInput = targetCell.querySelector('input.editing-field');
+                    targetCell.textContent = currentInput ? currentInput.value : originalValue; // Mantener valor actual si no es escape
+                    if (saveButton) saveButton.style.display = 'inline-block'; // Mantener visible el botón guardar
+                    document.removeEventListener('click', handleOutsideClickOrEsc, true);
+                    document.removeEventListener('keydown', handleOutsideClickOrEsc, true);
+                }
+            }
+            // Usar captura para el evento de click para que se dispare antes que otros listeners
+            document.addEventListener('click', handleOutsideClickOrEsc, true); 
+            document.addEventListener('keydown', handleOutsideClickOrEsc, true);
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    e.preventDefault();
+                    if (saveButton) saveButton.click();
+                    document.removeEventListener('click', handleOutsideClickOrEsc, true);
+                    document.removeEventListener('keydown', handleOutsideClickOrEsc, true);
+                }
+            });
+        });
+
+        tableContainer.addEventListener('click', async function(event) {
+            const saveButton = event.target.closest('.btn-save-banda');
+            const deleteButton = event.target.closest('.btn-delete-banda');
+
+            if (saveButton) {
+                const row = saveButton.closest('tr');
+                const bandaId = row.dataset.bandaId;
+                const nombreCell = row.querySelector('td[data-field="nombre"]');
+                const input = nombreCell.querySelector('input.editing-field');
+                
+                let nuevoNombre = input ? input.value.trim() : nombreCell.textContent.trim();
+
+                if (!nuevoNombre) {
+                    alert('El nombre no puede estar vacío.');
+                    if(input) input.focus();
+                    else {
+                         // Simular dblclick para volver a editar si no hay input (improbable aquí)
+                        const dblClickEvent = new MouseEvent('dblclick', { bubbles: true });
+                        nombreCell.dispatchEvent(dblClickEvent);
+                    }
+                    return;
+                }
+
+                try {
+                    const response = await fetch(`/api/bandas/${bandaId}`, {
+                        method: 'PUT',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Accept': 'application/json'
+                        },
+                        body: JSON.stringify({ nombre: nuevoNombre })
+                    });
+                    const result = await response.json();
+                    if (response.ok && result.success) {
+                        showFeedback(result.message || 'Banda actualizada.', 'success');
+                        nombreCell.textContent = nuevoNombre;
+                        saveButton.style.display = 'none'; 
+                        // Opcionalmente, actualizar la fecha si la respuesta la incluyera
+                    } else {
+                        showFeedback(result.message || 'Error al actualizar la banda.', 'error');
+                        if(input) input.focus();
+                    }
+                } catch (err) {
+                    console.error('Error al actualizar banda:', err);
+                    showFeedback('Error de conexión al actualizar la banda.', 'error');
+                    if(input) input.focus();
+                }
+            }
+
+            if (deleteButton) {
+                const row = deleteButton.closest('tr');
+                const bandaId = row.dataset.bandaId;
+                const bandaNombre = row.querySelector('td[data-field="nombre"]').textContent;
+
+                if (confirm(`¿Estás seguro de que deseas eliminar la banda "${bandaNombre}"? Esta acción no se puede deshacer.`)) {
+                    try {
+                        const response = await fetch(`/api/bandas/${bandaId}`, {
+                            method: 'DELETE',
+                            headers: { 'Accept': 'application/json' }
+                        });
+                        const result = await response.json();
+                        if (response.ok && result.success) {
+                            showFeedback(result.message || 'Banda eliminada.', 'success');
+                            row.remove();
+                            if (tableContainer.querySelectorAll('tbody tr').length === 0) {
+                                const noBandasMsg = document.createElement('p');
+                                noBandasMsg.className = 'text-center text-muted';
+                                noBandasMsg.innerHTML = 'No hay bandas registradas todavía. <a href="/bandas/nueva" style="color: #FEDB37;">¡Añade la primera!</a>';
+                                tableContainer.querySelector('.table-responsive').replaceWith(noBandasMsg);
+                            }
+                        } else {
+                            showFeedback(result.message || 'Error al eliminar la banda.', 'error');
+                        }
+                    } catch (err) {
+                        console.error('Error al eliminar banda:', err);
+                        showFeedback('Error de conexión al eliminar la banda.', 'error');
+                    }
+                }
+            }
+        });
+
+        function showFeedback(message, type) {
+            // Reutilizar la lógica de alertas si ya existe una, o crear una nueva
+            let alertContainer = tableContainer.querySelector('.dynamic-alert-area');
+            if (!alertContainer) {
+                alertContainer = document.createElement('div');
+                alertContainer.className = 'dynamic-alert-area';
+                // Insertar antes de la tabla o del mensaje de "no hay bandas"
+                const tableOrMsg = tableContainer.querySelector('.table-responsive, .text-center.text-muted');
+                if (tableOrMsg) {
+                    tableContainer.insertBefore(alertContainer, tableOrMsg);
+                } else {
+                    tableContainer.appendChild(alertContainer);
+                }
+            }
+            
+            const alertDiv = document.createElement('div');
+            alertDiv.className = `alert-custom alert-${type === 'success' ? 'success' : 'danger'}-custom`;
+            alertDiv.setAttribute('role', 'alert');
+            alertDiv.innerHTML = `<i class="fas fa-${type === 'success' ? 'check-circle' : 'exclamation-triangle'}"></i> ${message}`;
+            
+            alertContainer.innerHTML = ''; // Limpiar alertas previas
+            alertContainer.appendChild(alertDiv);
+
+            setTimeout(() => {
+                alertDiv.style.transition = 'opacity 0.5s ease';
+                alertDiv.style.opacity = '0';
+                setTimeout(() => alertDiv.remove(), 500);
+            }, 3000);
+        }
+
+        // Limpiar mensajes de éxito/error de la URL después de mostrarlos y guardarlos para feedback si es necesario
+        const urlParams = new URLSearchParams(window.location.search);
+        const successMessage = urlParams.get('success');
+        const errorMessage = urlParams.get('error');
+        if (successMessage) {
+            showFeedback(successMessage, 'success');
+        }
+        if (errorMessage) {
+            showFeedback(errorMessage, 'error');
+        }
+        if (successMessage || errorMessage) {
+            const newUrl = window.location.pathname;
+            window.history.replaceState({}, document.title, newUrl);
+        }
+    });
+</script>
+
+<%- include('partials/footer') %> 

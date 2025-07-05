@@ -1,0 +1,146 @@
+/* Estilos específicos para la página de Horarios Generales */
+
+/* --- Fondo Original Restaurado --- */
+body {
+    /* Sobreescribir el fondo base del header para esta página específica */
+    --s: 200px;
+    --c1: #1d1d1d;
+    --c2: #4e4f51;
+    --c3: #3c3c3c;
+    background: repeating-conic-gradient(
+        from 30deg,
+        #0000 0 120deg,
+        var(--c3) 0 180deg
+      )
+      calc(0.5 * var(--s)) calc(0.5 * var(--s) * 0.577),
+      repeating-conic-gradient(
+        from 30deg,
+        var(--c1) 0 60deg,
+        var(--c2) 0 120deg,
+        var(--c3) 0 180deg
+      );
+    background-size: var(--s) calc(var(--s) * 0.577);
+    /* background-attachment: fixed; Puedes añadirlo si lo prefieres */
+}
+/* --- Fin Fondo Restaurado --- */
+
+.schedule-container {
+    padding-top: 20px;
+}
+
+.schedule-content-wrapper {
+    background-color: #000;
+    padding: 20px;
+    border-radius: 8px;
+    /* Más estilos que tenías... */
+}
+
+.dias-semana-tabs .nav-link {
+    transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease;
+    border-radius: 5px 5px 0 0; /* Bordes redondeados solo arriba */
+    margin-right: 5px;
+    font-weight: 500;
+}
+
+.dias-semana-tabs .nav-link.active,
+.dias-semana-tabs .nav-link:hover {
+    background-color: #FEDB37; /* Dorado para activo/hover */
+    color: #1d1d1d !important; /* Texto oscuro para contraste */
+    border-color: #FEDB37;
+    transform: translateY(-2px); /* Efecto ligero de elevación */
+    box-shadow: 0 2px 4px rgba(254, 219, 55, 0.3); /* Sombra sutil dorada */
+}
+
+.table-dark {
+    --bs-table-bg: #000; /* Fondo de la tabla directamente negro */
+    --bs-table-border-color: #373b3e; /* Bordes un poco más claros que el fondo */
+}
+
+.table th {
+    background-color: #111; /* Cabeceras un poco más claras que la tabla */
+    color: #FEDB37;
+}
+
+.table td.disponible {
+    background-color: #1c1c1c; /* Fondo para celdas disponibles */
+    color: #6c757d; /* Texto grisáceo para 'Disponible' */
+}
+
+.table td.ocupado-continuacion {
+    font-style: italic;
+    opacity: 0.7;
+}
+
+.slot-content strong {
+     display: block;
+     margin-bottom: 3px;
+}
+
+.slot-content span, .slot-content div {
+    font-size: 0.85em;
+    line-height: 1.2;
+}
+
+.sala-nombre-personalizado {
+    display: block;
+    font-size: 0.75em;
+    color: #bbb;
+    font-weight: normal;
+    margin-top: 2px;
+}
+
+/* Asegurar que el modal esté por encima de otros elementos como el sidebar */
+.modal#claseModal {
+    z-index: 1060; /* Bootstrap usa ~1050 para modales, ~1030 para su backdrop */
+}
+
+/* Estilos para el contenido de las celdas de horario */
+/* Ya no se necesitan reglas generales de herencia de color aquí, 
+   se manejan con estilos en línea en el EJS para mayor precisión. */
+
+/* .schedule-slot .slot-content {
+    color: inherit !important; 
+}
+
+.schedule-slot .slot-content strong,
+.schedule-slot .slot-content span,
+.schedule-slot .slot-content div {
+    color: inherit !important; 
+    font-size: 0.85em; 
+    line-height: 1.2;  
+} */
+
+.schedule-slot.banda .slot-content strong {
+    /* color: #ffffff !important;  Texto blanco para bandas, manejado por EJS si es necesario */
+    font-size: 1.1rem; /* Mantener tamaño como en EJS */
+}
+
+/* Estilo para el texto 'Disponible' o 'Ocupado' si no hay más info */
+.disponible-texto-ocupado {
+    font-style: italic;
+    font-size: 0.9em;
+    /* opacity: 0.7; El color ya lo maneja EJS/CSS heredado */
+}
+
+/* Para el div que contiene la info del profesor en el horario */
+.info-profesor-horario {
+    font-size: 0.8em;
+    /* opacity: 0.8; El color ya lo maneja EJS/CSS heredado */
+    display: block; /* Asegura que tome su propio espacio */
+    margin-top: 3px; /* Pequeño espacio arriba */
+}
+
+/* Mantener esta si aún es necesaria para los span dentro de strong (ej. alumnos en múltiples líneas) */
+.schedule-slot .slot-content strong span {
+    display: block; /* Asegurar que cada alumno esté en una nueva línea si hay <br> */
+    /* color: inherit !important;  Ya no es necesaria esta línea si el strong padre ya tiene el color correcto */
+}
+
+/* Estilos para las clases de RECUPERACIÓN */
+/* Comentado porque el EJS lo manejará con estilos en línea 
+.schedule-slot.slot-recuperacion .slot-content strong,
+.schedule-slot.slot-recuperacion .slot-content span,
+.schedule-slot.slot-recuperacion .slot-content div.info-profesor-horario,
+.schedule-slot.slot-recuperacion .slot-content span.disponible-texto-ocupado {
+    color: #dc3545 !important; 
+} */ 

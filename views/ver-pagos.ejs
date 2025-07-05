@@ -1,0 +1,275 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ver Pagos Mensualidad</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            --s: 200px;
+            --c1: #1d1d1d;
+            --c2: #4e4f51;
+            --c3: #3c3c3c;
+            background: repeating-conic-gradient(
+                from 30deg,
+                #0000 0 120deg,
+                var(--c3) 0 180deg
+              )
+              calc(0.5 * var(--s)) calc(0.5 * var(--s) * 0.577),
+              repeating-conic-gradient(
+                from 30deg,
+                var(--c1) 0 60deg,
+                var(--c2) 0 120deg,
+                var(--c3) 0 180deg
+              );
+            background-size: var(--s) calc(var(--s) * 0.577);
+        }
+
+        .container {
+            width: 80%;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
+            border-radius: 8px;
+            background-color: #000;
+            border: 1px solid #4e4f51;
+            color: #d1d1d1;
+        }
+        
+        h1 {
+            text-align: center;
+            color: #d1d1d1;
+        }
+
+        form {
+            margin-bottom: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 10px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 5px;
+            color: #d1d1d1;
+        }
+
+        .form-group input[type="text"] {
+            width: 100%;
+            padding: 8px;
+            box-sizing: border-box;
+            border-radius: 4px;
+            border: 1px solid #4e4f51;
+            background-color: #2c2c2c;
+            color: #d1d1d1;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            color: #d1d1d1;
+        }
+
+        table, th, td {
+            border: 1px solid #4e4f51;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: left;
+        }
+
+        th {
+            background-color: #3c3c3c;
+            cursor: pointer;
+        }
+
+        tr:hover {
+            background-color: #2c2c2c;
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 10px 20px;
+            background: radial-gradient(ellipse farthest-corner at right bottom, #FEDB37 0%, #FDB931 8%, #9f7928 30%, #8A6E2F 40%, transparent 80%),
+            radial-gradient(ellipse farthest-corner at left top, #FFFFFF 0%, #FFFFAC 8%, #D1B464 25%, #5d4a1f 62.5%, #5d4a1f 100%);
+            color: white;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .btn:hover {
+            background: radial-gradient(ellipse farthest-corner at right bottom, #FEDB37 0%, #FDB931 8%, #9f7928 30%, #8A6E2F 40%, transparent 80%),
+            radial-gradient(ellipse farthest-corner at left top, #FFFFFF 0%, #FFFFAC 12%, #D1B464 35%, #5d4a1f 40%, #5d4a1f 80%);
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 
+                0 6px 6px rgba(0, 0, 0, 0.23);
+            color: #D1D1D1;
+        }
+
+        .sort-icon {
+            width: 12px; /* Ajusta el tamaño según sea necesario */
+            height: auto;
+            margin-left: 5px;
+            cursor: pointer;
+        }
+
+        .asc::after {
+            content: " ▲";
+        }
+
+        .desc::after {
+            content: " ▼";
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Registros de pagos de mensualidades</h1>
+
+        <!-- Formulario de filtro -->
+        <form id="buscarForm">
+            <div class="form-group">
+                <label for="busqueda">Buscar Alumno (Nombre, Apellido, RUT, Fecha, etc.):</label>
+                <input type="text" id="busqueda" name="busqueda" placeholder="Ingrese el dato a buscar...">
+            </div>
+            <button type="submit" class="btn">Buscar</button>
+        </form>
+
+        <!-- Tabla de resultados -->
+        <table id="tablaPagos">
+            <thead>
+                <tr>
+                    <th id="thRut" data-order="asc">RUT <img src="images/sort-icon.png" class="sort-icon" alt="ordenar"></th>
+                    <th id="thNombre" data-order="asc">Nombre <img src="images/sort-icon.png" class="sort-icon" alt="ordenar"></th>
+                    <th id="thApellido" data-order="asc">Apellido <img src="images/sort-icon.png" class="sort-icon" alt="ordenar"></th>
+                    <th id="thProfesor" data-order="asc">Profesor Correspondiente <img src="images/sort-icon.png" class="sort-icon" alt="ordenar"></th>
+                    <th id="thFecha" data-order="asc">Fecha De Pago <img src="images/sort-icon.png" class="sort-icon" alt="ordenar"></th>
+                    <th id="thMetodo" data-order="asc">Método De Pago <img src="images/sort-icon.png" class="sort-icon" alt="ordenar"></th>
+                    <th id="thComentarios" data-order="asc">Comentarios <img src="images/sort-icon.png" class="sort-icon" alt="ordenar"></th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Aquí se mostrarían los resultados de la base de datos -->
+            </tbody>
+        </table>
+    </div>
+
+    <script>
+        // Función para formatear el RUT
+        function formatearRUT(rut) {
+            if (!rut) return '';
+            const rutSinFormato = rut.replace(/\./g, '').replace(/-/g, '');
+            const cuerpo = rutSinFormato.slice(0, -1);
+            const dv = rutSinFormato.slice(-1).toUpperCase();
+            return `${cuerpo.replace(/(\d)(?=(\d{3})+(?!\d))/g, '$1.')}-${dv}`;
+        }
+
+        // Función para formatear la fecha a DD/MM/YYYY
+        function formatearFecha(fecha) {
+            const date = new Date(fecha);
+            const dia = String(date.getDate()).padStart(2, '0');
+            const mes = String(date.getMonth() + 1).padStart(2, '0');
+            const anio = date.getFullYear();
+            return `${dia}/${mes}/${anio}`;
+        }
+
+        // Función para manejar el ordenamiento
+        function ordenarTabla(columna, orden) {
+            const tbody = document.querySelector('#tablaPagos tbody');
+            const filas = Array.from(tbody.querySelectorAll('tr'));
+
+            filas.sort((a, b) => {
+                const valorA = a.children[columna].innerText;
+                const valorB = b.children[columna].innerText;
+
+                if (orden === 'asc') {
+                    return valorA.localeCompare(valorB);
+                } else {
+                    return valorB.localeCompare(valorA);
+                }
+            });
+
+            filas.forEach(fila => tbody.appendChild(fila));
+        }
+
+        // Agregar eventos de clic a los encabezados
+        document.querySelectorAll('th').forEach((th, index) => {
+            th.addEventListener('click', () => {
+                const orden = th.getAttribute('data-order');
+                ordenarTabla(index, orden);
+                th.setAttribute('data-order', orden === 'asc' ? 'desc' : 'asc');
+            });
+        });
+
+        function cargarPagos(busqueda = '') {
+            fetch('/buscar_registro_pagos', { 
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ busqueda })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.error) {
+                    console.error('Error:', data.error);
+                    return;
+                }
+
+                const tbody = document.querySelector('#tablaPagos tbody');
+                tbody.innerHTML = '';
+                
+                if (data.length === 0) {
+                    const row = document.createElement('tr');
+                    row.innerHTML = '<td colspan="7" style="text-align: center;">No se encontraron registros</td>';
+                    tbody.appendChild(row);
+                    return;
+                }
+
+                data.forEach(pago => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>${formatearRUT(pago.rut)}</td>
+                        <td>${pago.nombre}</td>
+                        <td>${pago.apellido}</td>
+                        <td>${pago.profesor_nombre || 'No asignado'}</td>
+                        <td>${formatearFecha(pago.fecha_pago)}</td>
+                        <td>${pago.metodo_de_pago}</td>
+                        <td>${pago.notas || 'Sin comentarios'}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                const tbody = document.querySelector('#tablaPagos tbody');
+                tbody.innerHTML = '<tr><td colspan="7" style="text-align: center; color: red;">Error al cargar los datos</td></tr>';
+            });
+        }
+
+        // Cargar los pagos al iniciar la página
+        document.addEventListener('DOMContentLoaded', () => {
+            cargarPagos();
+        });
+
+        // Modificar el evento submit del formulario
+        document.getElementById('buscarForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const busqueda = document.getElementById('busqueda').value;
+            cargarPagos(busqueda);
+        });
+    </script>
+</body>
+</html>

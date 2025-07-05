@@ -1,0 +1,103 @@
+/* Elimina esta línea ya que Bootstrap se carga desde CDN */
+/* @import 'bootstrap/dist/css/bootstrap.min.css'; */
+
+body {
+            --s: 200px;
+            --c1: #1d1d1d;
+            --c2: #4e4f51;
+            --c3: #3c3c3c;
+            background: repeating-conic-gradient(
+                from 30deg,
+                #0000 0 120deg,
+                var(--c3) 0 180deg
+              )
+              calc(0.5 * var(--s)) calc(0.5 * var(--s) * 0.577),
+              repeating-conic-gradient(
+                from 30deg,
+                var(--c1) 0 60deg,
+                var(--c2) 0 120deg,
+                var(--c3) 0 180deg
+              );
+            background-size: var(--s) calc(var(--s) * 0.577);
+  font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+}
+
+.fade-in {
+  animation: fadeIn 0.8s ease-in;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.class-item {
+  border-left: 4px solid #007bff;
+  margin-bottom: 1rem;
+  padding: 1rem;
+  background-color: #fff;
+  border-radius: 0.25rem;
+  transition: transform 0.2s ease-in-out;
+}
+
+.class-item:hover {
+  transform: translateX(5px);
+}
+
+.class-item.current {
+  border-left-color: #28a745;
+  background-color: #f8fff8;
+}
+
+.time-badge {
+  background-color: #e9ecef;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+  color: #495057;
+}
+
+.room-info {
+  font-size: 0.875rem;
+  color: #6c757d;
+}
+
+.card {
+  border: none;
+  transition: box-shadow 0.3s ease-in-out;
+}
+
+.card:hover {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+.class-info {
+  font-size: 0.9rem;
+  color: #495057;
+}
+
+.class-info p {
+  margin-bottom: 0.3rem;
+}
+
+.class-info strong {
+  color: #212529;
+}
+
+.time-badge {
+  background-color: #007bff;
+  color: white;
+  padding: 0.25rem 0.5rem;
+  border-radius: 0.25rem;
+  font-size: 0.875rem;
+}
+
+.class-item.current .time-badge {
+  background-color: #28a745;
+}

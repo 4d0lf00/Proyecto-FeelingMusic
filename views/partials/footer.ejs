@@ -1,0 +1,15 @@
+    </main> <!-- Cierre de .main-content -->
+</div> <!-- Cierre de .page-wrapper -->
+
+<!-- Scripts globales o de Bootstrap si son necesarios al final del body -->
+<% if (typeof pageScripts !== 'undefined' && Array.isArray(pageScripts)) { %>
+    <% pageScripts.forEach(script => { %>
+        <script src="<%= script %>"></script>
+    <% }); %>
+<% } %>
+
+<!-- Script de Bootstrap (Ejemplo, si lo usas consistentemente) -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.5/dist/js/bootstrap.bundle.min.js" integrity="sha384-k6d4wzSIapyDyv1kpU366/PK5hCdSbCRGRCMv+eplOQJWyd1fbcAu9OCUj5zNLiq" crossorigin="anonymous"></script>
+
+</body>
+</html>

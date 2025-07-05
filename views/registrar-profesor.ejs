@@ -1,0 +1,76 @@
+
+<%- include('partials/header1') %> 
+
+
+<form action="/registrar-profesor" method="POST"> <!-- Cambia a POST y define la acción para registro -->
+    <div class="container">
+        <div class="row">
+            <div class="col-md-6"> <!-- Ajusta el número para cambiar el tamaño -->
+                <br>
+                <br>
+                <br>
+                <h3 class="w3layouts-heading">Registrar Profesor</h3>
+                
+                <!-- Mensaje de error (si corresponde) -->
+                <div id="error-message" class="alert alert-danger" style="display: none;"></div>
+                <div id="success-message" class="alert alert-success" style="display: none;"></div> <!-- Mensaje de éxito -->
+
+                <div class="mb-3">
+                    <label for="exampleInputEmail1" class="form-label">Correo electrónico</label>
+                    <input type="email" class="form-control" id="exampleInputEmail1" name="email" required> <!-- Agregar name y required -->
+                </div>
+                <div class="mb-3">
+                    <label for="exampleInputPassword1" class="form-label">Contraseña</label>
+                    <input type="password" class="form-control" id="exampleInputPassword1" name="contrasena" required> <!-- Agregar name y required -->
+                </div>
+                <div class="mb-3">
+                    <label for="exampleInputName" class="form-label">Nombre</label>
+                    <input type="text" class="form-control" id="exampleInputName" name="nombre" required> <!-- Agregar name y required -->
+                </div>
+                <br>
+                <button type="submit" class="btn btn-primary">Registrar</button>
+            </div>
+        </div>
+    </div>
+</form>
+
+<script>
+
+
+    // Manejo del envío del formulario
+    document.querySelector('form').addEventListener('submit', async (e) => {
+        e.preventDefault(); // Evitar el envío del formulario
+
+        const email = document.getElementById('exampleInputEmail1').value;
+        const contrasena = document.getElementById('exampleInputPassword1').value;
+        const nombre = document.getElementById('exampleInputName').value;
+
+        const response = await fetch('/registrar-profesor', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({ email, contrasena, nombre }), // Enviar nombre junto con email y contrasena
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+            // Mostrar mensaje de éxito
+            const successMessage = document.getElementById('success-message');
+            successMessage.innerText = 'Registro exitoso. Por favor, inicie sesión.'; // Mensaje de éxito
+            successMessage.style.display = 'block'; // Mostrar el mensaje de éxito
+            document.getElementById('exampleInputEmail1').value = ''; // Limpiar el campo de email
+            document.getElementById('exampleInputPassword1').value = ''; // Limpiar el campo de contraseña
+            document.getElementById('exampleInputName').value = ''; // Limpiar el campo de nombre
+        } else {
+            // Mostrar el mensaje de error
+            const errorMessage = document.getElementById('error-message');
+            errorMessage.innerText = data.error; // Mensaje de error desde el servidor
+            errorMessage.style.display = 'block'; // Mostrar el mensaje de error
+        }
+    });
+</script>
+
+
+<%- include('partials/footer1') %>

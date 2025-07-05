@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel de administración</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/dashboard.css">
+    <style>
+        /* Color por defecto del texto "Menu" (igual al fondo) */
+        .logo-text {
+            color: #2c3e50; /* Mismo color que el fondo del sidebar */
+        }
+        
+        /* Cuando un submenú está activo, restaurar el color blanco del texto "Menu" */
+        .submenu-profesor.active ~ .logo .logo-text,
+        .dropdown-trigger-profesor:hover ~ .logo .logo-text,
+        .sidebar:hover .logo-text {
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <nav class="sidebar">
+            <div class="logo">
+                <div class="logo-icon-container"></div>
+                <h2 class="logo-text">Menu</h2>
+            </div>
+            <ul>
+                <li class="active">
+                    <a href="/" title="Dashboard">
+                        <i class="fas fa-home"></i> 
+                        <span class="menu-text">Panel de administración</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="dropdown-trigger-profesor" title="Profesores">
+                        <i class="fas fa-user-graduate"></i> 
+                        <span class="menu-text-profesor">Profesores</span>
+                        <i class="fas fa-chevron-down arrow-profesor"></i>
+                    </a>
+                    <ul class="submenu-profesor">
+                        <li>
+                            <a href="/register2">
+                                <i class="fas fa-user-plus"></i>
+                                <span>Inscribir Profesor Nuevo</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/ver-profes">
+                                <i class="fas fa-users"></i>
+                                <span>Ver Profesores</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>  
+                <li>
+                    <a href="#" class="dropdown-trigger-profesor" title="Mis Alumnos">
+                        <i class="fas fa-user-graduate"></i> 
+                        <span class="menu-text-profesor">Alumnos</span>
+                        <i class="fas fa-chevron-down arrow-profesor"></i>
+                    </a>
+                    <ul class="submenu-profesor">
+                        <li>
+                            <a href="/form">
+                                <i class="fas fa-user-plus"></i>
+                                <span>Inscribir Alumnos</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/filtro2">
+                                <i class="fas fa-users"></i>
+                                <span>Ver Alumnos</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>          
+                
+                <li>
+                    <a href="#" class="dropdown-trigger-profesor" title="Horarios">
+                        <i class="fas fa-calendar-alt"></i> 
+                        <span class="menu-text">Horarios</span>
+                        <i class="fas fa-chevron-down arrow-profesor"></i>
+                    </a>
+                    <ul class="submenu-profesor">
+                        <li>
+                            <a href="/horarios">
+                                <i class="fas fa-calendar"></i>
+                                <span class="menu-text">Mis Horarios</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/horarios-generales">
+                                <i class="fas fa-users"></i>
+                                <span class="menu-text">Horarios Generales</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#" onclick="cerrarSesion(event)" title="Cerrar Sesión">
+                        <i class="fas fa-sign-out-alt"></i> 
+                        <span class="menu-text">Cerrar Sesión</span>
+                    </a>
+                </li>
+            </ul>         
+        </nav>
+
+        <main class="content">
+            <header>
+                <h1>Panel de administración</h1>
+                <div class="user-info">
+                    <span><i class="fas fa-user"></i> Bienvenido Admin</span>
+                </div>
+            </header>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <h3><i class="fas fa-dollar-sign"></i> Total de mensualidades</h3>
+                    <p>$<span id="totalGanancias"><%= data && data.revenue ? data.revenue.toLocaleString() : 0 %></span></p>
+                </div>
+                <div class="stat-card">
+                    <h3><i class="fas fa-shopping-cart"></i> Visualizacion de la pagina</h3>
+                    <p><%= data && data.orders ? data.orders : 0 %></p>
+                </div>
+                <div class="stat-card">
+                    <h3><i class="fas fa-users"></i> Alumnos Registrados</h3>
+                    <p id="totalAlumnos">0</p>
+                </div>
+            </div>
+
+            <div class="charts-grid">
+                <div class="chart-card collapsible">
+                    <div class="chart-header" onclick="toggleChart(this)">
+                        <h3>Alumnos por mes</h3>
+                        <i class="fas fa-chevron-down"></i>
+                    </div>
+                    <div class="chart-content">
+                        <canvas id="salesChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h3>Distribución de Alumnos por Instrumento</h3>
+                    <canvas id="categoryChart"></canvas>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // Pasar los datos del servidor al cliente
+        window.dashboardData = JSON.parse('<%- JSON.stringify(data) %>');
+        console.log('Datos recibidos en el cliente:', window.dashboardData);
+    </script>
+    <script src="/js/graficos.js"></script>
+    <script>
+        // Script para el menú desplegable
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropdownTriggers = document.querySelectorAll('.dropdown-trigger-profesor');
+            
+            dropdownTriggers.forEach(trigger => {
+                trigger.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Cerrar otros submenús abiertos
+                    const allSubmenus = document.querySelectorAll('.submenu-profesor');
+                    const allArrows = document.querySelectorAll('.arrow-profesor');
+                    
+                    allSubmenus.forEach(submenu => {
+                        if (submenu !== this.nextElementSibling) {
+                            submenu.classList.remove('active');
+                            submenu.style.maxHeight = '0';
+                            submenu.style.opacity = '0';
+                            submenu.style.transform = 'scaleY(0)';
+                        }
+                    });
+                    
+                    allArrows.forEach(arrow => {
+                        if (arrow !== this.querySelector('.arrow-profesor')) {
+                            arrow.classList.remove('active');
+                        }
+                    });
+                    
+                    // Toggle del submenu actual
+                    const submenu = this.nextElementSibling;
+                    const arrow = this.querySelector('.arrow-profesor');
+                    
+                    if (submenu.classList.contains('active')) {
+                        submenu.classList.remove('active');
+                        submenu.style.maxHeight = '0';
+                        submenu.style.opacity = '0';
+                        submenu.style.transform = 'scaleY(0)';
+                        arrow.classList.remove('active');
+                    } else {
+                        submenu.classList.add('active');
+                        submenu.style.maxHeight = '500px';
+                        submenu.style.opacity = '1';
+                        submenu.style.transform = 'scaleY(1)';
+                        arrow.classList.add('active');
+                    }
+                });
+            });
+
+            // Cerrar submenús al hacer clic fuera
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.dropdown-trigger-profesor')) {
+                    const allSubmenus = document.querySelectorAll('.submenu-profesor');
+                    const allArrows = document.querySelectorAll('.arrow-profesor');
+                    
+                    allSubmenus.forEach(submenu => {
+                        submenu.classList.remove('active');
+                        submenu.style.maxHeight = '0';
+                        submenu.style.opacity = '0';
+                        submenu.style.transform = 'scaleY(0)';
+                    });
+                    
+                    allArrows.forEach(arrow => {
+                        arrow.classList.remove('active');
+                    });
+                }
+            });
+        });
+    </script>
+    <script>
+        async function actualizarContadores() {
+            try {
+                // Actualizar alumnos
+                const responseAlumnos = await fetch('/api/total-alumnos');
+                const dataAlumnos = await responseAlumnos.json();
+                const elementoAlumnos = document.getElementById('totalAlumnos');
+                
+                // Actualizar ganancias
+                const responseGanancias = await fetch('/api/ganancias-mes');
+                const dataGanancias = await responseGanancias.json();
+                const elementoGanancias = document.getElementById('totalGanancias');
+                
+                // Agregar clase para animación
+                elementoAlumnos.classList.add('updating');
+                elementoAlumnos.textContent = dataAlumnos.total;
+                
+                elementoGanancias.classList.add('updating');
+                elementoGanancias.textContent = dataGanancias.total.toLocaleString();
+                
+                // Remover clase después de la animación
+                setTimeout(() => {
+                    elementoAlumnos.classList.remove('updating');
+                    elementoGanancias.classList.remove('updating');
+                }, 300);
+                
+            } catch (error) {
+                console.error('Error al actualizar contadores:', error);
+            }
+        }
+
+        // Actualizar cada 30 segundos
+        actualizarContadores();
+        setInterval(actualizarContadores, 30000);
+    </script>
+    <script>
+        function cerrarSesion(event) {
+            event.preventDefault();
+            if (confirm('¿Estás seguro que deseas cerrar sesión?')) {
+                window.location.href = '/logout';
+            }
+        }
+    </script>
+    <script>
+        // Script para las transiciones de página
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebarLinks = document.querySelectorAll('.sidebar a');
+            
+            // Manejar el botón de retroceso
+            window.addEventListener('pageshow', function(event) {
+                // Remover cualquier clase de transición
+                document.body.classList.remove('page-transition');
+                document.body.classList.remove('page-enter');
+                
+                // Si venimos del caché (botón atrás)
+                if (event.persisted) {
+                    document.body.style.opacity = '1';
+                    document.body.style.transform = 'none';
+                }
+            });
+            
+            sidebarLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    // No aplicar a enlaces con onclick o href="#"
+                    if (!this.getAttribute('onclick') && this.getAttribute('href') !== '#') {
+                        e.preventDefault();
+                        const href = this.getAttribute('href');
+                        
+                        // Añadir clase para la animación de salida
+                        document.body.classList.add('page-transition');
+                        
+                        // Navegar después de la animación
+                        setTimeout(() => {
+                            window.location.href = href;
+                        }, 200);
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

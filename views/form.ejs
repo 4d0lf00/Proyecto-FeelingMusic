@@ -1,0 +1,91 @@
+<%- include('partials/header', { title: title, userTipo: userTipo, currentPath: '/form' }) %>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="X-UA-Compatible" content="ie=edge" />
+    <title>Formulario de Registro</title>
+    <link rel="stylesheet" href="/css/form.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" />
+</head>
+<body>
+    <div class="container">
+        <header>
+            <i class="fas fa-music" style="color: rgb(0, 0, 0); font-size: 1.5em; margin-right: 10px;"></i>
+            Formulario de Registro
+        </header>
+        <form action="/alumnos" method="POST" class="form">
+            <div class="input-box">
+                <label>Nombre</label>
+                <input type="text" name="nombre" placeholder="Ingrese el nombre" required />
+                <span class="check-icon">✔</span>
+            </div>
+            <div class="input-box">
+                <label>Apellido</label>
+                <input type="text" name="apellido" placeholder="Ingrese el apellido" required />
+                <span class="check-icon">✔</span>
+            </div>
+            <div class="input-box">
+                <label>Correo Electrónico</label>
+                <input type="email" name="email" placeholder="Ingrese el correo electrónico" required />
+                <span class="check-icon">✔</span>
+            </div>
+            <div class="input-box">
+                <label>Número de Teléfono</label>
+                <input type="tel" name="numero_telefono" placeholder="+569XXXXXXXX" 
+                       pattern="^\+569[0-9]{8}$" 
+                       title="El número debe ser en el formato +569XXXXXXXX" />
+                       <span class="check-icon">✔</span>
+            </div>
+            
+            <button type="submit">Aceptar</button>
+        </form>
+        <div id="mensaje" style="color: red;"></div> <!-- Mensaje de error -->
+    </div>
+    <script>
+        document.querySelector('.form').addEventListener('submit', async function(e) {
+            e.preventDefault();
+
+            const formData = new FormData(this);
+            const formDataObject = {};
+            formData.forEach((value, key) => {
+                formDataObject[key] = value;
+            });
+
+            const mensajeDiv = document.getElementById('mensaje'); // Obtener el div de mensajes
+            mensajeDiv.textContent = ''; // Limpiar mensajes anteriores
+            mensajeDiv.style.display = 'none';
+
+            try {
+                const response = await fetch('/alumnos', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formDataObject)
+                });
+                
+                const data = await response.json();
+                if (response.ok) {
+                    console.log('Alumno registrado:', data); 
+                    if (data.alumnoId) {
+                        alert('Datos personales del alumno registrados exitosamente. Procediendo a datos de la clase.');
+                        window.location.href = `/formulario-class?alumnoId=${data.alumnoId}`; // Redirigir a formulario-class
+                    } else {
+                        mensajeDiv.textContent = 'Error: No se recibió el ID del alumno del servidor.';
+                        mensajeDiv.style.display = 'block';
+                    }
+                } else {
+                    mensajeDiv.textContent = data.error || `Error ${response.status}: Ocurrió un problema al registrar.`;
+                    mensajeDiv.style.display = 'block';
+                }
+            } catch (error) {
+                console.error('Error de red o al procesar la solicitud:', error);
+                mensajeDiv.textContent = 'Error de conexión o al procesar la solicitud. Intente nuevamente.';
+                mensajeDiv.style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>

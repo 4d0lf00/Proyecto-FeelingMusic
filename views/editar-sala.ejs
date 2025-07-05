@@ -1,0 +1,170 @@
+<%- include('partials/header', { title: title, userTipo: userTipo, currentPath: '/editar-sala' }) %>
+
+<main class="main-content">
+    <style>
+        /* Estilos para nueva-sala.ejs y editar-sala.ejs (inspirados en bandas-form.ejs) */
+        .form-container-bandas {
+            width: 100%;
+            max-width: 700px; 
+            background: #2c2c2c; 
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            margin: 40px auto;
+            position: relative; 
+            border: 1px solid #4e4f51; 
+        }
+        .form-title-bandas {
+            font-size: 1.8rem;
+            color: #FEDB37; 
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .form-title-bandas i {
+            font-size: 1.7rem;
+            margin-right: 10px;
+            color: #FEDB37; 
+        }
+        .form-content-bandas .mb-3 label {
+            color: #c0c0c0; 
+            font-weight: 500;
+            margin-bottom: .5rem;
+        }
+        .form-content-bandas .form-control {
+            position: relative;
+            height: 50px;
+            width: 100%;
+            outline: none;
+            font-size: 1rem;
+            color: #e0e0e0; 
+            margin-top: 8px;
+            border: 1px solid #4e4f51; 
+            border-radius: 6px;
+            padding: 0 15px;
+            background-color: #3c3c3c; 
+        }
+        .form-content-bandas .form-control[readonly] {
+            background-color: #333; /* Un poco diferente para indicar que no es editable */
+            opacity: 0.7;
+        }
+        .form-content-bandas .form-control:focus {
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1), 0 0 8px rgba(254, 219, 55, 0.5);
+            border-color: #FEDB37;
+            background-color: #4a4a4a; 
+        }
+        .form-content-bandas .form-text {
+            color: #a0a0a0 !important; 
+        }
+
+        .btn-submit-bandas {
+            display: inline-block; /* Para que esté al lado del botón cancelar si es necesario */
+            height: auto; /* Altura automática basada en padding */
+            width: auto; /* Ancho automático */
+            padding: 12px 25px;
+            color: #1c1c1c; 
+            font-size: 1.05rem; /* Ligeramente más pequeño */
+            font-weight: bold;
+            margin-top: 30px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 6px;
+            letter-spacing: 0.5px;
+            background: #FEDB37; 
+            box-shadow: 0 4px 15px rgba(254, 219, 55, 0.2);
+        }
+        .btn-submit-bandas:hover {
+            background: #e0b420; 
+            box-shadow: 0 6px 20px rgba(224, 180, 32, 0.3);
+        }
+        .btn-cancel-bandas {
+            display: inline-block;
+            padding: 12px 25px;
+            color: #e0e0e0;
+            background-color: #555;
+            border: 1px solid #4e4f51;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 1.05rem; 
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin-top: 30px; 
+            margin-left: 10px;
+        }
+        .btn-cancel-bandas:hover {
+            background-color: #666;
+            color: #fff;
+        }
+        .alert-fixed-bandas {
+            color: #fff;
+            padding: 12px 15px;
+            border-radius: 5px;
+            font-size: 0.95rem;
+            margin-bottom: 20px; 
+            text-align: center;
+        }
+        .alert-fixed-bandas.alert-success {
+            background-color: #28a745;
+            border: 1px solid #1e7e34;
+        }
+        .alert-fixed-bandas.alert-danger {
+            background-color: #dc3545;
+            border: 1px solid #b02a37;
+        }
+
+        .form-container-bandas .form-control::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
+            color: #999; /* Un gris más claro */
+            opacity: 1; /* Firefox */
+        }
+        .form-container-bandas .form-control:-ms-input-placeholder { /* Internet Explorer 10-11 */
+            color: #999;
+        }
+        .form-container-bandas .form-control::-ms-input-placeholder { /* Microsoft Edge */
+            color: #999;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+    </style>
+    <div class="form-container-bandas">
+        <h2 class="form-title-bandas"><i class="fas fa-edit"></i> <%= title %></h2>
+
+        <% if (typeof error !== 'undefined' && error && error.trim() !== '') { %>
+            <div class="alert alert-danger alert-fixed-bandas"><%= error %></div>
+        <% } %>
+        <% if (typeof success !== 'undefined' && success && success.trim() !== '') { %>
+            <div class="alert alert-success alert-fixed-bandas"><%= success %></div>
+        <% } %>
+
+        <% if (sala) { %>
+            <form action="/salas/editar/<%= sala.id %>" method="POST" class="form-content-bandas">
+                <div class="mb-3">
+                    <label for="nombre_base" class="form-label">Nombre Base de la Sala:</label>
+                    <input type="text" class="form-control" id="nombre_base" name="nombre_base" value="<%= sala.nombre %>" readonly>
+                    <small class="form-text text-muted">El nombre base no se puede modificar para mantener la consistencia del orden.</small>
+                </div>
+                <div class="mb-3">
+                    <label for="nombre_personalizado" class="form-label">Nombre Personalizado (Opcional):</label>
+                    <input type="text" class="form-control" id="nombre_personalizado" name="nombre_personalizado" value="<%= sala.nombre_personalizado || '' %>" placeholder="Ej: Sala de Ensayo Principal">
+                </div>
+                
+                <button type="submit" class="btn-submit-bandas">Actualizar Sala</button>
+                <a href="/salas" class="btn-cancel-bandas" style="margin-left: 10px;">Cancelar y Volver</a>
+            </form>
+        <% } else { %>
+            <p class="text-center" style="color: white; margin-top:20px;">Sala no encontrada.</p>
+            <div class="text-center">
+                <a href="/salas" class="btn-cancel-bandas">Volver a la Lista de Salas</a>
+            </div>
+        <% } %>
+    </div>
+</main>
+
+<%- include('partials/footer') %>
+
+<!-- Reutilizar los mismos estilos que nueva-sala.ejs -->

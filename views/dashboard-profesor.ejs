@@ -1,0 +1,389 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel del Profesor</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/dashboard-profesor.css">
+</head>
+<body>
+    <div class="container-profesor">
+        <nav class="sidebar-profesor">
+            <div class="logo">
+                <h2><i class="fas fa-chart-line"></i> Menu</h2>
+            </div>
+            <ul>
+                <li class="active">
+                    <a href="/" title="Dashboard">
+                        <i class="fas fa-home"></i> 
+                        <span class="menu-text-profesor">Panel del Profesor</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="dropdown-trigger-profesor" title="Mis Alumnos">
+                        <i class="fas fa-user-graduate"></i> 
+                        <span class="menu-text-profesor">Mis Alumnos</span>
+                        <i class="fas fa-chevron-down arrow-profesor"></i>
+                    </a>
+                    <ul class="submenu-profesor">
+                        <li>
+                            <a href="/form">
+                                <i class="fas fa-user-plus"></i>
+                                <span>Inscribir Alumnos</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/filtro2">
+                                <i class="fas fa-users"></i>
+                                <span>Ver Alumnos</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#" class="dropdown-trigger-profesor" title="Pagos">
+                        <i class="fas fa-dollar-sign"></i> 
+                        <span class="menu-text-profesor">Pagos</span>
+                        <i class="fas fa-chevron-down arrow-profesor"></i>
+                    </a>
+                    <ul class="submenu-profesor">
+                        <li>
+                            <a href="/registro-de-pagos">
+                                <i class="fas fa-wallet"></i>
+                                <span>Registrar Nuevo Pago</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/ver-pagos">
+                                <i class="fas fa-list-alt"></i>
+                                <span>Lista de pagos</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>  
+                <li>
+                    <a href="#" class="dropdown-trigger-profesor" title="Horarios">
+                        <i class="fas fa-calendar-alt"></i> 
+                        <span class="menu-text-profesor">Horarios</span>
+                        <i class="fas fa-chevron-down arrow-profesor"></i>
+                    </a>
+                    <ul class="submenu-profesor">
+                        <li>
+                            <a href="/horarios">
+                                <i class="fas fa-calendar"></i>
+                                <span>Mis Horarios</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/horarios-generales">
+                                <i class="fas fa-users"></i>
+                                <span>Horarios Generales</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="/actualizar-contrasena" title="Actualizar Contraseña">
+                        <i class="fas fa-lock"></i> 
+                        <span class="menu-text-profesor">Actualizar Contraseña</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" onclick="cerrarSesion(event)" title="Cerrar Sesión">
+                        <i class="fas fa-sign-out-alt"></i> 
+                        <span class="menu-text-profesor">Cerrar Sesión</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+
+        <main class="content-profesor">
+            <header class="header-profesor">
+                <h1>Panel del Profesor</h1>
+                <div class="user-info-profesor">
+                    <span><i class="fas fa-user"></i> Profesor User</span>
+                </div>
+            </header>
+
+            <!-- Selector de Color para Horarios -->
+            <div class="color-selector-card">
+                <h3><i class="fas fa-palette"></i> Mi Color para Horarios</h3>
+                <div class="color-selector-content">
+                    <p>Este color se usará para identificar tus horarios en el calendario:</p>
+                    <div class="color-picker-container">
+                        <input type="color" id="profesorColorPicker" value="<%= viewData.profesor && viewData.profesor.color ? viewData.profesor.color : '#3788d8' %>" 
+                               title="Selecciona un color para tus horarios">
+                        <button id="guardarColorProfesor" class="btn-save-color">Guardar Color</button>
+                    </div>
+                    <div id="mensajeColorProfesor" class="color-status"></div>
+                </div>
+            </div>
+
+            <div class="stats-grid-profesor">
+                <div class="stat-card-profesor">
+                    <h3><i class="fas fa-users"></i> Mis Alumnos</h3>
+                    <p id="totalMisAlumnos"><%= viewData.dashboardData && typeof viewData.dashboardData.totalAlumnos !== 'undefined' ? viewData.dashboardData.totalAlumnos : '0' %></p>
+                </div>
+                <div class="stat-card-profesor">
+                    <h3><i class="fas fa-clock"></i> Horas Semanales</h3>
+                    <p id="horasSemanales">0</p>
+                </div>
+                <div class="stat-card-profesor">
+                    <h3><i class="fas fa-book"></i> Cursos Activos</h3>
+                    <p id="cursosActivos">0</p>
+                </div>
+            </div>
+
+            <div class="charts-grid-profesor">
+                <div class="chart-card-profesor">
+                    <h3>Alumnos por Instrumento</h3>
+                    <canvas id="instrumentosChart"></canvas>
+                </div>
+                <div class="chart-card-profesor">
+                    <h3>Asistencia Mensual</h3>
+                    <canvas id="asistenciaChart"></canvas>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        function cerrarSesion(event) {
+            event.preventDefault();
+            if (confirm('¿Estás seguro que deseas cerrar sesión?')) {
+                window.location.href = '/logout';
+            }
+        }
+    </script>
+
+    <script>
+        // Script para el menú desplegable
+        document.addEventListener('DOMContentLoaded', function() {
+            const dropdownTriggers = document.querySelectorAll('.dropdown-trigger-profesor');
+            
+            dropdownTriggers.forEach(trigger => {
+                trigger.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // Cerrar otros submenús abiertos
+                    const allSubmenus = document.querySelectorAll('.submenu-profesor');
+                    const allArrows = document.querySelectorAll('.arrow-profesor');
+                    const allTriggers = document.querySelectorAll('.dropdown-trigger-profesor');
+                    
+                    allSubmenus.forEach(submenu => {
+                        if (submenu !== this.nextElementSibling) {
+                            submenu.classList.remove('active');
+                        }
+                    });
+                    
+                    allArrows.forEach(arrow => {
+                        if (arrow !== this.querySelector('.arrow-profesor')) {
+                            arrow.classList.remove('active');
+                        }
+                    });
+
+                    allTriggers.forEach(trigger => {
+                        if (trigger !== this) {
+                            trigger.classList.remove('active');
+                        }
+                    });
+                    
+                    // Toggle del submenu actual
+                    const submenu = this.nextElementSibling;
+                    const arrow = this.querySelector('.arrow-profesor');
+                    
+                    this.classList.toggle('active');
+                    submenu.classList.toggle('active');
+                    arrow.classList.toggle('active');
+                });
+            });
+
+            // Cerrar submenús al hacer clic fuera
+            document.addEventListener('click', function(e) {
+                if (!e.target.closest('.dropdown-trigger-profesor')) {
+                    const allSubmenus = document.querySelectorAll('.submenu-profesor');
+                    const allArrows = document.querySelectorAll('.arrow-profesor');
+                    const allTriggers = document.querySelectorAll('.dropdown-trigger-profesor');
+                    
+                    allSubmenus.forEach(submenu => submenu.classList.remove('active'));
+                    allArrows.forEach(arrow => arrow.classList.remove('active'));
+                    allTriggers.forEach(trigger => trigger.classList.remove('active'));
+                }
+            });
+
+            // Manejar hover del sidebar
+            const sidebar = document.querySelector('.sidebar-profesor');
+            const content = document.querySelector('.content-profesor');
+            
+            sidebar.addEventListener('mouseenter', () => {
+                content.style.marginLeft = '300px';
+            });
+            
+            sidebar.addEventListener('mouseleave', () => {
+                content.style.marginLeft = '70px';
+            });
+        });
+    </script>
+
+    <script>
+        // Script para las transiciones de página
+        document.addEventListener('DOMContentLoaded', function() {
+            const sidebarLinks = document.querySelectorAll('.sidebar-profesor a');
+            
+            // Manejar el botón de retroceso
+            window.addEventListener('pageshow', function(event) {
+                document.body.classList.remove('page-transition');
+                document.body.classList.remove('page-enter');
+                
+                if (event.persisted) {
+                    document.body.style.opacity = '1';
+                    document.body.style.transform = 'none';
+                }
+            });
+            
+            sidebarLinks.forEach(link => {
+                link.addEventListener('click', function(e) {
+                    if (!this.getAttribute('onclick') && this.getAttribute('href') !== '#') {
+                        e.preventDefault();
+                        const href = this.getAttribute('href');
+                        
+                        document.body.classList.add('page-transition');
+                        
+                        setTimeout(() => {
+                            window.location.href = href;
+                        }, 200);
+                    }
+                });
+            });
+        });
+    </script>
+
+    <script>
+        // Pasar los datos del servidor al cliente
+        
+        // Esto evita problemas con caracteres especiales y la necesidad de parsear dos veces.
+        window.dashboardClientData = <%- JSON.stringify(viewData.dashboardData || {}) %>;
+        console.log('Datos para el cliente (dashboardClientData):', window.dashboardClientData);
+    </script>
+    <script src="/js/graficos.js"></script>
+    <script src="/js/dashboard-profesor.js"></script>
+
+    <style>
+        /* Estilos para el selector de color */
+        .color-selector-card {
+            background-color: #2a2a2a;
+            border-radius: 10px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            padding: 20px;
+            margin-bottom: 25px;
+        }
+        
+        .color-selector-card h3 {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            color: #e0e0e0;
+        }
+        
+        .color-selector-card h3 i {
+            margin-right: 10px;
+            color: #FEDB37;
+        }
+        
+        .color-selector-content {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .color-selector-content p {
+            color: #b0b0b0;
+            margin: 0;
+        }
+        
+        .color-picker-container {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        #profesorColorPicker {
+            width: 60px;
+            height: 40px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        
+        .btn-save-color {
+            background: linear-gradient(to bottom, #FEDB37, #D1B464);
+            color: #1e1e1e;
+            border: none;
+            border-radius: 5px;
+            padding: 10px 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        .btn-save-color:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        
+        .color-status {
+            min-height: 20px;
+            color: #FEDB37;
+            font-weight: bold;
+        }
+    </style>
+
+    <script>
+        // Script para manejar el cambio de color
+        document.addEventListener('DOMContentLoaded', function() {
+            const colorPicker = document.getElementById('profesorColorPicker');
+            const saveColorBtn = document.getElementById('guardarColorProfesor');
+            const colorStatus = document.getElementById('mensajeColorProfesor');
+            
+            if (saveColorBtn) {
+                saveColorBtn.addEventListener('click', function() {
+                    const selectedColor = colorPicker.value;
+                    
+                    // Actualizar el color en la base de datos
+                    fetch('/api/profesor/actualizar-color', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ color: selectedColor })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            colorStatus.textContent = 'Color guardado con éxito';
+                            colorStatus.style.color = '#4CAF50'; // Verde para éxito
+                            
+                            // Limpiar mensaje después de 3 segundos
+                            setTimeout(() => {
+                                colorStatus.textContent = '';
+                            }, 3000);
+                        } else {
+                            colorStatus.textContent = data.message || 'Error al guardar el color';
+                            colorStatus.style.color = '#F44336'; // Rojo para error
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error al actualizar color:', error);
+                        colorStatus.textContent = 'Error de conexión al guardar el color';
+                        colorStatus.style.color = '#F44336'; // Rojo para error
+                    });
+                });
+            }
+        });
+    </script>
+</body>
+</html>

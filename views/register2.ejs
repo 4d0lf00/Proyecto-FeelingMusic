@@ -1,0 +1,151 @@
+
+<%- include('partials/header', { title: title,  currentPath: '/register2' }) %>
+
+<link rel="stylesheet" href="/css/register.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+<body>
+    
+    <div class="card" style="display: flex !important; justify-content: center !important; align-items: center !important; ">
+        <h4 class="title">Registrar profesor</h4>
+        <form id="registerForm">
+            <div class="field">
+                <input autocomplete="off" id="firstname" placeholder="Nombre" class="input-field" name="nombre" type="text" required>
+            </div>
+            <div class="field">
+                <input autocomplete="off" id="lastname" placeholder="Apellido" class="input-field" name="apellido" type="text" required>
+            </div>
+            <div class="field">
+                <input autocomplete="off" id="regemail" placeholder="Email" class="input-field" name="email" type="email" required>
+            </div>
+            <div class="field">
+                <input autocomplete="off" id="regpass" placeholder="Contraseña" class="input-field" name="contrasena" type="password" required>
+            </div>
+            <div class="field">
+                <div class="especialidades-container">
+                    <label class="especialidad-label">Selecciona tus especialidades:</label>
+                    <div class="checkbox-group">
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="guitarra" name="especialidad" value="guitarra">
+                            <label for="guitarra">Guitarra</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="piano" name="especialidad" value="piano">
+                            <label for="piano">Piano</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="bateria" name="especialidad" value="bateria">
+                            <label for="bateria">Batería</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="canto" name="especialidad" value="canto">
+                            <label for="canto">Canto</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="bajo" name="especialidad" value="bajo">
+                            <label for="bajo">Bajo</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="cello" name="especialidad" value="cello">
+                            <label for="cello">Cello</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="acordeon" name="especialidad" value="acordeon">
+                            <label for="acordeon">Acordeón</label>
+                        </div>
+                        <div class="checkbox-item">
+                            <input type="checkbox" id="ukelele" name="especialidad" value="ukelele">
+                            <label for="ukelele">Ukelele</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button class="btn" type="submit">Registrar</button>
+            <!-- Mensaje de error -->
+    <div id="error-message" class="alert alert-danger" style="display: none;"></div>
+    <div id="alert-message" class="alert alert-success" style="display: none;"></div>
+        </form>
+    </div>
+    
+
+
+    <script>
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const nombre = document.getElementById('firstname').value;
+            const apellido = document.getElementById('lastname').value;
+            const email = document.getElementById('regemail').value;
+            const contrasena = document.getElementById('regpass').value;
+            
+            // Obtener especialidades seleccionadas
+            const especialidades = Array.from(document.querySelectorAll('input[name="especialidad"]:checked'))
+                .map(checkbox => checkbox.value);
+
+            if (especialidades.length === 0) {
+                const errorMessage = document.getElementById('error-message');
+                errorMessage.innerText = 'Debes seleccionar al menos una especialidad';
+                errorMessage.style.display = 'block';
+                return;
+            }
+            
+            try {
+                const response = await fetch('/register2', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ 
+                        nombre, 
+                        apellido, 
+                        email, 
+                        contrasena, 
+                        especialidad: especialidades // Enviar como array
+                    }),
+                });
+                
+                const data = await response.json();
+                console.log('Datos recibidos del servidor:', data);
+
+                if (response.ok) {
+                    const alertMessage = document.getElementById('alert-message');
+                    alertMessage.innerText = 'Profesor registrado exitosamente.';
+                    alert('Profesor registrado exitosamente.');
+                    location.href = location.href;
+                    
+                } else {
+                    const errorMessage = document.getElementById('error-message');
+                    console.log('Datos de error recibidos del servidor:', data);
+                    errorMessage.innerText = data.error || 'Error en el registro.';
+                    errorMessage.style.display = 'block';
+                    errorMessage.classList.add('animate__animated', 'animate__fadeIn');
+                }
+            } catch (error) {
+                console.error('Error en el proceso de registro:', error);
+                const errorMessage = document.getElementById('error-message');
+                errorMessage.innerText = 'Error en el proceso de registro.';
+                errorMessage.style.display = 'block';
+                errorMessage.classList.add('animate__animated', 'animate__fadeIn');
+            }
+        });
+
+        // Mostrar mensaje de error si existe en la URL
+        document.addEventListener('DOMContentLoaded', function() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const error = urlParams.get('error');
+            
+            if (error) {
+                const errorMessage = document.getElementById('error-message');
+                errorMessage.textContent = decodeURIComponent(error);
+                errorMessage.style.display = 'block';
+                errorMessage.classList.add('animate__animated', 'animate__fadeIn');
+            }
+        });
+    </script>
+
+    <!-- Incluir SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+    <!-- Incluir Animaciones de Alerta -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+</body>
+</html>

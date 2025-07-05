@@ -1,0 +1,468 @@
+<!-- views/partials/sidebar.ejs -->
+<% if (typeof userTipo !== 'undefined') { %>
+    <% if (userTipo === 1) { %>
+        <!-- Sidebar Administrador -->
+        <nav class="sidebar">
+            <div class="logo">
+                <h2><i class="fas fa-chart-line"></i> <span>Menu</span></h2>
+            </div>
+            <ul>
+                <li class="active">
+                    <a href="/horarios-generales" title="Dashboard">
+                        <i class="fas fa-home"></i> 
+                        <span class="menu-text">Home</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="dropdown-trigger" title="Profesores">
+                        <i class="fas fa-user"></i> 
+                        <span>Profesores</span>
+                        <i class="fas fa-chevron-down arrow"></i>
+                    </a>
+                    <ul class="submenu">
+                        <li>
+                            <a href="/register2">
+                                <i class="fas fa-user-plus"></i>
+                                <span>Inscribir Profesor</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/ver-profes">
+                                <i class="fas fa-users"></i>
+                                <span>Ver Profesores</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>  
+                <li>
+                    <a href="#" class="dropdown-trigger" title="Alumnos">
+                        <i class="fa-solid fa-user-graduate"></i>
+                        <span>Alumnos</span>
+                        <i class="fas fa-chevron-down arrow"></i>
+                    </a>
+                    <ul class="submenu">
+                        <li>
+                            <a href="/form">
+                                <i class="fas fa-user-plus"></i>
+                                <span>Inscribir Alumnos</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/filtro2">
+                                <i class="fas fa-users"></i>
+                                <span>Ver Alumnos</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#" class="dropdown-trigger" title="Bandas">
+                        <i class="fas fa-drum"></i> <!-- Icono para Bandas -->
+                        <span>Bandas</span>
+                        <i class="fas fa-chevron-down arrow"></i>
+                    </a>
+                    <ul class="submenu">
+                        <li>
+                            <a href="/bandas/nueva">
+                                <i class="fas fa-plus"></i>
+                                <span>Añadir Banda</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/bandas">
+                                <i class="fas fa-list-ul"></i>
+                                <span>Ver Bandas</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>          
+                <li>
+                    <a href="#" class="dropdown-trigger" title="Salas">
+                        <i class="fa-solid fa-chalkboard"></i>
+                        <span>Salas</span>
+                        <i class="fas fa-chevron-down arrow"></i>
+                    </a>
+                    <ul class="submenu">
+                        <li>
+                            <a href="/salas/nueva">
+                                <i class="fas fa-plus-square"></i> <!-- Icono diferente para añadir sala -->
+                                <span>Añadir Sala</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/salas">
+                                <i class="fas fa-th-list"></i> <!-- Icono diferente para ver salas -->
+                                <span>Ver Salas</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="/horarios-generales"  title="Horarios">
+                        <i class="fas fa-calendar-alt"></i> 
+                        <span>Horarios</span>
+                        
+                    </a>
+                    
+                </li>
+                <!-- <li>
+                    <a href="#" class="dropdown-trigger" title="Pagos">
+                        <i class="fas fa-dollar-sign"></i> 
+                        <span>Pagos</span>
+                        <i class="fas fa-chevron-down arrow"></i>
+                    </a>
+                    <ul class="submenu">
+                        <li>
+                            <a href="/registro-de-pagos">
+                                <i class="fas fa-wallet"></i>
+                                <span>Registrar Pago</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/ver-pagos">
+                                <i class="fas fa-list-alt"></i>
+                                <span>Ver Pagos</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li> 
+                -->
+                <li>
+                    <a href="/actualizar-contrasena" title="Actualizar Contraseña">
+                        <i class="fas fa-lock"></i> 
+                        <span>Actualizar Contraseña</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/logout" title="Cerrar Sesión">
+                        <i class="fas fa-sign-out-alt"></i> 
+                        <span>Cerrar Sesión</span>
+                    </a>
+                </li>
+            </ul>         
+        </nav>
+
+    <% } else if (userTipo === 2) { %>
+        <!-- Sidebar Profesor -->
+        <nav class="sidebar">
+            <div class="logo">
+                <h2><i class="fas fa-chart-line"></i> <span>Menu</span></h2>
+            </div>
+            <ul>
+                <li class="active">
+                    <a href="/dashboard-profesor" title="Dashboard">
+                        <i class="fas fa-home"></i> 
+                        <span>Panel Profesor</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="#" class="dropdown-trigger" title="Mis Alumnos">
+                        <i class="fas fa-user-graduate"></i> 
+                        <span>Alumnos</span>
+                        <i class="fas fa-chevron-down arrow"></i>
+                    </a>
+                    <ul class="submenu">
+                        <li>
+                            <a href="/form">
+                                <i class="fas fa-user-plus"></i>
+                                <span>Inscribir Alumnos</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/filtro2">
+                                <i class="fas fa-users"></i>
+                                <span>Ver Alumnos</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>
+                <li>
+                    <a href="#" class="dropdown-trigger" title="Bandas">
+                        <i class="fas fa-drum"></i> <!-- Icono para Bandas -->
+                        <span>Bandas</span>
+                        <i class="fas fa-chevron-down arrow"></i>
+                    </a>
+                    <ul class="submenu">
+                        <li>
+                            <a href="/bandas/nueva">
+                                <i class="fas fa-plus"></i>
+                                <span>Añadir Banda</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="/bandas">
+                                <i class="fas fa-list-ul"></i>
+                                <span>Ver Bandas</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>  
+                 
+                <!--
+                <li>
+                    <a href="#" class="dropdown-trigger" title="Pagos">
+                        <i class="fas fa-dollar-sign"></i> 
+                        <span>Pagos</span>
+                        <i class="fas fa-chevron-down arrow"></i>
+                    </a>
+                    <ul class="submenu">
+                        
+                        <li>
+                            <a href="/ver-pagos">
+                                <i class="fas fa-list-alt"></i>
+                                <span>Ver Pagos</span>
+                            </a>
+                        </li>
+                    </ul>
+                </li>  
+                -->
+                <li>
+                    <a href="/horarios-generales"  title="Horarios">
+                        <i class="fas fa-calendar-alt"></i> 
+                        <span>Horarios</span>
+                        
+                    </a>
+                    
+                </li>
+                <li>
+                    <a href="/actualizar-contrasena" title="Actualizar Contraseña">
+                        <i class="fas fa-lock"></i> 
+                        <span>Actualizar Contraseña</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/logout" title="Cerrar Sesión">
+                        <i class="fas fa-sign-out-alt"></i> 
+                        <span>Cerrar Sesión</span>
+                    </a>
+                </li>
+            </ul>
+        </nav>
+    <% } else if (userTipo === 3) { %>
+         <!-- Sidebar Alumno -->
+         <nav class="sidebar">
+            <div class="logo">
+                <h2><i class="fas fa-music"></i> <span>Menu</span></h2>
+            </div>
+            <ul>
+                <li class="active">
+                    <a href="/horario" title="Mi Horario">
+                        <i class="fas fa-calendar-check"></i> 
+                        <span>Mi Horario</span>
+                    </a>
+                </li>
+                <li>
+                    <a href="/actualizar-contrasena" title="Actualizar Contraseña">
+                        <i class="fas fa-lock"></i> 
+                        <span>Actualizar Contraseña</span>
+                    </a>
+                </li>
+                 <li>
+                    <a href="/logout" title="Cerrar Sesión">
+                        <i class="fas fa-sign-out-alt"></i> 
+                        <span>Cerrar Sesión</span>
+                    </a>
+                </li>
+            </ul>
+         </nav>
+    <% } else { %>
+        <!-- Opcional: Mostrar algo si userTipo no está definido o es inesperado -->
+        <p>Error: Tipo de usuario no reconocido.</p>
+    <% } %>
+<% } else { %>
+    <p>Error: No se pudo determinar el tipo de usuario.-</p>
+    <br>
+    <p>  userTipo: <%= userTipo %></p>
+<% } %>
+
+<!-- Estilos específicos del Sidebar -->
+<style>
+    /* Añadir regla para el sidebar colapsado directamente <-- Eliminado */
+    /* .sidebar.collapsed { */
+    /*    border-right: none; */
+    /*    box-shadow: none; */
+    /* } */
+    .sidebar.collapsed .logo h2 {
+        font-size: 1.5rem; /* Aumentar ligeramente para icono solo */
+        display: flex;        
+        align-items: center;
+        justify-content: center; /* Centrar icono */
+        overflow: hidden; 
+        /* text-overflow: ellipsis; <-- No necesario si solo hay icono */
+        /* white-space: nowrap; <-- No necesario si solo hay icono */
+    }
+    /* Ocultar el texto del menú cuando está colapsado */
+    .sidebar.collapsed .logo h2 span {
+        display: none;
+    }
+    .sidebar.collapsed .logo {
+        padding: 10px 5px; 
+        text-align: center; 
+    }
+    /* Quitar margen del icono cuando está solo */
+    .sidebar.collapsed .logo h2 i {
+        margin-right: 0; /* Sin margen si el texto está oculto */
+    }
+
+</style>
+
+<!-- Script para el menú desplegable (movido aquí para encapsular) -->
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const sidebar = document.querySelector('.sidebar');
+        const hamburgerBtn = document.getElementById('hamburger-menu');
+        const mainContent = document.querySelector('.main-content');
+        const mainContentOverlay = document.querySelector('.main-content-overlay');
+        const body = document.body;
+
+        // --- Manejo del Menú Hamburguesa y Sidebar Colapsado ---
+        if (hamburgerBtn && sidebar) {
+            console.log('Sidebar JS: hamburgerBtn y sidebar encontrados. Adjuntando listener.'); // Log inicial
+            hamburgerBtn.addEventListener('click', function() {
+                console.log('Sidebar JS: ¡Clic en hamburguesa detectado!');
+                const isMobile = window.innerWidth <= 1295;
+                console.log('Sidebar JS: isMobile:', isMobile);
+
+                if (isMobile) {
+                    // Modo Móvil
+                    sidebar.classList.toggle('active');
+                    body.classList.toggle('sidebar-active');
+                    sidebar.classList.remove('collapsed', 'sidebar-desktop-collapsed'); // Limpiar clases de escritorio
+                    body.classList.remove('sidebar-desktop-collapsed');
+                    if (mainContentOverlay) mainContentOverlay.style.display = sidebar.classList.contains('active') ? 'block' : 'none';
+                    if (sidebar.classList.contains('active')) closeAllSubmenus();
+                    console.log('Sidebar JS: Sidebar classList (móvil):', sidebar.classList.toString());
+                    console.log('Sidebar JS: Body classList (móvil):', body.classList.toString());
+                } else {
+                    // Modo Escritorio: el clic alterna el estado colapsado "fijo"
+                    sidebar.classList.toggle('collapsed');
+                    body.classList.toggle('sidebar-desktop-collapsed', sidebar.classList.contains('collapsed'));
+                    sidebar.classList.remove('active', 'sidebar-hover-expand'); // Limpiar clases de móvil y hover
+                    body.classList.remove('sidebar-active');
+                    if (mainContentOverlay) mainContentOverlay.style.display = 'none';
+                    if (!sidebar.classList.contains('collapsed')) closeAllSubmenus();
+                    console.log('Sidebar JS: Sidebar classList (escritorio):', sidebar.classList.toString());
+                    console.log('Sidebar JS: Body classList (escritorio):', body.classList.toString());
+                }
+            });
+
+            // --- Lógica de Hover para Escritorio ---
+            if (sidebar) { // Asegurarse que sidebar existe
+                console.log('Sidebar JS: Intentando adjuntar listeners de mouseenter/mouseleave.'); // NUEVO LOG
+                sidebar.addEventListener('mouseenter', function() {
+                    const isMobile = window.innerWidth <= 1295;
+                    if (!isMobile && sidebar.classList.contains('collapsed')) {
+                        // Solo expandir con hover si está explícitamente colapsado
+                        sidebar.classList.add('sidebar-hover-expand');
+                        sidebar.classList.remove('collapsed'); // Temporalmente quitar collapsed para que CSS expanda
+                        // No necesitamos tocar body.sidebar-desktop-collapsed aquí,
+                        // el CSS de .sidebar.sidebar-hover-expand debe manejar el width.
+                        console.log('Sidebar JS: Mouse enter, hover-expand (era collapsed)');
+                    }
+                });
+
+                sidebar.addEventListener('mouseleave', function() {
+                    const isMobile = window.innerWidth <= 1295;
+                    if (!isMobile && sidebar.classList.contains('sidebar-hover-expand')) {
+                        // Si se estaba expandiendo por hover, volver a colapsar
+                        sidebar.classList.remove('sidebar-hover-expand');
+                        sidebar.classList.add('collapsed'); // Reestablecer el estado colapsado
+                        // No es necesario cerrar submenús aquí a menos que sea un requisito específico,
+                        // ya que al colapsar, los submenús se ocultarán por CSS.
+                        console.log('Sidebar JS: Mouse leave, remove hover-expand, add collapsed');
+                    }
+                });
+            }
+
+        } else {
+            console.error('Sidebar JS: No se encontró hamburgerBtn o sidebar.'); // Log si no se encuentran los elementos
+        }
+
+        // --- Lógica existente para Dropdowns (submenús) ---
+        const dropdownTriggers = document.querySelectorAll('.dropdown-trigger');
+        function closeAllSubmenus() {
+            document.querySelectorAll('.submenu.active').forEach(submenu => {
+                submenu.classList.remove('active');
+                submenu.style.maxHeight = '0';
+                submenu.style.opacity = '0';
+            });
+            document.querySelectorAll('.arrow.active').forEach(arrow => {
+                arrow.classList.remove('active');
+            });
+        }
+
+        if (dropdownTriggers.length > 0) {
+            dropdownTriggers.forEach(trigger => {
+                trigger.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    
+                    // No permitir abrir submenús si el sidebar está colapsado (en modo escritorio)
+                    const isMobile = window.innerWidth <= 1295;
+                    if (!isMobile && sidebar && sidebar.classList.contains('collapsed')) {
+                        return; 
+                    }
+
+                    const currentSubmenu = this.nextElementSibling;
+                    const currentArrow = this.querySelector('.arrow');
+                    const isActive = currentSubmenu.classList.contains('active');
+
+                    // Cerrar otros submenús (solo si no es el que se está abriendo)
+                    if (!isActive) {
+                        closeAllSubmenus();
+                    }
+
+                    // Toggle del submenu actual
+                    if (isActive) {
+                        currentSubmenu.classList.remove('active');
+                        currentSubmenu.style.maxHeight = '0';
+                        currentSubmenu.style.opacity = '0';
+                        if (currentArrow) currentArrow.classList.remove('active');
+                    } else {
+                        currentSubmenu.classList.add('active');
+                        currentSubmenu.style.maxHeight = currentSubmenu.scrollHeight + "px";
+                        currentSubmenu.style.opacity = '1';
+                        if (currentArrow) currentArrow.classList.add('active');
+                    }
+                });
+            });
+
+            // Cerrar submenús al hacer clic fuera DEL SIDEBAR
+            document.addEventListener('click', function(e) {
+                if (sidebar && !sidebar.contains(e.target) && !e.target.closest('#hamburger-menu')) {
+                    // Solo cerrar si el click es fuera del sidebar y no en el botón hamburguesa
+                    // y si el sidebar no está activo en modo móvil (porque queremos que el overlay lo cierre)
+                    const isMobile = window.innerWidth <= 1295;
+                    if (isMobile && sidebar.classList.contains('active')) {
+                        // En móvil, si el sidebar está activo, el overlay debería manejar el cierre,
+                        // o un clic en el overlay.
+                        if (mainContentOverlay && e.target === mainContentOverlay) {
+                            sidebar.classList.remove('active');
+                            mainContentOverlay.style.display = 'none';
+                            body.classList.remove('sidebar-active');
+                            closeAllSubmenus(); 
+                        }
+                        return; 
+                    }
+                    // Si no es móvil o el sidebar no está activo, cerrar submenús.
+                    closeAllSubmenus();
+                }
+            });
+        }
+
+        // Ajustar estado inicial del sidebar y main-content en carga de página (escritorio)
+        const isInitiallyMobile = window.innerWidth <= 1295; 
+        if (!isInitiallyMobile && mainContent && sidebar) {
+            // Si es escritorio, empezar con el sidebar colapsado
+            if (!sidebar.classList.contains('sidebar-hover-expand')) { // No colapsar si ya está en hover (poco probable en carga)
+                sidebar.classList.add('collapsed');
+                body.classList.add('sidebar-desktop-collapsed');
+            }
+        } else if (isInitiallyMobile && mainContent && sidebar) {
+            // Asegurarse que en móvil no tenga clases de colapso de escritorio por si acaso
+            sidebar.classList.remove('collapsed');
+            body.classList.remove('sidebar-desktop-collapsed');
+        }
+
+    });
+</script> 

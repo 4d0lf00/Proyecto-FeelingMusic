@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta http-equiv="Content-Security-Policy" content="
+      script-src 'self' 'unsafe-inline' 'unsafe-eval' 
+      https://code.jquery.com 
+      https://maxcdn.bootstrapcdn.com 
+      https://cdn.jsdelivr.net 
+      https://kit.fontawesome.com;
+    ">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horarios de Clases y Asignación de Instrumentos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            min-height: 100vh;
+            --s: 200px;
+            --c1: #1d1d1d;
+            --c2: #4e4f51;
+            --c3: #3c3c3c;
+            background: repeating-conic-gradient(
+                from 30deg,
+                #0000 0 120deg,
+                var(--c3) 0 180deg
+              )
+              calc(0.5 * var(--s)) calc(0.5 * var(--s) * 0.577),
+              repeating-conic-gradient(
+                from 30deg,
+                var(--c1) 0 60deg,
+                var(--c2) 0 120deg,
+                var(--c3) 0 180deg
+              );
+            background-size: var(--s) calc(var(--s) * 0.577);
+            background-attachment: fixed;
+        }
+
+        .container {
+            width: 90%;
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.7);
+            border-radius: 8px;
+            background-color: #000;
+            border: 1px solid #4e4f51;
+            color: #d1d1d1;
+        }
+
+        
+
+        h1 {
+            text-align: center;
+            color: #d1d1d1;
+        }
+
+        h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            color: #d1d1d1;
+        }
+
+        /* Estilo de formulario */
+        #horarioForm {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            width: 100%;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            width: 100%;
+            max-width: 100%;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .form-group label {
+            display: block;
+            color: #d1d1d1;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .form-group select,
+        .form-group input {
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            font-size: 1.0em;
+            height: 42px;
+        }
+
+        .btn {
+            display: block;
+            width: 200px;
+            margin: 30px auto 0;
+            padding: 12px 0;
+            background: radial-gradient(ellipse farthest-corner at right bottom, #FEDB37 0%, #FDB931 8%, #9f7928 30%, #8A6E2F 40%, transparent 80%),
+            radial-gradient(ellipse farthest-corner at left top, #FFFFFF 0%, #FFFFAC 8%, #D1B464 25%, #5d4a1f 62.5%, #5d4a1f 100%);
+            color: white;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .btn:hover {
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.19), 
+                0 6px 6px rgba(0, 0, 0, 0.23);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+            color: #d1d1d1;
+        }
+
+        table, th, td {
+            border: 1px solid #4e4f51;
+        }
+
+        th, td {
+            padding: 12px;
+            text-align: center;
+        }
+
+        th {
+            background-color: #3c3c3c;
+            cursor: pointer;
+        }
+
+        tr:hover {
+            background-color: #2c2c2c;
+        }
+
+        .edit-btn {
+            padding: 6px 12px;
+            background-color: #4e4f51;
+            border: none;
+            color: #d1d1d1;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .edit-btn:hover {
+            background-color: #6b6c6e;
+        }
+
+        @media (max-width: 768px) {
+            .container {
+                width: 95%;
+                padding: 10px;
+            }
+
+            .form-group input, 
+            .form-group select {
+                padding: 10px;
+            }
+        }
+
+        .form-group input[type="time"] {
+            cursor: pointer;
+            width: 100%;
+            padding: 8px;
+            background-color: #3c3c3c;
+            border: 1px solid #4e4f51;
+            border-radius: 4px;
+            color: #d1d1d1;
+            height: 45px;
+            font-size: 1.1em;
+        }
+
+        .form-group input[type="time"]:hover {
+            border-color: #666;
+        }
+
+        .form-group input[type="time"]:focus {
+            outline: none;
+            border-color: #4e4f51;
+            box-shadow: 0 0 5px rgba(78, 79, 81, 0.3);
+        }
+
+        .form-group input[type="time"]::-webkit-calendar-picker-indicator {
+            filter: invert(0.8);
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Horario de Clases</h2>
+        <form id="horarioForm">   
+
+            
+            <div class="form-group">
+                <label for="instrumento" class="form-label">Instrumento</label>
+                        <select class="form-select" id="instrumento" name="instrumento" required>
+                            <option value="">Seleccione instrumento</option>
+                            <% if (instrumentosDisponibles && instrumentosDisponibles.length > 0) { %>
+                                <% instrumentosDisponibles.forEach(function(instrumento) { %>
+                                    <option value="<%= instrumento.id %>">
+                                        <%= instrumento.nombre %>
+                                    </option>
+                                <% }); %>
+                            <% } else { %>
+                                <option disabled>No hay instrumentos disponibles</option>
+                            <% } %>
+                        </select>
+            </div>
+            <div class="form-group">
+                <label for="modalidad" class="form-label">Modalidad de clase</label>
+                        <select class="form-select" id="modalidadTipo" name="modalidadTipo" required>
+                            <option value="">Seleccione modalidad</option>
+                            <option value="individual">Individual</option>
+                            <option value="grupal">Grupal</option>
+                        </select>
+            </div>
+            <div class="form-group">
+                <label for="dia">Día de la semana:</label>
+                <select id="dia" name="dia" required>
+                    <option value="">Seleccione un día</option>
+                    <option value="Lunes">Lunes</option>
+                    <option value="Martes">Martes</option>
+                    <option value="Miércoles">Miércoles</option>
+                    <option value="Jueves">Jueves</option>
+                    <option value="Viernes">Viernes</option>
+                    <option value="Sábado">Sábado</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="horaInicio">Hora de inicio:</label>
+                <select id="horaInicio" name="horaInicio" required style="width: 100%; padding: 8px; background-color: #3c3c3c; color: #d1d1d1; border: 1px solid #4e4f51;">
+                    <option value="">Seleccione una hora</option>
+                    <option value="08:00">08:00</option>
+                    <option value="09:00">09:00</option>
+                    <option value="10:00">10:00</option>
+                    <option value="11:00">11:00</option>
+                    <option value="12:00">12:00</option>
+                    <option value="13:00">13:00</option>
+                    <option value="14:00">14:00</option>
+                    <option value="15:00">15:00</option>
+                    <option value="16:00">16:00</option>
+                    <option value="17:00">17:00</option>
+                    <option value="18:00">18:00</option>
+                    <option value="19:00">19:00</option>
+                    <option value="20:00">20:00</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="horaFin">Hora de fin:</label>
+                <select id="horaFin" name="horaFin" required style="width: 100%; padding: 8px; background-color: #3c3c3c; color: #d1d1d1; border: 1px solid #4e4f51;">
+                    <option value="">Seleccione una hora</option>
+                    <option value="08:00">08:00</option>
+                    <option value="09:00">09:00</option>
+                    <option value="10:00">10:00</option>
+                    <option value="11:00">11:00</option>
+                    <option value="12:00">12:00</option>
+                    <option value="13:00">13:00</option>
+                    <option value="14:00">14:00</option>
+                    <option value="15:00">15:00</option>
+                    <option value="16:00">16:00</option>
+                    <option value="17:00">17:00</option>
+                    <option value="18:00">18:00</option>
+                    <option value="19:00">19:00</option>
+                    <option value="20:00">20:00</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="profesor">Profesor:</label>
+                <select id="profesor" name="profesorId" required>
+                    <% if (profesores && profesores.length > 0) { %>
+                        <% profesores.forEach(profesor => { %>
+                            <option value="<%= profesor.id %>"
+                                    <%= profesor.id === userId ? 'selected' : '' %>>
+                                <%= profesor.nombre %> <%= profesor.apellido %>
+                            </option>
+                        <% }); %>
+                    <% } else { %>
+                        <option value="">No hay profesores disponibles</option>
+                    <% } %>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="sala">Sala:</label>
+                <select id="sala" name="salaNombre" required>
+                    <% if (typeof salas !== 'undefined' && Array.isArray(salas) && salas.length > 0) { %>
+                        <% salas.forEach(function(sala) { %>
+                            <option value="<%= sala.nombre %>"><%= sala.nombre %></option>
+                        <% }); %>
+                    <% } else { %>
+                        <option value="">No hay salas disponibles</option>
+                    <% } %>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="alumno">Alumno:</label>
+                <div class="alumno-search-container">
+                    <input type="text" 
+                           id="alumnoSearch" 
+                           placeholder="Buscar alumno por nombre..." 
+                           style="margin-bottom: 10px; background-color: #3c3c3c; color: #d1d1d1; border: 1px solid #4e4f51;">
+                    <select id="alumno" name="alumnoId" style="background-color: #3c3c3c; color: #d1d1d1; border: 1px solid #4e4f51;">
+                        <option value="">Seleccione un alumno</option>
+                    </select>
+                </div>
+            </div>
+
+            <button type="submit" class="btn btn-primary">Guardar</button>
+        </form>
+
+        <div class="horarios-guardados">
+            <h3>Horarios Guardados</h3>
+            <div class="table-responsive">
+                <table class="table">
+                    <thead>
+                        <tr>
+                            <th>Día</th>
+                            <th>Hora Inicio</th>
+                            <th>Hora Fin</th>
+                            <th>Alumno</th>
+                            <th>Profesor</th>
+                            <th>Sala</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (horarios && horarios.length > 0) { %>
+                            <% horarios.forEach(function(horario) { %>
+                                <tr>
+                                    <td><%= horario.dia %></td>
+                                    <td><%= horario.hora_inicio %></td>
+                                    <td><%= horario.hora_fin %></td>
+                                    <td>
+                                        <% if (horario.alumnos) { %>
+                                            <strong><%= horario.alumnos.replace(/<br>/g, '<br/>') %></strong>
+                                        <% } else { %>
+                                            <span class="disponible">Sin asignar</span>
+                                        <% } %>
+                                    </td>
+                                    <td>
+                                        <strong>
+                                            <%= horario.profesor_nombre %> 
+                                            <%= horario.profesor_apellido %>
+                                        </strong>
+                                    </td>
+                                    <td><%= horario.sala_nombre %></td>
+                                </tr>
+                            <% }); %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="6" class="text-center">No hay horarios guardados</td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script>
+        // Función para buscar alumnos
+        let typingTimer;
+        const doneTypingInterval = 500;
+        const alumnoSearchInput = document.getElementById('alumnoSearch');
+        const alumnoSelect = document.getElementById('alumno');
+
+        alumnoSearchInput.addEventListener('keyup', () => {
+            clearTimeout(typingTimer);
+            if (alumnoSearchInput.value) {
+                typingTimer = setTimeout(buscarAlumnos, doneTypingInterval);
+            }
+        });
+
+        function buscarAlumnos() {
+            const searchTerm = alumnoSearchInput.value;
+            fetch(`/api/buscar-alumno?nombre=${encodeURIComponent(searchTerm)}`)
+                .then(response => response.json())
+                .then(alumnos => {
+                    alumnoSelect.innerHTML = '<option value="">Seleccione un alumno</option>';
+                    alumnos.forEach(alumno => {
+                        const option = document.createElement('option');
+                        option.value = alumno.id;
+                        option.textContent = `${alumno.nombre} ${alumno.apellido}`;
+                        alumnoSelect.appendChild(option);
+                    });
+                })
+                .catch(error => console.error('Error:', error));
+        }
+
+        // Modificar el evento submit del formulario
+        document.getElementById('horarioForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const formData = {
+                dia: document.getElementById('dia').value,
+                horaInicio: document.getElementById('horaInicio').value,
+                horaFin: document.getElementById('horaFin').value,
+                profesorId: document.getElementById('profesor').value,
+                salaNombre: document.getElementById('sala').value,
+                alumnoId: document.getElementById('alumno').value || null,
+                modalidadTipo: document.getElementById('modalidadTipo').value,
+                instrumentoId: document.getElementById('instrumento').value,
+            };
+
+            console.log('Datos a enviar:', formData);
+
+            fetch('/guardar-horario', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify(formData)
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Horario guardado exitosamente');
+                    window.location.reload();
+                } else {
+                    alert(data.message || 'Error al guardar el horario');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error al guardar el horario');
+            });
+        });
+    </script>
+</body>
+</html>
