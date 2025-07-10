@@ -373,7 +373,7 @@ router.post('/formulario-class',
         body('alumnoId').isInt().withMessage('ID de alumno inválido.'),
         body('instrumentoId').isInt({ gt: 0 }).withMessage('Debe seleccionar un instrumento.'),
         body('modalidad').isIn(['individual', 'grupal']).withMessage('Modalidad inválida.'),
-        body('monto').isInt({ gt: 0 }).withMessage('El monto debe ser un número entero positivo.').toInt(),
+        body('monto').isInt({ gt: 0 }).withMessage('El monto debe ser mayor a 0.').toInt(),
         body('dia_pago').isInt({ min: 1, max: 31 }).withMessage('El día de pago debe ser entre 1 y 31.').toInt(),
         body('comentarios').optional().isString().trim()
     ],
