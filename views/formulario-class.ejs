@@ -99,7 +99,7 @@
 
                 const data = await response.json();
                 if (data.success) {
-                    alert('Clase registrada exitosamente para el alumno.');
+                    alert('Alumno registrado exitosamente.');
                     window.location.href = '/horarios-generales';
                 } else {
                     alert(data.error || 'Error al registrar la clase');
