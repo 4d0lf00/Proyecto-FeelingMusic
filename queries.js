@@ -1529,6 +1529,10 @@ async function eliminarAlumnoPermanentemente(alumnoId) {
     } catch (error) {
         await connection.rollback();
         console.error('[eliminarAlumnoPermanentemente] Error:', error);
+          // Si el error es una violación de clave foránea específica
+        if (error.code === 'ER_ROW_IS_REFERENCED_2' && error.sqlMessage.includes('sala_horario')) {
+            throw new Error('No se puede eliminar el alumno porque tiene un horario registrado. Elimine el horario asociado al alumno primero.');
+        }
         // Si es un error de referencia por FK que no hemos cubierto explícitamente:
         if (error.code && error.code.startsWith('ER_ROW_IS_REFERENCED')) {
             throw new Error('No se puede eliminar el alumno porque aún tiene otros registros asociados no contemplados. Revise la consola del servidor para más detalles.');
