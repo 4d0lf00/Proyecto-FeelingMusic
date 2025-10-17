@@ -87,7 +87,7 @@ router.post('/register2', [
     body('nombre').notEmpty().withMessage('El nombre es requerido'),
     body('apellido').notEmpty().withMessage('El apellido es requerido'),
     body('especialidad').custom(value => {
-        const especialidadesPermitidas = ['guitarra', 'piano', 'bateria', 'canto', 'bajo', 'cello', 'acordeon', 'ukelele'];
+        const especialidadesPermitidas = ['guitarra', 'piano', 'bateria', 'canto', 'bajo', 'cello', 'acordeon', 'ukelele', 'teoría musical'];
         const especialidades = Array.isArray(value) ? value : (value ? value.split(',') : []);
         // Validar que al menos una especialidad fue seleccionada y que todas son válidas
         if (especialidades.length === 0) return false;
