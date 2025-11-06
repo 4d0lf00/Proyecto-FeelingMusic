@@ -17,6 +17,11 @@
         </header>
         <form action="/alumnos" method="POST" class="form">
             <div class="input-box">
+                <label>RUT</label>
+                <input type="text" name="rut" placeholder="Ingrese el RUT sin puntos ni guión(ej: 12345678K)" pattern="^\d{7,8}[\dkK]{1}$" title="Ingrese un RUT válido sin puntos ni guion (ej: 12345678K)" required />
+                <span class="check-icon">✔</span>
+            </div>
+            <div class="input-box">
                 <label>Nombre</label>
                 <input type="text" name="nombre" placeholder="Ingrese el nombre" required />
                 <span class="check-icon">✔</span>

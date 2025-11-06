@@ -509,7 +509,7 @@ router.get('/api/buscar-alumno', verificarToken, async (req, res) => {
 
 // Ruta para insertar un nuevo alumno
 router.post('/alumnos', verificarToken, async (req, res) => {
-    const { nombre, apellido, email, numero_telefono } = req.body; // Se elimina rut
+    const { nombre, apellido, email, numero_telefono, rut } = req.body; 
   
     try {
         // Obtener el ID del profesor correspondiente al ID de la tabla usuarios
@@ -523,7 +523,7 @@ router.post('/alumnos', verificarToken, async (req, res) => {
 
         // Insertar el alumno en la base de datos
         // Se pasa numero_telefono (puede ser undefined/null si no se envía desde el front) y se omite rut
-        const resultAlumno = await queries.insertarAlumno(nombre, apellido, email, numero_telefono, profesorId);
+        const resultAlumno = await queries.insertarAlumno(nombre, apellido, email, numero_telefono, profesorId, rut);
         console.log('Alumno insertado, resultado:', resultAlumno); // LOG
 
         // Asegurarse de que resultAlumno.insertId existe
@@ -533,7 +533,7 @@ router.post('/alumnos', verificarToken, async (req, res) => {
         const nuevoAlumnoId = resultAlumno.insertId;
 
         // Crear el usuario para el alumno (sin rut)
-        await queries.crearUsuarioAlumno(nuevoAlumnoId, email, nombre, profesorId);
+        await queries.crearUsuarioAlumno(nuevoAlumnoId, email, nombre, profesorId, rut);
         console.log('Usuario para alumno creado.'); // LOG
 
         // Devolver el ID del alumno en la respuesta
@@ -547,6 +547,7 @@ router.post('/alumnos', verificarToken, async (req, res) => {
         console.error('Error en POST /alumnos:', error.message || error); // LOG del error
         // Devolver un error específico si es uno de los esperados
         const erroresEsperados = [
+            'El RUT ya está registrado',
             'El correo ya está registrado',
             'El profesor especificado no existe',
             'Nombre, apellido y correo electrónico son requeridos.', // Actualizado para coincidir con queries.js

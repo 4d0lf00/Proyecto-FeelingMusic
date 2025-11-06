@@ -741,8 +741,8 @@ const buscarProfesores = async (nombre) => {
 
 
 // Función para insertar un nuevo alumno en la base de datos (Refactorizada a async/await)
-const insertarAlumno = async (nombre, apellido, email, numero_telefono, profesorId) => {
-    if (!nombre || !apellido || !email) { // profesorId se valida internamente, numero_telefono es opcional
+const insertarAlumno = async (nombre, apellido, email, numero_telefono, profesorId, rut) => {
+    if (!nombre || !apellido || !email || !rut) { // profesorId se valida internamente, numero_telefono es opcional
         throw new Error('Nombre, apellido y correo electrónico son requeridos.'); 
     }
 
@@ -752,14 +752,14 @@ const insertarAlumno = async (nombre, apellido, email, numero_telefono, profesor
     }
 
     try {
-    // Ya no se verifica el RUT
-
+    
+        /*
         // Verificar si el correo ya está registrado en usuarios
         const queryVerificarEmail = 'SELECT id FROM usuarios WHERE email_personal = ?';
         const [resultsEmail] = await db.query(queryVerificarEmail, [email]);
         if (resultsEmail.length > 0) {
             throw new Error('El correo ya está registrado');
-        }
+        }*/
 
             // Verificar si el profesor existe
         const queryVerificarProfesor = 'SELECT id FROM profesor WHERE id = ?';
@@ -768,13 +768,13 @@ const insertarAlumno = async (nombre, apellido, email, numero_telefono, profesor
             throw new Error('El profesor especificado no existe');
         }
 
-                // Insertar alumno (sin RUT, y numero_telefono puede ser null si no se provee)
+                // Insertar alumno (numero_telefono puede ser null si no se provee)
                 const queryInsertar = `
-                    INSERT INTO alumno (nombre, apellido, email, numero_telefono, profesor_id)
-                    VALUES (?, ?, ?, ?, ?);
+                    INSERT INTO alumno (nombre, apellido, email, numero_telefono, profesor_id, rut)
+                    VALUES (?, ?, ?, ?, ?, ?);
                 `;
         // Usamos [resultado] para obtener el objeto de resultado de la inserción
-        const [resultado] = await db.query(queryInsertar, [nombre, apellido, email, numero_telefono, profesorId]);
+        const [resultado] = await db.query(queryInsertar, [nombre, apellido, email, numero_telefono, profesorId, rut]);
         
         // Devolver el resultado de la inserción (incluye insertId)
         return resultado; 
@@ -1732,69 +1732,7 @@ async function actualizarProfesor(profesorId, datosProfesor) {
 
 
 
-// Exportar las funciones
-module.exports = {
-    obtenerHorarios,
-    crearClase,
-    obtenerDetallesClase,
-    actualizarDatosClase,
-    eliminarClasesDelSlot,
-    obtenerUsuarioProfesorPorId,
-    actualizarUsuarioProfesor,
-    generarContrasena,
-    buscarAlumnos,
-    buscarProfesores,
-    insertarAlumno,
-    obtenerProfesorId,
-    crearUsuarioAlumno,
-    obtenerProfesores,
-    obtenerSalas, 
-    insertarHorario, 
-    obtenerHorarioDisponible,
-    actualizarEstadoHorario,
-    obtenerUsuarioLogin,
-    insertarUsuario, 
-    obtenerHorariosPorProfesor,
-    actualizarHorario, 
-    buscarAlumnosPorNombre,
-    obtenerInstrumentoIdPorNombre, 
-    guardarClase, 
-    insertarPago,
-    buscarPagos,
-    obtenerUsuarioPorId,
-    actualizarCredencialesUsuario,
-    obtenerHorariosPorSalaYHora, 
-    obtenerInstrumentosPorProfesor,
-    obtenerInstrumentos, 
-    actualizarAlumnoConDatosClase,
-    obtenerOCrearModalidadId,
-    sincronizarClasesDelSlot,
-    actualizarAlumno, 
-    eliminarAlumnoPermanentemente,
-    eliminarProfesorPermanentemente,
-    actualizarProfesor,
-    // Funciones para Bandas
-    crearBanda,
-    obtenerTodasLasBandas,
-    obtenerBandaPorId,
-    actualizarBanda,
-    eliminarBanda,
-    buscarBandasPorNombre,
-    
-    // Funciones CRUD para Salas
-    crearSala,
-    obtenerTodasLasSalasDetalladas, 
-    obtenerSalaPorId,
-    actualizarSala,
-    eliminarSalaConDependencias,
-    
-    // Funciones añadidas para el dashboard del profesor y color
-    actualizarColorProfesor,
-    contarMisAlumnos,
-    contarTodosLosAlumnos,
-    obtenerDistribucionInstrumentosProfesor,
-    obtenerDetallesProfesor
-};
+
 
 // ----------- FUNCIONES PARA BANDAS ----------- //
 async function crearBanda(nombre) {
@@ -2085,3 +2023,69 @@ async function eliminarSalaConDependencias(id) {
         if (connection) connection.release();
     }
 }
+
+
+
+// Exportar las funciones
+module.exports = {
+    obtenerHorarios,
+    crearClase,
+    obtenerDetallesClase,
+    actualizarDatosClase,
+    eliminarClasesDelSlot,
+    obtenerUsuarioProfesorPorId,
+    actualizarUsuarioProfesor,
+    generarContrasena,
+    buscarAlumnos,
+    buscarProfesores,
+    insertarAlumno,
+    obtenerProfesorId,
+    crearUsuarioAlumno,
+    obtenerProfesores,
+    obtenerSalas, 
+    insertarHorario, 
+    obtenerHorarioDisponible,
+    actualizarEstadoHorario,
+    obtenerUsuarioLogin,
+    insertarUsuario, 
+    obtenerHorariosPorProfesor,
+    actualizarHorario, 
+    buscarAlumnosPorNombre,
+    obtenerInstrumentoIdPorNombre, 
+    guardarClase, 
+    insertarPago,
+    buscarPagos,
+    obtenerUsuarioPorId,
+    actualizarCredencialesUsuario,
+    obtenerHorariosPorSalaYHora, 
+    obtenerInstrumentosPorProfesor,
+    obtenerInstrumentos, 
+    actualizarAlumnoConDatosClase,
+    obtenerOCrearModalidadId,
+    sincronizarClasesDelSlot,
+    actualizarAlumno, 
+    eliminarAlumnoPermanentemente,
+    eliminarProfesorPermanentemente,
+    actualizarProfesor,
+    // Funciones para Bandas
+    crearBanda,
+    obtenerTodasLasBandas,
+    obtenerBandaPorId,
+    actualizarBanda,
+    eliminarBanda,
+    buscarBandasPorNombre,
+    
+    // Funciones CRUD para Salas
+    crearSala,
+    obtenerTodasLasSalasDetalladas, 
+    obtenerSalaPorId,
+    actualizarSala,
+    eliminarSalaConDependencias,
+    
+    // Funciones añadidas para el dashboard del profesor y color
+    actualizarColorProfesor,
+    contarMisAlumnos,
+    contarTodosLosAlumnos,
+    obtenerDistribucionInstrumentosProfesor,
+    obtenerDetallesProfesor
+};
