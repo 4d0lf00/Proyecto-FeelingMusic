@@ -753,14 +753,7 @@ const insertarAlumno = async (nombre, apellido, email, numero_telefono, profesor
 
     try {
     
-        /*
-        // Verificar si el correo ya está registrado en usuarios
-        const queryVerificarEmail = 'SELECT id FROM usuarios WHERE email_personal = ?';
-        const [resultsEmail] = await db.query(queryVerificarEmail, [email]);
-        if (resultsEmail.length > 0) {
-            throw new Error('El correo ya está registrado');
-        }*/
-
+        
             // Verificar si el profesor existe
         const queryVerificarProfesor = 'SELECT id FROM profesor WHERE id = ?';
         const [resultsProf] = await db.query(queryVerificarProfesor, [profesorId]);
