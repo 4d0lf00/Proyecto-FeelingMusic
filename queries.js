@@ -661,19 +661,58 @@ const buscarAlumnos = async (busqueda) => {
     let query;
     const params = [];
 
-    if (busqueda && busqueda.trim() !== '') {
+    // Limpiar el término de búsqueda para casos específicos (RUT)
+    const busquedaLimpia = busqueda ? busqueda.trim() : '';
+
+    // ---------------------------------------------------------------------
+    // CASO 1: Hay término de búsqueda (nombre, apellido, RUT o Email)
+    // ---------------------------------------------------------------------
+    if (busquedaLimpia !== '') {
+        // 1. Preparar valores de búsqueda
+        const likeTermino = `%${busquedaLimpia}%`;
+        
+        // 2. Limpiar el RUT ingresado (quitar puntos y guiones) para buscarlo en la DB
+        // Esto permite que el usuario busque con o sin formato.
+        const rutLimpio = busquedaLimpia.replace(/[.-]/g, '').toUpperCase();
+        const likeRut = `%${rutLimpio}%`; 
+
         query = `
-            SELECT id, nombre, apellido, instrumento_alumno, modalidad_alumno,  monto, dia_pago, IFNULL(comentarios, 'no registrado') AS comentarios, numero_telefono, rut, IFNULL(DATE_FORMAT(fecha_registro, '%d/%m/%y'), 'no registrada') AS fecha_registro, email, profesor_id
+            SELECT 
+                id, nombre, apellido, instrumento_alumno, modalidad_alumno, monto, dia_pago, 
+                IFNULL(comentarios, 'no registrado') AS comentarios, 
+                numero_telefono, 
+                rut, -- Ya incluido
+                IFNULL(DATE_FORMAT(fecha_registro, '%d/%m/%y'), 'no registrada') AS fecha_registro, 
+                email, 
+                profesor_id
             FROM alumno 
-            WHERE (nombre LIKE ? OR apellido LIKE ?) AND estado = 'activo'
+            WHERE 
+                (
+                    nombre LIKE ? OR 
+                    apellido LIKE ? OR
+                    email LIKE ? OR 
+                    rut LIKE ? -- ¡AGREGADO! Búsqueda por RUT (usa el rutLimpio)
+                ) 
+                AND estado = 'activo'
             ORDER BY nombre ASC, apellido ASC; 
         `;
-        const likeBusqueda = `%${busqueda}%`;
-        params.push(likeBusqueda, likeBusqueda);
+        
+        // 3. Pasar los parámetros en el orden correspondiente a los '?'
+        params.push(likeTermino, likeTermino, likeTermino, likeRut);
+
+    // ---------------------------------------------------------------------
+    // CASO 2: La búsqueda está vacía (obtener todos los alumnos)
+    // ---------------------------------------------------------------------
     } else {
-        // Si la búsqueda está vacía, obtener todos los alumnos activos ordenados por nombre
         query = `
-            SELECT id, nombre, apellido, instrumento_alumno, modalidad_alumno,  monto, dia_pago, IFNULL(comentarios, 'no registrado') AS comentarios, numero_telefono, rut, IFNULL(DATE_FORMAT(fecha_registro, '%d/%m/%y'), 'no registrada') AS fecha_registro, email, profesor_id
+            SELECT 
+                id, nombre, apellido, instrumento_alumno, modalidad_alumno, monto, dia_pago, 
+                IFNULL(comentarios, 'no registrado') AS comentarios, 
+                numero_telefono, 
+                rut, -- Ya incluido
+                IFNULL(DATE_FORMAT(fecha_registro, '%d/%m/%y'), 'no registrada') AS fecha_registro, 
+                email, 
+                profesor_id
             FROM alumno 
             WHERE estado = 'activo'
             ORDER BY nombre ASC, apellido ASC;
@@ -688,7 +727,6 @@ const buscarAlumnos = async (busqueda) => {
         throw error;
     }
 };
-
 
 
 /*
@@ -1405,12 +1443,17 @@ async function actualizarAlumno(alumnoId, datosAlumno) {
     }
     console.log(`[actualizarAlumno] ID: ${alumnoId}, datosAlumno recibidos:`, JSON.stringify(datosAlumno)); // LOG 3
 
+    // 1. AÑADIR RUT A LA LISTA DE CAMPOS EDITABLES
     const camposEditables = {
+        rut: 'rut',             // <--- ¡AGREGADO!
         nombre: 'nombre',
         apellido: 'apellido',
         email: 'email',
         numero_telefono: 'numero_telefono',
-        comentarios: 'comentarios'
+        comentarios: 'comentarios',
+        modalidad_alumno: 'modalidad_alumno',
+        monto: 'monto',
+        dia_pago: 'dia_pago'
     };
 
     const setClauses = [];
@@ -1418,12 +1461,32 @@ async function actualizarAlumno(alumnoId, datosAlumno) {
 
     for (const key in datosAlumno) {
         if (camposEditables[key]) {
+            let valueToPush = datosAlumno[key];
+
+            // 2. MANEJAR LIMPIEZA DEL RUT si el campo es 'rut'
+            if (key === 'rut') {
+                valueToPush = valueToPush.replace(/[.-]/g, '').toUpperCase();
+                // Opcional: Agregar lógica de validación de DV aquí si es necesario
+            }
+
+            if (key === 'monto' || key === 'dia_pago'){
+                // Asegurarse de que el monto se guarde como número entero, sin formato de moneda
+                 // La validación estricta del valor se hará en routes.js
+                valueToPush = parseInt(valueToPush, 10)
+            }
+
+            if (key === 'modalidad_alumno'){
+                //convertir a mayúsculas y limpiar espacios para estandarizar
+                valueToPush = valueToPush.trim().toUpperCase();
+            }
+
             setClauses.push(`${camposEditables[key]} = ?`);
-            values.push(datosAlumno[key]);
+            values.push(valueToPush);
         } else {
             console.warn(`[actualizarAlumno] Intento de actualizar campo no permitido o no reconocido: ${key}`);
         }
     }
+    
     console.log(`[actualizarAlumno] setClauses generadas:`, setClauses.join(', ')); // LOG 4
     console.log(`[actualizarAlumno] values generados:`, JSON.stringify(values)); // LOG 5
 
@@ -1438,30 +1501,33 @@ async function actualizarAlumno(alumnoId, datosAlumno) {
     try {
         await connection.beginTransaction();
         
+        // 3. ACTUALIZACIÓN EN TABLA ALUMNO (INCLUYE POSIBLE ERROR DE RUT DUPLICADO)
         const [resultado] = await connection.query(queryUpdateAlumno, values);
+        
         if (resultado.affectedRows === 0) {
-             await connection.rollback();
+            await connection.rollback();
             throw new Error('Alumno no encontrado o los datos son idénticos.');
         }
 
-        // Si el email se está actualizando, también actualizarlo en la tabla usuarios
+        // Si el email se está actualizando, también actualizarlo en la tabla usuarios (Lógica existente)
         if (datosAlumno.hasOwnProperty('email')) {
-            const nuevoEmail = datosAlumno.email;
-            // Verificar si el nuevo email ya existe para OTRO usuario (no el alumno actual)
-            const [otrosUsuariosConEmail] = await connection.query(
-                'SELECT id FROM usuarios WHERE email_personal = ? AND (alumno_id IS NULL OR alumno_id != ?)',
-                [nuevoEmail, alumnoId]
-            );
-            if (otrosUsuariosConEmail.length > 0) {
-                await connection.rollback();
-                throw new Error('El email proporcionado ya está en uso por otro usuario.');
-            }
-            // Actualizar el email en la tabla usuarios para este alumno
-            const [updateUserResult] = await connection.query('UPDATE usuarios SET email_personal = ? WHERE alumno_id = ?', [nuevoEmail, alumnoId]);
-            if (updateUserResult.affectedRows === 0) {
-                console.warn(`[actualizarAlumno] No se encontró un usuario en la tabla 'usuarios' para el alumno ID ${alumnoId} para actualizar el email, o el email ya era el mismo.`);
-                // No consideramos esto un error fatal que revierta la transacción, pero es bueno registrarlo.
-            }
+             // ... lógica de verificación y actualización de email en tabla 'usuarios' ...
+             // (Dejé tu lógica original inalterada para esta parte)
+             const nuevoEmail = datosAlumno.email;
+             // Verificar si el nuevo email ya existe para OTRO usuario (no el alumno actual)
+             const [otrosUsuariosConEmail] = await connection.query(
+                 'SELECT id FROM usuarios WHERE email_personal = ? AND (alumno_id IS NULL OR alumno_id != ?)',
+                 [nuevoEmail, alumnoId]
+             );
+             if (otrosUsuariosConEmail.length > 0) {
+                 await connection.rollback();
+                 throw new Error('El email proporcionado ya está en uso por otro usuario.');
+             }
+             // Actualizar el email en la tabla usuarios para este alumno
+             const [updateUserResult] = await connection.query('UPDATE usuarios SET email_personal = ? WHERE alumno_id = ?', [nuevoEmail, alumnoId]);
+             if (updateUserResult.affectedRows === 0) {
+                 console.warn(`[actualizarAlumno] No se encontró un usuario en la tabla 'usuarios' para el alumno ID ${alumnoId} para actualizar el email, o el email ya era el mismo.`);
+             }
         }
         
         await connection.commit();
@@ -1469,11 +1535,21 @@ async function actualizarAlumno(alumnoId, datosAlumno) {
     } catch (error) {
         await connection.rollback();
         console.error('Error en actualizarAlumno:', error);
-        // Evitar exponer códigos de error de SQL directamente si no son 'ER_DUP_ENTRY' manejados explícitamente
-        if (error.message.startsWith('El email proporcionado ya está en uso')) {
-            throw error; // Re-lanzar error ya manejado
+        
+        // 4. MANEJO DE ERROR DE DUPLICIDAD DE RUT/EMAIL
+        // Error de MySQL para clave duplicada es ER_DUP_ENTRY (código 1062)
+        if (error.code === 'ER_DUP_ENTRY') {
+            // Se asume que el índice UNIQUE está en 'rut' o 'email'.
+            // LANZAMOS UN ERROR CLARO QUE SERÁ CAPTURADO POR routes.js
+            throw new Error('El RUT o Email que intenta guardar ya está registrado por otro alumno.');
         }
-        throw new Error('Error interno del servidor al actualizar el alumno.'); // Error genérico
+
+        if (error.message.startsWith('El email proporcionado ya está en uso')) {
+            throw error; // Re-lanzar el error de email que manejas internamente
+        }
+        
+        // Error genérico
+        throw new Error('Error interno del servidor al actualizar el alumno.'); 
     } finally {
         if (connection) connection.release();
     }

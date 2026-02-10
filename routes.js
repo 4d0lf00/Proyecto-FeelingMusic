@@ -7,6 +7,7 @@ const { body, validationResult } = require('express-validator');
 const dashboardController = require('./controllers/dashboardController');
 const db = require('./db');
 const dashboardControllerProfesor = require('./controllers/dashboardControllerProfesor');
+const { valueOrDefault } = require('chart.js/helpers');
 
 // ------------------- Rutas de Autenticación -------------------
 
@@ -544,7 +545,7 @@ router.post('/alumnos', verificarToken, async (req, res) => {
         });
 
     } catch (error) { // Capturar errores de todo el proceso
-        console.error('Error en POST /alumnos:', error.message || error); // LOG del error
+        console.error('Error en router.POST /alumnos:', error.message || error); // LOG del error
         // Devolver un error específico si es uno de los esperados
         const erroresEsperados = [
             'El RUT ya está registrado',
@@ -1378,14 +1379,59 @@ router.get('/api/total-alumnos', verificarToken, async (req, res) => {
 
 // API para actualizar un alumno
 router.put('/api/alumnos/:id', verificarToken, [
-    // Validaciones (puedes añadir más según necesidad)
+    // 1. AÑADIR VALIDACIÓN PARA EL RUT
+    body('rut')
+        .optional()
+        .notEmpty().withMessage('El RUT no puede estar vacía.')
+        // Limpiamos el formato (puntos y guion) para que las validaciones y queries trabajen con él limpio.
+        .customSanitizer(value => value.replace(/[.-]/g, '').toUpperCase())
+        .isLength({ min: 5 }).withMessage('El RUT debe tener al menos 5 caracteres (incluyendo DV).')
+        // Opcional: Si tienes una función de validación de DV en el backend, úsala aquí.
+        // .custom(rutLimpio => {
+        //     if (!queries.validarDigitoVerificador(rutLimpio)) { 
+        //         throw new Error('El dígito verificador del RUT es incorrecto.');
+        //     }
+        //     return true;
+        // }),
+        
+        .trim(),
+        
+
+
+
+    // Validaciones existentes
     body('nombre').optional().notEmpty().withMessage('El nombre no puede estar vacío si se envía.').trim(),
     body('apellido').optional().notEmpty().withMessage('El apellido no puede estar vacío si se envía.').trim(),
     body('email').optional().isEmail().withMessage('Email inválido.').normalizeEmail(),
     body('numero_telefono').optional().isMobilePhone('any', { strictMode: false }).withMessage('Número de teléfono inválido. Intenta con formato internacional (+569xxxxxxxx).'),
-    body('comentarios').optional().trim()
+    body('comentarios').optional().trim(),
+    
+    body('modalidad_alumno')
+        .optional()
+        .notEmpty()
+        .withMessage('La modalidad no puede estar vacía.')
+        .trim()
+        .toUpperCase()
+        .isIn(['INDIVIDUAL', 'GRUPAL'])
+        .withMessage('La modalidad solo puede ser Individual o Grupal.'),
+
+    body('monto')
+        .optional()
+        .notEmpty()
+        .withMessage('El monto no puede estar vacío.')
+        .customSanitizer(value => value.toString().replace(/\$|\.|\s/g, ''))
+        .isInt({ min:1000})
+        .withMessage('El monto debe ser un numero entero válido (Ej: 20000).'),
+
+    body('dia_pago')
+        .optional()
+        .notEmpty()
+        .withMessage('El día de pago no puede estar vacío.')
+        .isInt({min: 1, max:31})
+        .withMessage('El día de pago debe ser un número entre 1 y 31.'),
 ], async (req, res) => {
-    if (req.userTipo !== 1 && req.userTipo !== 2) { // Solo Admin o Profesor
+    // ... (Permisos y Validación de Errores de Express-Validator existentes) ...
+    if (req.userTipo !== 1 && req.userTipo !== 2) { 
         return res.status(403).json({ success: false, message: 'No tienes permiso para actualizar alumnos.' });
     }
 
@@ -1393,33 +1439,52 @@ router.put('/api/alumnos/:id', verificarToken, [
     if (!errors.isEmpty()) {
         return res.status(400).json({ success: false, errors: errors.array(), message: errors.array()[0].msg });
     }
+    // ... (Fin de la validación de Express-Validator) ...
 
     try {
         const alumnoId = req.params.id;
-        const datosAlumno = req.body; // Contiene los campos que se enviaron para actualizar
-        console.log(`[PUT /api/alumnos/${alumnoId}] req.body recibido:`, JSON.stringify(datosAlumno)); // LOG 1
+        const datosAlumno = req.body;
+        console.log(`[PUT /api/alumnos/${alumnoId}] req.body recibido:`, JSON.stringify(datosAlumno)); 
         
-        // Filtrar solo los campos que realmente se pueden editar desde esta interfaz
-        const camposPermitidos = ['nombre', 'apellido', 'email', 'numero_telefono', 'comentarios'];
+        //En esta lista se agregan los campos que serán modificables con doble click
+        const camposPermitidos = ['rut', 'nombre', 'apellido', 'email', 'numero_telefono', 'comentarios', 'modalidad_alumno', 'monto', 'dia_pago'];
         const datosParaActualizar = {};
+        
+        // El bucle de filtrado es correcto, pero ahora incluye 'rut'
         for (const campo of camposPermitidos) {
             if (datosAlumno.hasOwnProperty(campo)) {
                 datosParaActualizar[campo] = datosAlumno[campo];
             }
         }
 
-        console.log(`[PUT /api/alumnos/${alumnoId}] datosParaActualizar que se enviarán a queries.actualizarAlumno:`, JSON.stringify(datosParaActualizar)); // LOG 2
+        console.log(`[PUT /api/alumnos/${alumnoId}] datosParaActualizar que se enviarán a queries.actualizarAlumno:`, JSON.stringify(datosParaActualizar)); 
 
         if (Object.keys(datosParaActualizar).length === 0) {
             return res.status(400).json({ success: false, message: 'No hay datos para actualizar.' });
         }
 
-        await queries.actualizarAlumno(alumnoId, datosParaActualizar);
+        // Si el RUT fue sanitizado arriba, 'datosParaActualizar.rut' ya contiene el RUT limpio (ej. 17123456K)
+        await queries.actualizarAlumno(alumnoId, datosParaActualizar); 
         res.json({ success: true, message: 'Alumno actualizado correctamente.' });
 
     } catch (error) {
         console.error(`Error en PUT /api/alumnos/${req.params.id}:`, error);
-        res.status(500).json({ success: false, message: error.message || 'Error interno al actualizar el alumno.' });
+
+        // 3. MANEJO DE ERRORES DE DUPLICIDAD (RUT o Email)
+        if (error.message.includes('RUT o Email que intenta guardar ya está registrado')) {
+            // Usamos 409 Conflict para errores de restricción de recurso duplicado
+            return res.status(409).json({ 
+                success: false, 
+                message: error.message 
+            });
+        }
+        
+        // Manejo de errores de validación de la query (ej. RUT inválido si implementaste esa lógica)
+        if (error.message.includes('RUT inválido')) {
+             return res.status(400).json({ success: false, message: error.message });
+        }
+
+        res.status(500).json({ success: false, message: 'Error interno al actualizar el alumno.' });
     }
 });
 
