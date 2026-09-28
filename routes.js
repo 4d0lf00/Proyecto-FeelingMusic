@@ -1,3 +1,22 @@
+//TODO documentacion
+
+//---------------------------------------Info de valores---------------------------------------//
+
+//El numero 1 indica que el tipo de usuario es ADMIN
+//req.userTipo == 1
+
+//El numero 2 indica que el tipo de usuario es PROFE
+//req.userTipo == 2
+
+
+
+
+
+
+
+
+
+
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const queries = require('./queries');
@@ -1190,6 +1209,255 @@ router.get('/api/bandas/buscar', verificarToken, async (req, res) => {
 
 // Exportar el router
 module.exports = router;
+
+
+
+// ----------- RUTAS CRUD PARA ASISTENCIAS ----------- //
+
+
+router.get('/asistencia', verificarToken, async (req, res) => {
+  try {
+    const userTipo = req.userTipo;
+    const profesorId = req.profesorId;
+    const mesParam = req.query.mes;
+ 
+    // Calcular meses reales
+    const hoy = new Date();
+    const meses = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio', 
+                   'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    
+    const mesActualNombre = meses[hoy.getMonth()];
+    const mesAnteriorNombre = meses[(hoy.getMonth() - 1 + 12) % 12];
+    const haceDosNombre = meses[(hoy.getMonth() - 2 + 12) % 12];
+ 
+    // Si NO tiene parámetro ?mes, mostrar MENÚ
+    if (mesParam === undefined) {
+      return res.render('asistencia', {
+        userTipo,
+        user: req.user,
+        mesActualNombre,
+        mesAnteriorNombre,
+        haceDosNombre,
+        alumnos: [],
+        profesorId,
+        mesOffset:0,
+        error: null,
+        success: null,
+        title: 'Registro Asistencia',
+        mostrarLista: false
+        //Esto de abajo debe ir siempre, no borrar
+      });
+    }
+ 
+    // Si tiene ?mes, mostrar LISTA DE ALUMNOS para ese mes
+    const mesOffset = parseInt(mesParam) || 0;
+    
+    // Calcular mes y año correctos
+    let mesNum = (hoy.getMonth() - mesOffset + 12) % 12 + 1; // 1-12
+    let anioNum = hoy.getFullYear();
+    if (hoy.getMonth() - mesOffset < 0) {
+      anioNum -= 1;
+    }
+ 
+    // Obtener nombre del mes para el título
+    const mesNombre = meses[(hoy.getMonth() - mesOffset + 12) % 12];
+ 
+    // Obtener TODOS los alumnos (sin filtro)
+    const alumnos = await queries.obtenerTodosLosAlumnos();
+ 
+    res.render('asistencia', {
+      userTipo,
+      user: req.user,
+      mesNombre,
+      mesOffset,
+      mesNum,
+      anioNum,
+      alumnos,
+      profesorId,
+      error: null,
+      success: null,
+      title: 'Registro Asistencia',
+      mostrarLista: true
+      //Esto de abajo debe ir siempre, no borrar
+    });
+  } catch (error) {
+    console.error('Error en GET /asistencia:', error);
+    res.render('asistencia', {
+      userTipo: req.userTipo,
+      user: req.user,
+      mesActualNombre: '',
+      mesAnteriorNombre: '',
+      haceDosNombre: '',
+      alumnos: [],
+      profesorId: req.profesorId,
+      mesOffset: 0,
+      error: error.message,
+      success: null,
+      title: 'Registro Asistencia',
+      mostrarLista: false
+      //Esto de abajo debe ir siempre, no borrar
+    });
+  }
+});
+
+/*
+// GET para mostrar Opciones de registros de asistencia
+//TODO marcador get botones registro asistencia
+router.get('/asistencia', verificarToken, (req, res) => {
+    // Solo permitir acceso a admin y profe
+    if (req.userTipo !== 1 && req.userTipo !== 2) {
+        return res.status(403).send('Acceso denegado.');
+    }
+    //Esto de abajo debe ir siempre, no borrar porque 
+    // si no, no funciona (no sé porqué al borrar eso no funciona)
+    res.render('asistencia', { 
+        title: 'Registros de asistencia', 
+        userTipo: req.userTipo,
+        user: req.user, // Pasar el objeto user si es necesario en el header/sidebar
+        error: null, 
+        success: null 
+    });
+});
+*/
+
+
+/**
+ * GET /api/buscar-alumno
+ * Búsqueda server-side: ?nombre=Juan
+ */
+router.get('/api/buscar-alumno', verificarToken, async (req, res) => {
+  try {
+    const { nombre } = req.query;
+
+    const alumnos = await queries.buscarAlumnosPorNombre(nombre || '');
+
+    res.json({
+      success: true,
+      alumnos
+    });
+  } catch (error) {
+    console.error('Error en GET /api/buscar-alumno:', error);
+    res.json({
+      success: false,
+      message: error.message,
+      alumnos: []
+    });
+  }
+});
+
+/**
+ * GET /api/asistencias-alumno/:alumnoId
+ * Obtener resumen de asistencia: ?mes=0
+ */
+router.get('/api/asistencias-alumno/:alumnoId', verificarToken, async (req, res) => {
+  try {
+    const { alumnoId } = req.params;
+    const mesOffset = parseInt(req.query.mes) || 0;
+    const profesorId = req.profesorId;
+
+    const hoy = new Date();
+    let mesNum = (hoy.getMonth() - mesOffset + 12) % 12 + 1;
+    let anioNum = hoy.getFullYear();
+    if (hoy.getMonth() - mesOffset < 0) {
+      anioNum -= 1;
+    }
+
+    // Obtener alumno
+    const [alumnoData] = await db.query(
+      'SELECT nombre, apellido FROM alumno WHERE id = ?',
+      [alumnoId]
+    );
+
+    if (!alumnoData || alumnoData.length === 0) {
+      return res.json({
+        success: false,
+        message: 'Alumno no encontrado'
+      });
+    }
+
+    // Obtener resumen
+    const resumen = await queries.obtenerResumenAsistenciaAlumno(
+      alumnoId,
+      profesorId,
+      mesNum,
+      anioNum
+    );
+
+    res.json({
+      success: true,
+      alumno: {
+        nombre: alumnoData[0].nombre,
+        apellido: alumnoData[0].apellido
+      },
+      resumen
+    });
+  } catch (error) {
+    console.error('Error en GET /api/asistencias-alumno:', error);
+    res.json({
+      success: false,
+      message: error.message
+    });
+  }
+});
+// POST para registrar asistencia diaria
+router.post('/ingresar-asistencia', verificarToken, [
+    body('alumnos').isArray({ min: 1 }).withMessage('Se requiere al menos un alumno.'),
+    body('fechaHora').notEmpty().withMessage('Fecha y hora son requeridas.'),
+    body('estadoAsistencia').isIn(['1', '2', '3']).withMessage('Estado de asistencia inválido.'),
+    body('comentario').optional().trim()
+], async (req, res) => {
+    // Solo permitir acceso a admin y profe
+    if (req.userTipo !== 1 && req.userTipo !== 2) {
+        return res.status(403).json({ success: false, message: 'Acceso denegado.' });
+    }
+
+    const errors = validationResult(req);
+    if (!errors.isEmpty()) {
+        return res.status(400).json({ success: false, errors: errors.array() });
+    }
+
+    try {
+        const { alumnos, fechaHora, estadoAsistencia, comentario } = req.body;
+        const profesorId = req.profesorId; // Del token
+
+        if (!profesorId) {
+            return res.status(400).json({ success: false, message: 'ID de profesor no encontrado.' });
+        }
+
+        // Preparar datos para insertar múltiples asistencias
+        const asistenciasParaRegistrar = alumnos.map(alumnoId => ({
+            alumnoId: parseInt(alumnoId),
+            fechaHora: fechaHora,
+            estadoAsistencia: parseInt(estadoAsistencia),
+            comentario: comentario || null
+        }));
+
+        const resultado = await queries.registrarMultiplesAsistencias(asistenciasParaRegistrar, profesorId);
+        res.json(resultado);
+
+    } catch (error) {
+        console.error('Error en POST /ingresar-asistencia:', error);
+        res.status(500).json({ success: false, message: error.message || 'Error al registrar asistencia.' });
+    }
+});
+
+// GET para mostrar página de ingresar asistencia diaria
+//TODO marcador get Ingresar asistencia diaria
+router.get('/ingresar-asistencia', verificarToken, (req, res) => {
+    // Solo permitir acceso a admin y profe
+    if (req.userTipo !== 1 && req.userTipo !== 2) {
+        return res.status(403).send('Acceso denegado.');
+    }
+    //Esto de abajo debe ir siempre, no borrar porque 
+    // si no, no funciona (no sé porqué al borrar eso no funciona)
+    res.render('ingresar-asistencia', { 
+        title: 'Ingresar asistencia diaria', 
+        userTipo: req.userTipo,
+        user: req.user, // Pasar el objeto user si es necesario en el header/sidebar
+        error: null, 
+        success: null 
+    });
+});
 
 // ----------- RUTAS CRUD PARA SALAS ----------- //
 

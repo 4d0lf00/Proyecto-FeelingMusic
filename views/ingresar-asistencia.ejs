@@ -1,0 +1,339 @@
+<%- include('partials/header', { title: title, userTipo: userTipo, currentPath: '/ingresar-asistencia' }) %>
+
+<main class="main-content">
+    <style>
+
+        body{
+            --s: 200px;
+            --c1: #1d1d1d;
+            --c2: #4e4f51;
+            --c3: #3c3c3c;
+            background: repeating-conic-gradient(
+                from 30deg,
+                #0000 0 120deg,
+                var(--c3) 0 180deg
+              )
+              calc(0.5 * var(--s)) calc(0.5 * var(--s) * 0.577),
+              repeating-conic-gradient(
+                from 30deg,
+                var(--c1) 0 60deg,
+                var(--c2) 0 120deg,
+                var(--c3) 0 180deg
+              );
+            background-size: var(--s) calc(var(--s) * 0.577);
+        }
+
+        /* Estilos para nueva-sala.ejs y editar-sala.ejs (inspirados en bandas-form.ejs) */
+        .form-container-bandas {
+            width: 100%;
+            max-width: 700px; /* Ajustado para un poco más de espacio si es necesario */
+            background: #2c2c2c; /* Fondo oscuro para el contenedor del formulario */
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            margin: 40px auto;
+            position: relative; 
+            border: 1px solid #4e4f51; /* Borde sutil */
+        }
+        
+        .form-title-bandas {
+            font-size: 1.8rem;
+            color: #FEDB37; /* Texto dorado para el título */
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .form-title-bandas i {
+            font-size: 1.7rem;
+            margin-right: 10px;
+            color: #FEDB37; /* Icono también dorado */
+        }
+        .form-content-bandas .mb-3 label {
+            color: #c0c0c0; /* Labels más claros */
+            font-weight: 500;
+            margin-bottom: .5rem;
+        }
+        .form-content-bandas .form-control {
+            position: relative;
+            height: 50px;
+            width: 100%;
+            outline: none;
+            font-size: 1rem;
+            color: #e0e0e0; /* Texto del input claro */
+            margin-top: 8px;
+            border: 1px solid #4e4f51; /* Borde del input */
+            border-radius: 6px;
+            padding: 0 15px;
+            background-color: #3c3c3c; /* Fondo del input oscuro */
+        }
+        .form-content-bandas .form-control:focus {
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1), 0 0 8px rgba(254, 219, 55, 0.5);
+            border-color: #FEDB37;
+            background-color: #4a4a4a; /* Fondo del input en focus */
+        }
+        .form-content-bandas .form-text {
+            color: #a0a0a0 !important; /* Color para texto de ayuda */
+        }
+
+        .btn-submit-bandas {
+            display: block;
+            height: 55px;
+            width: 100%;
+            color: #1c1c1c; /* Texto oscuro para contraste con dorado */
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-top: 30px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 6px;
+            letter-spacing: 0.5px;
+            background: #FEDB37; /* Dorado principal */
+            box-shadow: 0 4px 15px rgba(254, 219, 55, 0.2);
+        }
+        .btn-submit-bandas:hover {
+            background: #e0b420; /* Dorado más oscuro al hover */
+            box-shadow: 0 6px 20px rgba(224, 180, 32, 0.3);
+        }
+        /* Alertas (manteniendo consistencia) */
+        .alert-fixed-bandas {
+            color: #fff;
+            padding: 12px 15px;
+            border-radius: 5px;
+            font-size: 0.95rem;
+            margin-bottom: 20px; /* Espacio antes del formulario */
+            text-align: center;
+        }
+        .alert-fixed-bandas.alert-success {
+            background-color: #28a745;
+            border: 1px solid #1e7e34;
+        }
+        .alert-fixed-bandas.alert-danger {
+            background-color: #dc3545;
+            border: 1px solid #b02a37;
+        }
+        .btn-cancel-bandas {
+            display: inline-block;
+            padding: 10px 20px;
+            color: #e0e0e0;
+            background-color: #555;
+            border: 1px solid #4e4f51;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 1rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin-top: 15px; /* Si es necesario junto a otro botón */
+        }
+        .btn-cancel-bandas:hover {
+            background-color: #666;
+            color: #fff;
+        }
+
+        .form-container-bandas .form-control::placeholder { /* Chrome, Firefox, Opera, Safari 10.1+ */
+            color: #999; /* Un gris más claro */
+            opacity: 1; /* Firefox */
+        }
+        .form-container-bandas .form-control:-ms-input-placeholder { /* Internet Explorer 10-11 */
+            color: #999;
+        }
+        .form-container-bandas .form-control::-ms-input-placeholder { /* Microsoft Edge */
+            color: #999;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+        .form-content-bandas .comentarios-textarea {
+        height: 95px;
+        resize: vertical;
+        }
+    </style>
+    <div class="form-container-bandas">
+        <h2 class="form-title-bandas"><i class="fas fa-plus-circle"></i> <%= title %></h2>
+
+        <% if (typeof error !== 'undefined' && error && error.trim() !== '') { %>
+            <div class="alert alert-danger alert-fixed-bandas"><%= error %></div>
+        <% } %>
+        <% if (typeof success !== 'undefined' && success && success.trim() !== '') { %>
+            <div class="alert alert-success alert-fixed-bandas"><%= success %></div>
+        <% } %>
+
+        <form id="formAsistencia" class="form-content-bandas">
+        <!-- Buscar Alumnos -->
+        <div class="mb-3">
+            <label for="alumnoSearchInput" class="form-label">Buscar Alumno(s):</label>
+            <input type="text" class="form-control" id="alumnoSearchInput" 
+                   placeholder="Escriba nombre o apellido...">
+            <div id="alumnoSearchResults" style="margin-top: 10px;"></div>
+            <div id="alumnosSeleccionados" style="margin-top: 15px;">
+                <p class="form-label">Alumnos seleccionados:</p>
+                <div id="listaAlumnosSeleccionados"></div>
+            </div>
+        </div>
+
+        <!-- Fecha y Hora de la Clase -->
+        <div class="mb-3">
+            <label for="FechaClase" class="form-label">Fecha y Hora de la Clase:</label>
+            <input type="datetime-local" class="form-control" id="FechaClase" 
+                   name="fechaHora" required>
+        </div>
+
+        <!-- Tipo de Registro (Estado Asistencia) -->
+        <div class="mb-3">
+            <label class="form-label">Tipo de Registro:</label>
+            <div style="margin-top: 10px;">
+                <label class="radio-label">
+                    <input type="radio" name="estadoAsistencia" value="1" required> 
+                    Presente
+                </label>
+                <label class="radio-label">
+                    <input type="radio" name="estadoAsistencia" value="2"> 
+                    Ausente
+                </label>
+                <label class="radio-label">
+                    <input type="radio" name="estadoAsistencia" value="3"> 
+                    Recuperación
+                </label>
+            </div>
+        </div>
+
+        <!-- Comentarios -->
+        <div class="mb-3">
+            <label for="comentario" class="form-label">Comentarios (Opcional):</label>
+            <textarea class="form-control comentarios-textarea" id="comentario" 
+                      name="comentario" rows="3"></textarea>
+        </div>
+
+        <button type="submit" class="btn-submit-bandas">Registrar Asistencia</button>
+    </form>
+    </div>
+</main>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+     let alumnosSeleccionados = [];
+
+    // Establecer fecha y hora actual automáticamente
+    const fechaInput = document.getElementById('FechaClase');
+    const ahora = new Date();
+    const año = ahora.getFullYear();
+    const mes = String(ahora.getMonth() + 1).padStart(2, '0');
+    const día = String(ahora.getDate()).padStart(2, '0');
+    const horas = String(ahora.getHours()).padStart(2, '0');
+    const minutos = String(ahora.getMinutes()).padStart(2, '0');
+    fechaInput.value = `${año}-${mes}-${día}T${horas}:${minutos}`;
+
+    // Búsqueda de alumnos
+    document.getElementById('alumnoSearchInput').addEventListener('input', async function() {
+        const termino = this.value.trim();
+        if (termino.length < 2) {
+            document.getElementById('alumnoSearchResults').innerHTML = '';
+            return;
+        }
+
+        try {
+            const response = await fetch(`/api/buscar-alumno?nombre=${encodeURIComponent(termino)}`);
+            const alumnos = await response.json();
+            
+            let html = '<div style="border: 1px solid #4e4f51; border-radius: 6px; padding: 10px; background-color: #3c3c3c;">';
+            alumnos.forEach(alumno => {
+                const yaSeleccionado = alumnosSeleccionados.some(a => a.id === alumno.id);
+                html += `
+                    <div style="padding: 8px; border-bottom: 1px solid #4e4f51; cursor: pointer;" 
+                         onclick="seleccionarAlumno(${alumno.id}, '${alumno.nombre}', '${alumno.apellido}')"
+                         style="background-color: ${yaSeleccionado ? '#555' : 'transparent'};">
+                        ${alumno.nombre} ${alumno.apellido}
+                    </div>
+                `;
+            });
+            html += '</div>';
+            document.getElementById('alumnoSearchResults').innerHTML = html;
+        } catch (error) {
+            console.error('Error buscando alumnos:', error);
+        }
+    });
+
+    // Seleccionar alumno
+    window.seleccionarAlumno = function(id, nombre, apellido) {
+        if (!alumnosSeleccionados.some(a => a.id === id)) {
+            alumnosSeleccionados.push({ id, nombre, apellido });
+            actualizarListaAlumnos();
+        }
+        document.getElementById('alumnoSearchInput').value = '';
+        document.getElementById('alumnoSearchResults').innerHTML = '';
+    };
+
+    // Actualizar lista de alumnos seleccionados
+    function actualizarListaAlumnos() {
+        const lista = document.getElementById('listaAlumnosSeleccionados');
+        lista.innerHTML = alumnosSeleccionados.map(alumno => `
+            <span class="alumno-item">
+                ${alumno.nombre} ${alumno.apellido}
+                <button type="button"  onclick="removerAlumno(${alumno.id})">×</button>
+            </span>
+        `).join('');
+    }
+
+    // Remover alumno
+    window.removerAlumno = function(id) {
+        alumnosSeleccionados = alumnosSeleccionados.filter(a => a.id !== id);
+        actualizarListaAlumnos();
+    };
+
+    // Enviar formulario
+    document.getElementById('formAsistencia').addEventListener('submit', async function(e) {
+        e.preventDefault();
+
+        if (alumnosSeleccionados.length === 0) {
+            alert('Selecciona al menos un alumno');
+            return;
+        }
+
+        const fechaHora = document.getElementById('FechaClase').value;
+        const estadoAsistencia = document.querySelector('input[name="estadoAsistencia"]:checked')?.value;
+        const comentario = document.getElementById('comentario').value;
+
+        if (!estadoAsistencia) {
+            alert('Selecciona un tipo de registro');
+            return;
+        }
+
+        try {
+            const response = await fetch('/ingresar-asistencia', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    alumnos: alumnosSeleccionados.map(a => a.id),
+                    fechaHora: fechaHora,
+                    estadoAsistencia: estadoAsistencia,
+                    comentario: comentario
+                })
+            });
+
+            const result = await response.json();
+            
+            if (result.success) {
+                alert(`✅ ${result.message}`);
+                // Limpiar formulario
+                alumnosSeleccionados = [];
+                actualizarListaAlumnos();
+                document.getElementById('formAsistencia').reset();
+                fechaInput.value = `${año}-${mes}-${día}T${horas}:${minutos}`;
+            } else {
+                alert(`❌ ${result.message || 'Error al registrar asistencia'}`);
+            }
+        } catch (error) {
+            console.error('Error:', error);
+            alert('Error al registrar asistencia');
+        }
+    });
+});
+</script>
+
+<%- include('partials/footer') %> 

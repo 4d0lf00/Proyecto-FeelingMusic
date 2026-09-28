@@ -509,7 +509,7 @@
                 row.insertCell().outerHTML = `<td class="editable-field col-nombre" data-field="rut">${formatearRUT(alumno.rut)}</td>`;
                 row.insertCell().outerHTML = `<td class="editable-field col-nombre" data-field="nombre">${alumno.nombre || ''}</td>`;
                 row.insertCell().outerHTML = `<td class="editable-field col-apellido" data-field="apellido">${alumno.apellido || ''}</td>`;
-                row.insertCell().outerHTML = `<td class="editable-field col-instrumento data-field="instrumento"">${alumno.instrumento_alumno || 'N/A'}</td>`;
+                row.insertCell().outerHTML = `<td class="editable-field col-instrumento data-field="instrumento_alumno"">${alumno.instrumento_alumno || 'N/A'}</td>`;
                 row.insertCell().outerHTML = `<td class="editable-field col-modalidad data-field="modalidad"">${alumno.modalidad_alumno || 'N/A'}</td>`;
                 row.insertCell().outerHTML = `<td class="editable-field col-monto" data-field="monto" style="text-align: right; padding-right: 15px;">${alumno.monto !== null && alumno.monto !== undefined ? alumno.monto : 'N/A'}</td>`;
                 row.insertCell().outerHTML = `<td class="editable-field col-dia-pago" data-field="dia_pago" style="text-align: center;">${alumno.dia_pago !== null && alumno.dia_pago !== undefined ? alumno.dia_pago : 'N/A'}</td>`;
@@ -688,23 +688,20 @@
                 if (saveButton) {
                     const row = saveButton.closest('tr');
                     const alumnoId = row.dataset.alumnoId;
-                    const editableInputs = row.querySelectorAll('input.editing-field, textarea.editing-field');
                     const updatedData = {};
                     let isValid = true;
                     let changesMade = false;
 
-                    // Primero, volver a poner el texto en las celdas que no se cambiaron
-                    // y recopilar datos de los inputs activos.
+                    // 1. Recopilar datos y validar
                     row.querySelectorAll('td.editable-field').forEach(cell => {
                         const input = cell.querySelector('input.editing-field, textarea.editing-field');
                         const fieldName = cell.dataset.field;
-                        if (input) { // Si esta celda tiene un input activo
+
+                        if (input && fieldName) { 
                             const newValue = input.value.trim();
-                            const fieldName = cell.dataset.field;
                             const originalStoredValue = cell.dataset.originalValue !== undefined ? cell.dataset.originalValue : '';
 
-                            // --- 1. NORMALIZACIÓN PARA COMPARACIÓN JUSTA ---
-                            // Limpiamos los valores antes de comparar para evitar "falsos cambios" por formato
+                            // Normalización para comparación justa
                             let comparativeNew = newValue;
                             let comparativeOld = originalStoredValue;
 
@@ -712,29 +709,26 @@
                                 comparativeNew = newValue.replace(/[.-]/g, '').toUpperCase();
                                 comparativeOld = originalStoredValue.replace(/[.-]/g, '').toUpperCase();
                             } else if (fieldName === 'monto') {
-                                comparativeNew = newValue.replace(/\D/g, ''); // Solo dígitos: "15000"
+                                comparativeNew = newValue.replace(/\D/g, ''); 
                                 comparativeOld = originalStoredValue.replace(/\D/g, '');
                             } else if (fieldName === 'modalidad_alumno') {
                                 comparativeNew = newValue.toUpperCase();
                                 comparativeOld = originalStoredValue.toUpperCase();
                             }
 
-                            // --- 2. DETECCIÓN DE CAMBIOS REALES ---
+                            // Detección de cambios
                             if (comparativeNew !== comparativeOld) {
                                 updatedData[fieldName] = newValue; 
                                 changesMade = true;
                                 console.log(`[Cambio Detectado] Campo: ${fieldName}, de '${comparativeOld}' a '${comparativeNew}'`);
                             }
 
-                            // --- 3. VALIDACIONES ESPECÍFICAS ---
+                            // Validaciones
                             let fieldHasError = false;
-
-                            // Validación de Email
                             if (fieldName === 'email' && newValue && !/^\S+@\S+\.\S+$/.test(newValue)) {
                                 showFeedback(`Email inválido.`, 'error');
                                 fieldHasError = true;
                             } 
-                            // Validación de Modalidad
                             else if (fieldName === 'modalidad_alumno' && newValue) {
                                 const mod = newValue.toUpperCase();
                                 if (mod !== 'INDIVIDUAL' && mod !== 'GRUPAL') {
@@ -742,7 +736,6 @@
                                     fieldHasError = true;
                                 }
                             }
-                            // Validación de Día de Pago
                             else if (fieldName === 'dia_pago' && newValue) {
                                 const dia = parseInt(newValue, 10);
                                 if (isNaN(dia) || dia < 1 || dia > 31) {
@@ -751,33 +744,29 @@
                                 }
                             }
 
-                            // --- 4. MANEJO VISUAL DE ERRORES ---
                             if (fieldHasError) {
                                 isValid = false;
-                                input.style.borderColor = 'red'; // Marcar error visualmente
+                                input.style.borderColor = 'red';
                             } else {
-                                input.style.borderColor = ''; // Limpiar marca de error
+                                input.style.borderColor = '';
                             }
                         }
                     });
-
 
                     if (!isValid) return;
 
                     if (!changesMade) { 
                         showFeedback('No se detectaron cambios para guardar.', 'info');
-                        console.log('ChangesMade: ', changesMade);
                         saveButton.style.display = 'none';
                         row.querySelectorAll('td.editable-field').forEach(cell => {
                             const input = cell.querySelector('input.editing-field, textarea.editing-field');
-                            if (input) {
-                                // Revertir al valor original almacenado en el dataset
-                                cell.textContent = cell.dataset.originalValue !== undefined ? cell.dataset.originalValue : input.value; 
-                            }
+                            if (input) cell.textContent = cell.dataset.originalValue || input.value;
+                            delete cell.dataset.originalValue;
                         });
                         return;
                     }
                     
+                    // 2. Proceso de Guardado
                     saveButton.disabled = true;
                     saveButton.innerHTML = '<i class="fas fa-spinner fa-spin"></i>';
 
@@ -790,39 +779,35 @@
                             headers: { 'Content-Type': 'application/json', 'Accept': 'application/json' },
                             body: JSON.stringify(updatedData)
                         });
-                        result = await response.json();
+                        
+                        // El "?" evita errores si el servidor no responde un JSON
+                        result = await response?.json();
 
-                        if (response.ok && result.success) {
+                        if (response?.ok && result?.success) {
                             showFeedback(result.message || 'Alumno actualizado.', 'success');
-                            // Actualizar celdas y quitar inputs
+                            
                             row.querySelectorAll('td.editable-field').forEach(cell => {
                                 const input = cell.querySelector('input.editing-field, textarea.editing-field');
                                 const fieldName = cell.dataset.field;
-                                if (input && updatedData.hasOwnProperty(fieldName)) {
-                                    let displayValue = updatedData[fieldName]; // Nuevo valor a mostrar
-                                    
-                                    //Si es RUT, aplicar formato antes de mostrarlo
-                                    if (fieldName === 'rut') {
-                                        displayValue = formatearRUT(updatedData[fieldName]);
-                                    }
-                                    // Revertir al valor actualizado
-                                    /*cell.textContent = updatedData[fieldName];*/
 
-                                    // Revertir al valor actualizado
-                                    cell.textContent = displayValue;
+                                if (input && updatedData.hasOwnProperty(fieldName)) {
+                                    let displayValue = updatedData[fieldName];
+                                    
+                                    if (fieldName === 'rut') {
+                                        displayValue = formatearRUT(updatedData[fieldName]);
+                                    } else if (fieldName === 'monto') {
+                                        displayValue = new Intl.NumberFormat('es-CL', { 
+                                            style: 'currency', currency: 'CLP', maximumFractionDigits: 0 
+                                        }).format(updatedData[fieldName]).replace('CLP', '').trim();
+                                    }
+                                    cell.textContent = displayValue;
                                 } else if (input) { 
-                                     // Si estaba editando pero no se guardó el campo (ej. solo se editó otro campo en la misma fila)
-                                     // Revertir al valor original que tenía cuando se empezó a editar.
-                                     cell.textContent = cell.dataset.originalValue !== undefined ? cell.dataset.originalValue : input.value; 
+                                    cell.textContent = cell.dataset.originalValue || input.value; 
                                 }
-                                // Limpiar el originalValue después de guardar exitosamente o revertir
                                 delete cell.dataset.originalValue;
                             });
                         } else {
-                            showFeedback(result.message || 'Error al actualizar alumno.', 'error');
-                             // No quitar los inputs si hubo error, para que el usuario pueda corregir
-                             // Asegurarse de que el valor original no se pierda si hay un nuevo intento.
-                             // La lógica de revertToTextView ya maneja esto en caso de Escape.
+                            showFeedback(result?.message || 'Error al actualizar alumno.', 'error');
                         }
                     } catch (err) {
                         console.error('Error al actualizar alumno:', err);
@@ -830,20 +815,15 @@
                     } finally {
                         saveButton.disabled = false;
                         saveButton.innerHTML = '<i class="fas fa-save"></i>';
-                        // Ocultar después del intento y revertir la celda si no hubo error
                         saveButton.style.display = 'none';
-                        if (response && response.ok && result && result.success) {
-                             // Si el guardado fue exitoso, la celda ya fue actualizada en el bloque `if (response.ok && result.success)`
-                             // Asegurarse de que el input sea removido si no se hizo ya (aunque el textContent = ... debería reemplazarlo)
-                             row.querySelectorAll('input.editing-field, textarea.editing-field').forEach(input => { input.remove(); });
-                        } else { // Si hubo error o no se guardó (ej. sin cambios)
-                            // Revertir explícitamente las celdas que tenían input a su valor original
+
+                        // Limpieza final de seguridad
+                        if (response?.ok && result?.success) {
+                            row.querySelectorAll('input.editing-field, textarea.editing-field').forEach(input => input.remove());
+                        } else {
                             row.querySelectorAll('td.editable-field').forEach(cell => {
                                 const input = cell.querySelector('input.editing-field, textarea.editing-field');
-                                if (input) {
-                                    cell.textContent = cell.dataset.originalValue !== undefined ? cell.dataset.originalValue : input.value; // Revertir al original
-                                }
-                                // Limpiar el originalValue después de un intento fallido o sin cambios
+                                if (input) cell.textContent = cell.dataset.originalValue || input.value;
                                 delete cell.dataset.originalValue;
                             });
                         }

@@ -2093,7 +2093,163 @@ async function eliminarSalaConDependencias(id) {
     }
 }
 
+// ----------- FUNCIONES PARA ASISTENCIA ----------- //
 
+async function registrarAsistencia(alumnoId, profesorId, fechaHora, estadoAsistencia, comentario) {
+    if (!alumnoId || !profesorId || !fechaHora || !estadoAsistencia) {
+        throw new Error('Alumno, profesor, fecha/hora y estado de asistencia son requeridos.');
+    }
+
+    // Validar que estadoAsistencia sea 1, 2 o 3
+    if (![1, 2, 3].includes(parseInt(estadoAsistencia))) {
+        throw new Error('Estado de asistencia inválido. Debe ser 1 (presente), 2 (ausente) o 3 (recuperación).');
+    }
+
+    const query = `
+        INSERT INTO asistencia (alumno_id, profesor_id, fecha_hora, estado_asistencia, comentario)
+        VALUES (?, ?, ?, ?, ?)
+    `;
+
+    try {
+        const [resultado] = await db.query(query, [alumnoId, profesorId, fechaHora, estadoAsistencia, comentario || null]);
+        console.log(`Asistencia registrada para alumno ${alumnoId}, estado: ${estadoAsistencia}`);
+        return { success: true, message: 'Asistencia registrada exitosamente.', asistenciaId: resultado.insertId };
+    } catch (error) {
+        console.error('Error al registrar asistencia:', error);
+        if (error.code === 'ER_NO_REFERENCED_ROW_2') {
+            if (error.message.includes('alumno')) {
+                throw new Error('El alumno especificado no existe.');
+            } else if (error.message.includes('profesor')) {
+                throw new Error('El profesor especificado no existe.');
+            }
+        }
+        throw new Error('Error interno al registrar la asistencia.');
+    }
+}
+
+async function registrarMultiplesAsistencias(asistencias, profesorId) {
+    // asistencias es un array de [{alumnoId, fechaHora, estadoAsistencia, comentario}]
+    if (!Array.isArray(asistencias) || asistencias.length === 0) {
+        throw new Error('Se requiere al menos una asistencia para registrar.');
+    }
+
+    const connection = await db.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        const registros = [];
+        
+        for (const asistencia of asistencias) {
+            const { alumnoId, fechaHora, estadoAsistencia, comentario } = asistencia;
+
+            if (!alumnoId || !fechaHora || !estadoAsistencia) {
+                throw new Error(`Datos incompletos en asistencia del alumno ${alumnoId}`);
+            }
+
+            if (![1, 2, 3].includes(parseInt(estadoAsistencia))) {
+                throw new Error(`Estado de asistencia inválido para alumno ${alumnoId}`);
+            }
+
+            const query = `
+                INSERT INTO asistencia (alumno_id, profesor_id, fecha_hora, estado_asistencia, comentario)
+                VALUES (?, ?, ?, ?, ?)
+            `;
+
+            const [resultado] = await connection.query(query, [
+                alumnoId, 
+                profesorId, 
+                fechaHora, 
+                estadoAsistencia, 
+                comentario || null
+            ]);
+
+            registros.push({
+                asistenciaId: resultado.insertId,
+                alumnoId: alumnoId,
+                estado: estadoAsistencia
+            });
+        }
+
+        await connection.commit();
+        return { success: true, message: `${registros.length} asistencias registradas exitosamente.`, registros };
+
+    } catch (error) {
+        await connection.rollback();
+        console.error('Error al registrar múltiples asistencias:', error);
+        throw error;
+    } finally {
+        if (connection) connection.release();
+    }
+}
+
+/**
+ * Obtener todos los alumnos activos
+ */
+async function obtenerTodosLosAlumnos() {
+  try {
+    const [alumnos] = await db.query(
+      'SELECT id, nombre, apellido FROM alumno WHERE estado = "activo" ORDER BY nombre ASC'
+    );
+    return alumnos;
+  } catch (error) {
+    throw new Error(`Error al obtener alumnos: ${error.message}`);
+  }
+}
+/**
+ * Buscar alumnos por nombre (todos, sin filtro de profesor)
+ */
+async function buscarAlumnosPorNombreAsistencia(nombre) {
+  try {
+    const query = 'SELECT id, nombre, apellido FROM alumno WHERE estado = "activo" AND (nombre LIKE ? OR apellido LIKE ?) ORDER BY nombre ASC';
+    const [alumnos] = await db.query(query, [`%${nombre}%`, `%${nombre}%`]);
+    return alumnos;
+  } catch (error) {
+    throw new Error(`Error en búsqueda de alumnos: ${error.message}`);
+  }
+}
+
+/**
+ * Obtener resumen de asistencia de un alumno para un mes específico
+ */
+async function obtenerResumenAsistenciaAlumno(alumnoId, profesorId, mes, anio) {
+  try {
+    const [registros] = await db.query(
+      `SELECT estado_asistencia, DATE_FORMAT(fecha_hora, '%d/%m/%y') as fecha, comentario
+       FROM asistencia
+       WHERE alumno_id = ? AND profesor_id = ? AND MONTH(fecha_hora) = ? AND YEAR(fecha_hora) = ?
+       ORDER BY fecha_hora DESC`,
+      [alumnoId, profesorId, mes, anio]
+    );
+
+    const resumen = {
+      presente: { cantidad: 0, registros: [] },
+      ausente: { cantidad: 0, registros: [] },
+      recuperacion: { cantidad: 0, registros: [] }
+    };
+
+    registros.forEach(reg => {
+      const registro = {
+        fecha: reg.fecha,
+        comentario: reg.comentario || 'Sin comentario'
+      };
+
+      if (reg.estado_asistencia === 1) {
+        resumen.presente.cantidad++;
+        resumen.presente.registros.push(registro);
+      } else if (reg.estado_asistencia === 2) {
+        resumen.ausente.cantidad++;
+        resumen.ausente.registros.push(registro);
+      } else if (reg.estado_asistencia === 3) {
+        resumen.recuperacion.cantidad++;
+        resumen.recuperacion.registros.push(registro);
+      }
+    });
+
+    return resumen;
+  } catch (error) {
+    throw new Error(`Error al obtener resumen de asistencia: ${error.message}`);
+  }
+}
 
 // Exportar las funciones
 module.exports = {
@@ -2105,11 +2261,11 @@ module.exports = {
     obtenerUsuarioProfesorPorId,
     actualizarUsuarioProfesor,
     generarContrasena,
-    buscarAlumnos,
+    
     buscarProfesores,
-    insertarAlumno,
+    
     obtenerProfesorId,
-    crearUsuarioAlumno,
+    
     obtenerProfesores,
     obtenerSalas, 
     insertarHorario, 
@@ -2119,7 +2275,7 @@ module.exports = {
     insertarUsuario, 
     obtenerHorariosPorProfesor,
     actualizarHorario, 
-    buscarAlumnosPorNombre,
+    
     obtenerInstrumentoIdPorNombre, 
     guardarClase, 
     insertarPago,
@@ -2129,13 +2285,22 @@ module.exports = {
     obtenerHorariosPorSalaYHora, 
     obtenerInstrumentosPorProfesor,
     obtenerInstrumentos, 
-    actualizarAlumnoConDatosClase,
+    
     obtenerOCrearModalidadId,
     sincronizarClasesDelSlot,
-    actualizarAlumno, 
-    eliminarAlumnoPermanentemente,
+    
     eliminarProfesorPermanentemente,
     actualizarProfesor,
+
+    //Funciones para alumnos
+    buscarAlumnos,
+    insertarAlumno,
+    crearUsuarioAlumno,
+    buscarAlumnosPorNombre,
+    actualizarAlumnoConDatosClase,
+    actualizarAlumno, 
+    eliminarAlumnoPermanentemente,
+    
     // Funciones para Bandas
     crearBanda,
     obtenerTodasLasBandas,
@@ -2156,5 +2321,12 @@ module.exports = {
     contarMisAlumnos,
     contarTodosLosAlumnos,
     obtenerDistribucionInstrumentosProfesor,
-    obtenerDetallesProfesor
+    obtenerDetallesProfesor,
+    //funciones asistencia
+    registrarAsistencia,
+    registrarMultiplesAsistencias,
+    obtenerTodosLosAlumnos,
+    buscarAlumnosPorNombreAsistencia,
+    obtenerResumenAsistenciaAlumno,  
+    
 };

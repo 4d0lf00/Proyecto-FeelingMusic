@@ -1,0 +1,487 @@
+<%- include('partials/header', { title: title, userTipo: userTipo, currentPath: '/asistencia' }) %>
+
+<main class="main-content">
+    <style>
+
+        body{
+            --s: 200px;
+            --c1: #1d1d1d;
+            --c2: #4e4f51;
+            --c3: #3c3c3c;
+            background: repeating-conic-gradient(
+                from 30deg,
+                #0000 0 120deg,
+                var(--c3) 0 180deg
+              )
+              calc(0.5 * var(--s)) calc(0.5 * var(--s) * 0.577),
+              repeating-conic-gradient(
+                from 30deg,
+                var(--c1) 0 60deg,
+                var(--c2) 0 120deg,
+                var(--c3) 0 180deg
+              );
+            background-size: var(--s) calc(var(--s) * 0.577);
+        }
+
+        /* Estilos para asistencia (igual que ingresar-asistencia.ejs) */
+        .form-container-bandas {
+            width: 100%;
+            max-width: 700px;
+            background: #2c2c2c;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            margin: 40px auto;
+            position: relative; 
+            border: 1px solid #4e4f51;
+        }
+        
+        .form-title-bandas {
+            font-size: 1.8rem;
+            color: #FEDB37;
+            font-weight: 600;
+            text-align: center;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .form-title-bandas i {
+            font-size: 1.7rem;
+            margin-right: 10px;
+            color: #FEDB37;
+        }
+        .form-content-bandas .mb-3 label {
+            color: #c0c0c0;
+            font-weight: 500;
+            margin-bottom: .5rem;
+        }
+        .form-content-bandas .form-control {
+            position: relative;
+            height: 50px;
+            width: 100%;
+            outline: none;
+            font-size: 1rem;
+            color: #e0e0e0;
+            margin-top: 8px;
+            border: 1px solid #4e4f51;
+            border-radius: 6px;
+            padding: 0 15px;
+            background-color: #3c3c3c;
+        }
+        .form-content-bandas .form-control:focus {
+            box-shadow: 0 1px 0 rgba(0, 0, 0, 0.1), 0 0 8px rgba(254, 219, 55, 0.5);
+            border-color: #FEDB37;
+            background-color: #4a4a4a;
+        }
+        .form-content-bandas .form-text {
+            color: #a0a0a0 !important;
+        }
+
+        .btn-submit-bandas {
+            display: block;
+            height: 55px;
+            width: 100%;
+            color: #1c1c1c;
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-top: 30px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 6px;
+            letter-spacing: 0.5px;
+            background: #FEDB37;
+            box-shadow: 0 4px 15px rgba(254, 219, 55, 0.2);
+        }
+        .btn-submit-bandas:hover {
+            background: #e0b420;
+            box-shadow: 0 6px 20px rgba(224, 180, 32, 0.3);
+        }
+
+        .btn-rojo-bandas {
+            display: block;
+            height: 55px;
+            width: 100%;
+            color: #fff;
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-top: 20px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 6px;
+            letter-spacing: 0.5px;
+            background: #ff0000;
+            box-shadow: 0 4px 15px rgba(255, 0, 0, 0.2);
+        }
+        .btn-rojo-bandas:hover {
+            background: #ff2525;
+            box-shadow: 0 6px 20px rgba(255, 37, 37, 0.3);
+        }
+
+        .alert-fixed-bandas {
+            color: #fff;
+            padding: 12px 15px;
+            border-radius: 5px;
+            font-size: 0.95rem;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .alert-fixed-bandas.alert-success {
+            background-color: #28a745;
+            border: 1px solid #1e7e34;
+        }
+        .alert-fixed-bandas.alert-danger {
+            background-color: #dc3545;
+            border: 1px solid #b02a37;
+        }
+
+        .info-fixed-asistencias {
+            background-color: #666;
+            color: #fff;
+            padding: 10px 6px;
+            border-radius: 5px;
+            font-size: 1rem;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .form-container-bandas .form-control::placeholder {
+            color: #999;
+            opacity: 1;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            overflow-y: auto;
+        }
+
+        .modal-overlay.activo {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #2c2c2c;
+            border: 2px solid #FEDB37;
+            border-radius: 8px;
+            padding: 20px;
+            width: 90%;
+            max-width: 500px;
+            color: #fff;
+            position: relative;
+            margin: 20px auto;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #ff6b6b;
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 35px;
+            height: 35px;
+            cursor: pointer;
+            font-size: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-close:hover {
+            background: #ff5252;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #FEDB37;
+            border-top: 4px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        .btn-alumno {
+            display: block;
+            width: 100%;
+            height: auto;
+            padding: 12px;
+            margin-bottom: 10px;
+            border: 2px solid #FEDB37;
+            background: #2c2c2c;
+            color: #fff;
+            text-align: left;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+
+        .btn-alumno:hover {
+            background: #FEDB37;
+            color: #2c2c2c;
+            border-color: #FEDB37;
+        }
+
+        .oculto {
+            display: none !important;
+        }
+    </style>
+
+    <div class="form-container-bandas">
+        <h2 class="form-title-bandas"><i class="fa-solid fa-file-lines"></i> <%= title %></h2>
+
+        <% if (!mostrarLista) { %>
+            <!-- ===== MENÚ (sin parámetro ?mes) ===== -->
+            <div class="form-content-bandas">
+                <div class="mb-3">
+                    <label class="form-label">Selecciona el mes para ver los registros.</label>
+                    <div class="info-fixed-asistencias">Importante: Solo se guardan registros con 90 días de antigüedad</div>
+                </div>
+
+                <!-- 3 botones de mes (LINKS, no formulario) -->
+                <a href="/asistencia?mes=0" class="btn-submit-bandas" style="text-decoration: none; text-align: center; line-height: 55px; display: block;">
+                    Mes actual (<%= mesActualNombre %>)
+                </a>
+                <a href="/asistencia?mes=1" class="btn-submit-bandas" style="text-decoration: none; text-align: center; line-height: 55px; display: block;">
+                    Hace un mes (<%= mesAnteriorNombre %>)
+                </a>
+                <a href="/asistencia?mes=2" class="btn-submit-bandas" style="text-decoration: none; text-align: center; line-height: 55px; display: block;">
+                    Hace dos meses (<%= haceDosNombre %>)
+                </a>
+
+                <!-- Botón rojo para ingresar -->
+                <button type="button" class="btn-rojo-bandas" onclick="irAAsistencia()">
+                    Ingresar asistencia diaria
+                </button>
+            </div>
+
+        <% } else { %>
+            <!-- ===== LISTA DE ALUMNOS (con parámetro ?mes=X) ===== -->
+            <div class="form-content-bandas">
+                <div class="mb-3">
+                    <label class="form-label">Para conocer la asistencia mensual de un alumno, busca su nombre y selecciona.</label>
+                </div>
+
+                <!-- Buscador -->
+                <div class="mb-3">
+                    <label for="buscar-alumno" class="form-label">Buscar Alumno:</label>
+                    <input 
+                        type="text" 
+                        id="buscar-alumno" 
+                        class="form-control" 
+                        placeholder="Ingresar nombre..."
+                    >
+                </div>
+
+                <!-- Lista de alumnos -->
+                <div id="lista-alumnos" style="display: flex; flex-direction: column; gap: 10px;">
+                    <% if (alumnos && alumnos.length > 0) { %>
+                        <% alumnos.forEach(alumno => { %>
+                            <button 
+                                type="button" 
+                                class="btn-alumno alumno-btn"
+                                data-alumno-id="<%= alumno.id %>"
+                                data-alumno-nombre="<%= alumno.nombre %> <%= alumno.apellido %>"
+                            >
+                                <%= alumno.nombre %> <%= alumno.apellido %>
+                            </button>
+                        <% }); %>
+                    <% } else { %>
+                        <p style="color: #999; text-align: center; padding: 20px;">No hay alumnos registrados</p>
+                    <% } %>
+                </div>
+            </div>
+        <% } %>
+
+        <% if (error) { %>
+            <div class="alert alert-danger alert-fixed-bandas" style="margin-top: 20px;">
+                <%= error %>
+            </div>
+        <% } %>
+        <% if (success) { %>
+            <div class="alert alert-success alert-fixed-bandas" style="margin-top: 20px;">
+                <%= success %>
+            </div>
+        <% } %>
+    </div>
+
+    <!-- MODAL OVERLAY -->
+    <div id="modal-overlay" class="modal-overlay">
+        <div class="modal-content">
+            <button id="cerrar-modal" class="modal-close">✕</button>
+            <div id="modal-body">
+                <div style="text-align: center; padding: 50px;">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 20px; color: #FEDB37;">Cargando...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
+
+<script>
+  const mesOffset = '<%= mesOffset || 0 %>';
+  const profesorId = '<%= profesorId || "" %>';
+
+  document.addEventListener('DOMContentLoaded', function() {
+    const btnsAlumnos = document.querySelectorAll('.alumno-btn');
+    const inputBuscar = document.getElementById('buscar-alumno');
+    const cerrarBtn = document.getElementById('cerrar-modal');
+    const modal = document.getElementById('modal-overlay');
+
+    // Buscador (filtro local)
+    if (inputBuscar) {
+      inputBuscar.addEventListener('keyup', function() {
+        const termino = this.value.toLowerCase();
+        
+        btnsAlumnos.forEach(btn => {
+          const nombre = btn.getAttribute('data-alumno-nombre').toLowerCase();
+          if (nombre.includes(termino)) {
+            btn.classList.remove('oculto');
+          } else {
+            btn.classList.add('oculto');
+          }
+        });
+      });
+    }
+
+    // Click en alumno
+    btnsAlumnos.forEach(btn => {
+      btn.addEventListener('click', function() {
+        const alumnoId = this.getAttribute('data-alumno-id');
+        const alumnoNombre = this.getAttribute('data-alumno-nombre');
+        abrirModalAsistencia(alumnoId, alumnoNombre);
+      });
+    });
+
+    // Cerrar modal
+    if (cerrarBtn) {
+      cerrarBtn.addEventListener('click', cerrarModal);
+    }
+
+    // Cerrar modal con clic afuera
+    if (modal) {
+      modal.addEventListener('click', function(e) {
+        if (e.target === this) {
+          cerrarModal();
+        }
+      });
+    }
+  });
+
+  function abrirModalAsistencia(alumnoId, alumnoNombre) {
+    const modal = document.getElementById('modal-overlay');
+    const modalBody = document.getElementById('modal-body');
+
+    // Mostrar spinner
+    modalBody.innerHTML = `
+      <h3 style="color: #FEDB37; text-align: center;">Cargando...</h3>
+      <div style="text-align: center; padding: 30px;">
+        <div class="spinner"></div>
+      </div>
+    `;
+
+    modal.classList.add('activo');
+
+    // Fetch de datos
+    fetch(`/api/asistencias-alumno/${alumnoId}?mes=${mesOffset}`)
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          renderModalContent(data.alumno, data.resumen);
+        } else {
+          modalBody.innerHTML = `<p style="color: #ff6b6b; text-align: center;">${data.message}</p>`;
+        }
+      })
+      .catch(error => {
+        modalBody.innerHTML = `<p style="color: #ff6b6b; text-align: center;">Error: ${error.message}</p>`;
+      });
+  }
+
+function renderModalContent(alumno, resumen) {
+    const modalBody = document.getElementById('modal-body');
+
+    let html = `<h3 style="color: #FEDB37; margin-bottom: 20px;">${alumno.nombre} ${alumno.apellido}</h3>`;
+
+    // Asistió
+    if (resumen.presente.cantidad > 0) {
+      html += `
+        <div style="margin-bottom: 15px;">
+          <p style="color: #FEDB37; font-weight: bold;">Asistió (${resumen.presente.cantidad}):</p>
+          <div style="background: rgba(254, 219, 55, 0.1); padding: 10px; border-radius: 4px;">
+            ${resumen.presente.registros.map((r, i) => `<span class="fecha-clickable" style="color: #4da6ff; margin-right: 10px; cursor: pointer;" onclick="mostrarComentario('${r.comentario}', '${r.fecha}')">&gt;${r.fecha}</span>`).join('')}
+          </div>
+        </div>
+      `;
+    } else {
+      html += `<div style="margin-bottom: 15px;"><p style="color: #FEDB37; font-weight: bold;">Asistió:</p><p style="color: #999;">Sin registros</p></div>`;
+    }
+
+    // Faltó
+    if (resumen.ausente.cantidad > 0) {
+      html += `
+        <div style="margin-bottom: 15px;">
+          <p style="color: #FEDB37; font-weight: bold;">Faltó (${resumen.ausente.cantidad}):</p>
+          <div style="background: rgba(254, 219, 55, 0.1); padding: 10px; border-radius: 4px;">
+            ${resumen.ausente.registros.map((r, i) => `<span class="fecha-clickable" style="color: #4da6ff; margin-right: 10px; cursor: pointer;" onclick="mostrarComentario('${r.comentario}', '${r.fecha}')">&gt;${r.fecha}</span>`).join('')}
+          </div>
+        </div>
+      `;
+    } else {
+      html += `<div style="margin-bottom: 15px;"><p style="color: #FEDB37; font-weight: bold;">Faltó:</p><p style="color: #999;">Sin registros</p></div>`;
+    }
+
+    // Recuperaciones
+    if (resumen.recuperacion.cantidad > 0) {
+      html += `
+        <div style="margin-bottom: 15px;">
+          <p style="color: #FEDB37; font-weight: bold;">Recuperaciones (${resumen.recuperacion.cantidad}):</p>
+          <div style="background: rgba(254, 219, 55, 0.1); padding: 10px; border-radius: 4px;">
+            ${resumen.recuperacion.registros.map((r, i) => `<span class="fecha-clickable" style="color: #4da6ff; margin-right: 10px; cursor: pointer;" onclick="mostrarComentario('${r.comentario}', '${r.fecha}')">&gt;${r.fecha}</span>`).join('')}
+          </div>
+        </div>
+      `;
+    } else {
+      html += `<div style="margin-bottom: 15px;"><p style="color: #FEDB37; font-weight: bold;">Recuperaciones:</p><p style="color: #999;">Sin registros</p></div>`;
+    }
+
+    modalBody.innerHTML = html;
+  }
+
+  function mostrarComentario(comentario, fecha) {
+    alert(`Fecha: ${fecha}\n\nComentario:\n${comentario}`);
+  }
+  function cerrarModal() {
+    const modal = document.getElementById('modal-overlay');
+    modal.classList.remove('activo');
+  }
+
+  function irAAsistencia() {
+    window.location.href = '/ingresar-asistencia';
+  }
+</script>
+
+<%- include('partials/footer') %>
