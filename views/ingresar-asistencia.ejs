@@ -151,6 +151,11 @@
         height: 95px;
         resize: vertical;
         }
+
+        .alert-fixed-bandas.alert-warning {
+            background-color: #856404;
+            border: 1px solid #6a5003;
+        }
     </style>
     <div class="form-container-bandas">
         <h2 class="form-title-bandas"><i class="fas fa-plus-circle"></i> <%= title %></h2>
@@ -161,6 +166,12 @@
         <% if (typeof success !== 'undefined' && success && success.trim() !== '') { %>
             <div class="alert alert-success alert-fixed-bandas"><%= success %></div>
         <% } %>
+
+        <% if (typeof ultimaLimpieza !== 'undefined' && ultimaLimpieza) { %>
+        <div class="alert alert-warning alert-fixed-bandas">
+        Se eliminaron <%= ultimaLimpieza.cantidad %> registros con más de 90 días el <%= new Date(ultimaLimpieza.fecha).toLocaleDateString('es-CL') %>.
+        </div>
+<% } %>
 
         <form id="formAsistencia" class="form-content-bandas">
         <!-- Buscar Alumnos -->

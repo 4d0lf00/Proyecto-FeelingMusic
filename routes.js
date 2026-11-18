@@ -427,7 +427,20 @@ router.post('/formulario-class',
     }
 );
     
-    
+
+
+router.get('/pdf-asistencias', verificarToken, (req, res) => {
+    // Permitir acceso a Administradores (1) y Profesores (2)
+    if (req.userTipo !== 1 && req.userTipo !== 2) { 
+        return res.redirect('/login2?error=' + encodeURIComponent('No tienes permiso para acceder a esta página.'));
+    }
+    res.render('pdf-asistencias-mensual', { 
+        title: 'PDF Asistencias [Mes]', 
+        userTipo: req.userTipo 
+    });
+});
+
+
 
 // Ruta para el filtro2 ver la lista de alumnos
 router.get('/filtro2', verificarToken, (req, res) => {
@@ -1399,61 +1412,64 @@ router.get('/api/asistencias-alumno/:alumnoId', verificarToken, async (req, res)
     });
   }
 });
-// POST para registrar asistencia diaria
-router.post('/ingresar-asistencia', verificarToken, [
-    body('alumnos').isArray({ min: 1 }).withMessage('Se requiere al menos un alumno.'),
-    body('fechaHora').notEmpty().withMessage('Fecha y hora son requeridas.'),
-    body('estadoAsistencia').isIn(['1', '2', '3']).withMessage('Estado de asistencia inválido.'),
-    body('comentario').optional().trim()
-], async (req, res) => {
-    // Solo permitir acceso a admin y profe
+router.post('/ingresar-asistencia', verificarToken, async (req, res) => {
+    // Solo admin y profe
     if (req.userTipo !== 1 && req.userTipo !== 2) {
         return res.status(403).json({ success: false, message: 'Acceso denegado.' });
     }
 
-    const errors = validationResult(req);
-    if (!errors.isEmpty()) {
-        return res.status(400).json({ success: false, errors: errors.array() });
-    }
-
     try {
         const { alumnos, fechaHora, estadoAsistencia, comentario } = req.body;
-        const profesorId = req.profesorId; // Del token
+        const profesorId = req.profesorId;
 
         if (!profesorId) {
-            return res.status(400).json({ success: false, message: 'ID de profesor no encontrado.' });
+            return res.json({ success: false, message: 'ID de profesor no encontrado.' });
         }
 
-        // Preparar datos para insertar múltiples asistencias
-        const asistenciasParaRegistrar = alumnos.map(alumnoId => ({
-            alumnoId: parseInt(alumnoId),
-            fechaHora: fechaHora,
+        if (!Array.isArray(alumnos) || alumnos.length === 0 || !fechaHora ||
+            !['1', '2', '3'].includes(String(estadoAsistencia))) {
+            return res.json({ success: false, message: 'Datos incompletos o inválidos.' });
+        }
+
+        const asistencias = alumnos.map(id => ({
+            alumnoId: parseInt(id),
+            fechaHora,
             estadoAsistencia: parseInt(estadoAsistencia),
             comentario: comentario || null
         }));
 
-        const resultado = await queries.registrarMultiplesAsistencias(asistenciasParaRegistrar, profesorId);
-        res.json(resultado);
+        const resultado = await queries.registrarMultiplesAsistencias(asistencias, profesorId);
+        res.json({ success: true, message: `${resultado.registrados} registro(s) guardado(s)` });
 
     } catch (error) {
         console.error('Error en POST /ingresar-asistencia:', error);
-        res.status(500).json({ success: false, message: error.message || 'Error al registrar asistencia.' });
+        res.json({ success: false, message: error.message });
     }
 });
 
 // GET para mostrar página de ingresar asistencia diaria
 //TODO marcador get Ingresar asistencia diaria
-router.get('/ingresar-asistencia', verificarToken, (req, res) => {
+router.get('/ingresar-asistencia', verificarToken, async (req, res) => {
     // Solo permitir acceso a admin y profe
     if (req.userTipo !== 1 && req.userTipo !== 2) {
         return res.status(403).send('Acceso denegado.');
     }
+
+    // El aviso es secundario: si falla, la página igual se muestra
+    let ultimaLimpieza = null;
+    try {
+        ultimaLimpieza = await queries.obtenerUltimaLimpieza();
+    } catch (e) {
+        console.error('No se pudo leer registros_trigger:', e.message);
+    }
+
     //Esto de abajo debe ir siempre, no borrar porque 
     // si no, no funciona (no sé porqué al borrar eso no funciona)
     res.render('ingresar-asistencia', { 
         title: 'Ingresar asistencia diaria', 
         userTipo: req.userTipo,
-        user: req.user, // Pasar el objeto user si es necesario en el header/sidebar
+        user: req.user,
+        ultimaLimpieza,
         error: null, 
         success: null 
     });

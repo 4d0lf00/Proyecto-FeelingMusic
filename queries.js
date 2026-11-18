@@ -2251,8 +2251,27 @@ async function obtenerResumenAsistenciaAlumno(alumnoId, profesorId, mes, anio) {
   }
 }
 
+
+async function obtenerUltimaLimpieza() {
+  try {
+    const [registros] = await db.query(
+      `SELECT cantidad, fecha
+       FROM registros_trigger
+       WHERE tipo = 'asistencia_eliminada'
+         AND fecha >= DATE_SUB(NOW(), INTERVAL 7 DAY)
+       ORDER BY fecha DESC
+       LIMIT 1`
+    );
+    return registros[0] || null;
+  } catch (error) {
+    throw new Error(`Error al obtener última limpieza: ${error.message}`);
+  }
+}
+
+
 // Exportar las funciones
 module.exports = {
+    obtenerUltimaLimpieza,
     obtenerHorarios,
     crearClase,
     obtenerDetallesClase,
